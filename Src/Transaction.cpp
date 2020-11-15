@@ -5,12 +5,17 @@
  *      Author: Ramiro
  */
 
-
+#include <iostream>
 
 #include "Transaction.h"
+#include "TransactionInput.h"
+#include "TransactionOutput.h"
+#include <sstream>
+#include <cstddef> // Para NULL
 
+#include "sha256.h"
 
-	//---Constructores---//
+//---Constructores---//
 
 //Descripcion: Instancia el objeto Transaction vacio
 //Precondicion: -
@@ -18,6 +23,7 @@
 Transaction::Transaction(){
 	this->n_tx_in = 0;
 	this->n_tx_out = 0;
+	this->HashMerkle = "";
 }
 
 //Descripcion: Instancia el objeto Transaction a partir de un archivo raw_t
@@ -25,7 +31,6 @@ Transaction::Transaction(){
 //Postcondicion: Dos punteros a memoria de tamaño definido creados y
 // precargados con los datos de raw_t
 Transaction::Transaction( const raw_t & Raw ){
-	//TODO preparar Transaction para una cadena de Raw
 	this->n_tx_in = Raw.inTx;
 	for(int i = 0; i < this->n_tx_in ;i++ )
 	{
@@ -57,18 +62,33 @@ Transaction::Transaction( const raw_t & Raw ){
 	}
 }
 
-
 //Descripcion: Destruye elemento de Transaction
 //Precondicion: Si se envia una transaccion nula no es necesario que se realice accion
 //Postcondicion: Objeto destruido, memoria liberada, punteros a null y parametros a cero.
+/*
+	Analicé el destructor y me parece que fuga memoria.
+	Al invocar el destructor de los contenedores Lista, se eliminan los nodos pedidos dinámicamente.
+	pero no el puntero de cada Clase contenido en dato de cada nodo.
+	Se libera el nodo, pero se pierde la referencia del puntero del dato.
+	Es como borrar el vector dinámico, pero no liberar la memoria dinámica pedida en cada "globito", Cardozo dixit.
+Transaction::~Transaction(){
+	if( (n_tx_in != 0 ) || (n_tx_out != 0) || ! this->ListaTranIn.vacia() || ! this->ListaTranOut.vacia() ) {
+		this->n_tx_in = 0;
+		delete &ListaTranIn; //Invocacion explicita del destructor de lista^M
+		this->n_tx_out = 0;
+		delete &ListaTranOut; //Invocacion explicita del destructor de lista^M
+	}
+}
+*/
+
 Transaction::~Transaction(){
 	if ( ! this->ListaTranIn.vacia() ) {
 		lista <TransactionInput *>::iterador it(ListaTranIn);
 		it = this->ListaTranIn.primero();
-		do{
+		do {
 			delete it.dato();
 			it.avanzar();
-		}while ( ! it.extremo() );
+		} while ( ! it.extremo() );
 	}
 	if ( ! this->ListaTranOut.vacia() ) {
 		lista <TransactionOutput *>::iterador it(ListaTranOut);
@@ -76,8 +96,18 @@ Transaction::~Transaction(){
 		do {
 			delete it.dato();
 			it.avanzar();
-		}while ( ! it.extremo() );
+		} while ( ! it.extremo() );
 	}
+	/*
+	// Esta parte no seria necesaria porque ListaTranIn y ListaTranOut no fueron creados dinámicamente
+	// Al salir del alcance de la clase contenedora ejecutan c/u sus destructores respectivos.
+	if( (n_tx_in != 0 ) || (n_tx_out != 0) || ! this->ListaTranIn.vacia() || ! this->ListaTranOut.vacia() ) {
+		this->n_tx_in = 0;
+		delete &ListaTranIn; //Invocación explicita del destructor de lista TransactionInput
+		this->n_tx_out = 0;
+		delete &ListaTranOut; //Invocación explicita del destructor de lista TransactionOutput
+	}
+   */
 }
 
 //---Getters---//
@@ -94,6 +124,10 @@ int Transaction::getNumTransactionIn(){
 //Postcondicion:
 int Transaction::getNumTransactionOut(){
 	return this->n_tx_out;
+}
+
+std::string Transaction::getHashMerkle(){
+	return this->HashMerkle;
 }
 
 //Descripcion: Obtiene la transaccion de la lista de entradas
@@ -139,46 +173,18 @@ TransactionOutput * Transaction::getTransactionOutput(int index){
 std::string Transaction::getConcatenatedTransactions( void ){
        lista <TransactionInput *>::iterador itIn(this->ListaTranIn);
        lista <TransactionOutput *>::iterador itOut(this->ListaTranOut);
-       //std::ostringstream concatenation;
-       std::string concatenation;
-// 	   concatenation << this->n_tx_in << '\n';
-       concatenation += std::to_string( this->n_tx_in );
-	   concatenation += '\n';
-       for(itIn = ListaTranIn.primero(); !itIn.extremo() ; itIn.avanzar()){
-//               concatenation<< itIn.dato()->getTxId() <<' ';
-//               concatenation<< itIn.dato()->getIdx()  <<' ';
-//               concatenation<< itIn.dato()->getAddr() <<'\n';
-    	   	   	 concatenation += itIn.dato()->getTxId();
-    	  		 concatenation += ' ';
-    	  		 concatenation += std::to_string( itIn.dato()->getIdx() );
-    	  		 concatenation += ' ';
-    	  		 concatenation += itIn.dato()->getAddr();
-    	  	     concatenation += '\n';
-
+       std::ostringstream concatenation;
+       concatenation << this->n_tx_in << '\n';
+       for(itIn = ListaTranIn.primero(); !itIn.eol() ; itIn.avanzar()){
+               concatenation<< itIn.dato()->getTxId() <<' ';
+               concatenation<< itIn.dato()->getIdx()  <<' ';
+               concatenation<< itIn.dato()->getAddr() <<'\n';
       }
-      concatenation += std::to_string( this->n_tx_out );
-      concatenation += '\n';
-// 	  concatenation << this->n_tx_out << '\n';
-      for(itOut = ListaTranOut.primero(); !itOut.extremo() ; itOut.avanzar()){
-//               concatenation<< itOut.dato()->getValue() <<' ';
-//               concatenation<< itOut.dato()->getAddr()  <<'\n';
-    	  	  	 concatenation += float_to_string_w_precision( itOut.dato()->getValue() , 1 );
-    	  	  	 concatenation += ' ';
-    	  	  	 concatenation += itOut.dato()->getAddr();
-    	  	  	 concatenation += '\n';
+      concatenation << this->n_tx_out << '\n';
+      for(itOut = ListaTranOut.primero(); !itOut.eol() ; itOut.avanzar()){
+              concatenation<< itOut.dato()->getValue() <<' ';
+               concatenation<< itOut.dato()->getAddr()  <<'\n';
        }
-      //std::cout <<concatenation.str()<<std::endl; //DEBUG
-      //return concatenation.str();
-      return concatenation;
+	   this->HashMerkle = sha256( sha256( concatenation.str() ) );
+       return concatenation.str();
 }
-
-
-std::string Transaction::float_to_string_w_precision(float val, int p)
-{
-	if( p < 0 ) return "";
-	p = (unsigned int) p;
-	std::stringstream stream;
-	stream << std::fixed << std::setprecision(p) << val;
-	return stream.str();
-}
-

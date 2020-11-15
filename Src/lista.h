@@ -76,6 +76,7 @@ public:
 		bool operator==(const iterador &) const;
 		bool operator!=(const iterador &) const;
 		iterador const &operator=(iterador const &);
+
 	};
 
 	typedef T t_dato;
@@ -95,7 +96,15 @@ public:
 	void insertar_antes(const T &, iterador const &);
 	void insertar_despues(const T &, iterador const &);
 	void borrar(const T &);
+	void borrartodo();
 	lista const &operator=(lista const &);
+
+	// Parte de colas
+	void clear();
+	bool isEmpty() const;  
+	T & leercola();
+	T desencolar();
+	void encolar(const T & el);
 
 	// Esta clase provee métodos para generar iteradores preposicionados
 	// en los nodos distinguidos (i.e. inicial y final) de la secuencia.
@@ -103,10 +112,7 @@ public:
 	// el TDA iterador, buscamos facilitar las expresiones de corte o
 	// continuación de los ciclos de iteración. Por ejemplo,
 	//
-	// lista<int>::iterador it;
-	// ...
-	// for( it = L.ultimo(); !it.extremo(); it.retroceder()) {
-	// 	// ...
+
 	// }
 	// 
 	// También,
@@ -403,6 +409,19 @@ void lista<T>::borrar(const T &t)
 }
 
 template<typename T>
+void lista<T>::borrartodo() 
+{
+	nodo *iter, *sig=0;
+
+	for (iter = pri_; iter != 0; iter = sig)
+	{
+		sig = iter->sig_;
+		delete iter;
+		tam_--;
+	}
+}
+
+template<typename T>
 typename lista<T>::iterador lista<T>::ultimo() const
 {
 	return typename lista<T>::iterador(ult_);
@@ -411,7 +430,7 @@ typename lista<T>::iterador lista<T>::ultimo() const
 template<typename T>
 typename lista<T>::iterador lista<T>::primero() const
 {
-        return typename lista<T>::iterador(pri_);
+	return typename lista<T>::iterador(pri_);
 }
 
 template<typename T>
@@ -451,5 +470,37 @@ lista<T> const &lista<T>::operator=(lista const &orig)
 	return *this;
 }
 
+template<typename T>
+void lista<T>::clear()
+{
+	borrartodo();
+}
+
+template<typename T>
+bool lista<T>::isEmpty() const
+{
+	return ( ! tam_ );
+}
+
+template<typename T>
+T & lista<T>::leercola()
+{
+	return ult_->dato;
+}
+
+template<typename T>
+T lista<T>::desencolar() 
+{
+	nodo * aux = ult_;
+	borrar( ult_->dato );
+	return aux->dato;
+}
+
+template<typename T>
+void lista<T>::encolar( const T & el )
+{
+	lista<T>::iterador it;  // <- Arranca en el primero
+	insertar_antes( el, it);
+}
 
 #endif

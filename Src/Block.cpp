@@ -1,11 +1,19 @@
-//Archivo fuente clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación 2.
+//Archivo fuente clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación II.
+
+#include<string>
+#include <cstdlib>
+#include <iostream>
 
 #include "Block.h"
+#include "TiposHash.h"
+#include "Transaction.h"
+#include "BlockChainBuilder.h"
 
+#include "sha256.h"
 
 // Constructores
 Block::Block()
-	: pre_block(""), txns_hash(""), bits(3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos), txn_count(0), CurTran(NULL)
+	: pre_block(""), txns_hash(""), bits(3  /* El valor por default establecido en el TP0 */), nonce(""), eBlock(StatusBlock::BlockSinDatos), txn_count(0), CurTran(NULL)
 	// ver el #define DIFFICULTY_DEFAULT_VALUE 3
 {
 	//this->ListaTran = NULL;
@@ -15,7 +23,7 @@ Block::Block()
 }
 
 Block::Block( const raw_t & raw )
-	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos)
+	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(""), eBlock(StatusBlock::BlockSinDatos)
 {
 	/* Básicamente:
 			se instancia un objeto Transaction, se asume que se reciben datos consistentes.
@@ -46,22 +54,22 @@ Block::Block( const raw_t & raw )
 Block::~Block() {
 	// ListaTran se autodestruye, antes debo liberar la memoria asignada en cada elemento * ListaTran de la lista
 	if ( ! this->ListaTran.vacia() ) {
-
 		lista <Transaction *>::iterador it(ListaTran);
 		/* Itero la lista para recuperar todos los strings de la coleccion Transaction
 		   que necesito para calcular el Hash.
 		*/
 		it = this->ListaTran.primero();
-		while ( ! it.extremo() ) {
+		do {
 			delete it.dato();
 			it.avanzar();
-		}
+		} while ( ! it.extremo() );
 	}
 }
 
 // Getters
-unsigned int Block::gettxn_count() {
-	return this->txn_count;
+int Block::getCantTransacciones() {
+	// ToDo
+	return 0;
 }
 
 std::string Block::getpre_block() {
@@ -76,13 +84,18 @@ unsigned int Block::getbits() {
 	return this->bits;
 }
 
-unsigned int Block::getnonce() {
+std::string Block::getnonce() {
 	return this->nonce;
 }
 
 std::string Block::getcadenaprehash() {
 	return this->cadena_prehash;
 }
+
+double Block::tiempominado() {
+	return this->seconds;
+}
+
 
 // Setters
 bool Block::setpre_block( std::string valor ) {
@@ -130,14 +143,14 @@ bool Block::setbits( unsigned int valor ) {
 	return true;
 }
 
-bool Block::setnonce( int valor ) {
-	if ( valor < 0 ) {
-		this->nonce = 0;
+bool Block::setnonce( std::string valor ) {
+	if ( valor.empty() ) {
+		this->nonce = "";
 		// Hay que anotar, en un status ?, el error o disparar un throw
 	}
 	else {
 		/* No se valida nada, puede ser cualquier dato */
-		this->nonce = (unsigned int) valor;
+		this->nonce = valor;
 	}
 	return true;
 }
@@ -158,6 +171,10 @@ bool Block::settransaction( const raw_t & raw ) {
 		return false;
 	}
 }
+bool Block::setseconds( double segundos ) {
+	this->seconds = segundos;
+	return true;
+}
 
 std::string Block::RecalculoHash( void ) {
 	std::string cadena = "";
@@ -177,5 +194,20 @@ std::string Block::RecalculoHash( void ) {
 		this->eBlock = StatusBlock::BlockCalculadoCadena_prehash;
 	}
 	else this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+	return cadena;
+}
+
+std::string Block::ArbolMerkle( void ) {
+	/*
+	   Dudas
+	   Utilizar recursividad plantea un aumento de espacio con la misma complejidad log(n)
+	   Utilizar iteraciones combinado con el uso de un vector inplace() elimina el aumento de espacio con la misma complejidad
+	   Que pasa con la última transaccion si es impar? se asume que la de al lado es un string vacío y se hace un sha256?
+	     o se transfiere sin ejecutar un sha256 de nuevo.
+	*/
+	std::string cadena = "";
+	if ( ! this->ListaTran.vacia() ) {
+		
+	}
 	return cadena;
 }

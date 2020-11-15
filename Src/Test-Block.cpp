@@ -17,6 +17,16 @@ extern const string::size_type LargoHashEstandar;  // -> Block.h
 extern const string::size_type LargoHashFirma;	   // Hash Pública de la Cuenta definida en Block.h
 
 int main() {
+
+	int Cola[] = { 3, 4, 5, 47, 19, 39, 21, 34, 54, 97};
+	for (size_t i = 0; i < 10; i++ ) {
+		cout << Cola[i] << '\n';
+		lista <int> li;
+		li.encolar( Cola[i] );
+	}
+
+	return 0;
+
 	string Hash = "e9dc0f0fbcb9021dc39ec104dfa51e813a86c8205a77d3be6c8cd6140b941e0c";
 	string Dir = "f680e0021dcaf15d161604378236937225eeecae85cc3f";
 
@@ -66,7 +76,12 @@ int main() {
 			size_t contador = 0;
 			do {
 				std::string resultado = "", nonce, hash_resultado = "";
-				resultado = BlocklActual->gettxns_hash(); 	// <- falta definir el método que extrae el string en la Clase Transaction.
+	
+				resultado = BlocklActual->getpre_block() + '\n';          // <- getter que extrae la clave doble hash del Block previo.
+				resultado += BlocklActual->getcadenaprehash() + '\n'; 	  // <- getter que extrae el string en la Clase Transaction.
+				resultado += BlocklActual->getbits() + '\n'; 
+				BlocklActual->setnonce( BlockChainBuilder::Calculononce() );	// Cada llamada genera un nonce <>, se guarda en Block
+				resultado += BlocklActual->getnonce() + '\n';
 				nonce = BlockChainBuilder::Calculononce();	// Cada llamada genera un nonce <>
 				if ( resultado.length() > 0 || nonce.length() ) {
 					int test;
