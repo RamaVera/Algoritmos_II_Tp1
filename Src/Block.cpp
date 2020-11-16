@@ -10,6 +10,7 @@
 #include "BlockChainBuilder.h"
 
 #include "sha256.h"
+#include "vector.h"
 
 // Constructores
 Block::Block()
@@ -192,6 +193,7 @@ std::string Block::RecalculoHash( void ) {
 	if ( ! cadena.empty() ) {
 		this->cadena_prehash = cadena;
 		this->eBlock = StatusBlock::BlockCalculadoCadena_prehash;
+		this->hash_Merkle = ArbolMerkle();
 	}
 	else this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 	return cadena;
@@ -202,12 +204,44 @@ std::string Block::ArbolMerkle( void ) {
 	   Dudas
 	   Utilizar recursividad plantea un aumento de espacio con la misma complejidad log(n)
 	   Utilizar iteraciones combinado con el uso de un vector inplace() elimina el aumento de espacio con la misma complejidad
-	   Que pasa con la última transaccion si es impar? se asume que la de al lado es un string vacío y se hace un sha256?
-	     o se transfiere sin ejecutar un sha256 de nuevo.
+	   Con la última transacción si es impar se asume que la de al lado es el mismo hash se hace un sha256.
 	*/
 	std::string cadena = "";
 	if ( ! this->ListaTran.vacia() ) {
-		
+		// rellenado del vector.
+		// Esto se podria implementar para optimizar en la iteracion de RecalculoHash.
+		// A costa de extender el espacio de memoria consumido por strMerkle[] a lo largo de toda la instancia de Block.
+		lista <Transaction *>::iterador it(ListaTran);
+		size_t largo = this->ListaTran.tamano();  // Lo almaceno para no recalcularlo en cada iteración
+		vector < std::string > strMerkle( largo );
+		it = this->ListaTran.primero();
+		size_t i = 0, tam = largo;
+		while ( ! it.extremo() ) {
+			strMerkle[i++] = it.dato()->getConcatenatedTransactions();
+			it.avanzar();
+		};
+		// TODO. Analizar ventajas en este tramo de llevarlo a recursivo e inplace.
+		for ( size_t j = 0; ( j < tam ) && ( tam > 1 ); j++  ) {
+			for ( i = 0; i < largo; i += 2 ) {
+				if ( i == largo - 1) {
+					strMerkle[ i ] = sha256( strMerkle[ i ] ) + sha256( strMerkle[ i ] );
+				}
+				else {
+					strMerkle[ i ] = sha256( strMerkle[ i ] ) + sha256( strMerkle[ i + 1 ] );
+				}
+			}
+			if ( tam % 2 ) {
+				tam /= 2;
+			}
+			else {
+				tam = ( tam + 1) / 2;
+			}
+		}
+		cadena = strMerkle[ 1 ];
 	}
 	return cadena;
+}
+
+std::string Block::gethash_Merkle() {
+	return this->hash_Merkle;
 }

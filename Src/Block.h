@@ -33,13 +33,13 @@ class Block {
 		std::string txns_hash;	// <- retiene el hash256(hash256(cadena_prehash))
 		size_t bits;	/* La dificultad de bits */
 		std::string nonce;
+		std::string hash_Merkle;
 		StatusBlock eBlock;
 		// Atributos Seccion Body;
 		size_t txn_count;
 		lista <Transaction *> ListaTran;
 		Transaction * CurTran;
 		std::string cadena_prehash;
-		std::string hash_Merkle;
 		// Para medir tiempos de minado x Block.
 		double seconds;
 		// Métodos privados
@@ -62,6 +62,7 @@ class Block {
 		unsigned int getbits();
 		std::string getnonce();
 		std::string getcadenaprehash();
+		std::string gethash_Merkle();
 		double tiempominado();
 		// Setters
 		bool setpre_block( std::string valor );

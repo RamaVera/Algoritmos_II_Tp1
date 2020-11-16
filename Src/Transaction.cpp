@@ -23,7 +23,6 @@
 Transaction::Transaction(){
 	this->n_tx_in = 0;
 	this->n_tx_out = 0;
-	this->HashMerkle = "";
 }
 
 //Descripcion: Instancia el objeto Transaction a partir de un archivo raw_t
@@ -126,10 +125,6 @@ int Transaction::getNumTransactionOut(){
 	return this->n_tx_out;
 }
 
-std::string Transaction::getHashMerkle(){
-	return this->HashMerkle;
-}
-
 //Descripcion: Obtiene la transaccion de la lista de entradas
 //Precondicion: Si el indice esta fuera de rango debe devolver null
 //Postcondicion:
@@ -185,6 +180,5 @@ std::string Transaction::getConcatenatedTransactions( void ){
               concatenation<< itOut.dato()->getValue() <<' ';
                concatenation<< itOut.dato()->getAddr()  <<'\n';
        }
-	   this->HashMerkle = sha256( sha256( concatenation.str() ) );
        return concatenation.str();
 }

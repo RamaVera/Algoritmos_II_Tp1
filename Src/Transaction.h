@@ -22,7 +22,6 @@ private:
 	int n_tx_out; 								 // Indica cantidad total de outputs
 	lista <TransactionOutput *> ListaTranOut;    // Lista de outputs
 	statusTransaction Estatus;
-	std::string HashMerkle;
 public:
 	//---Constructores---//
 	Transaction();
@@ -37,7 +36,6 @@ public:
 	//---Setters---//
 	//---Otros---//
 	std::string getConcatenatedTransactions();
-	std::string getHashMerkle();
 };
 
 #endif /* TRANSACTION_H_ */
