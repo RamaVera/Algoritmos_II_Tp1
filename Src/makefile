@@ -1,41 +1,38 @@
+CXXARGS  = -g -Wall -Werror -pedantic 
+CXXFLAGS = -I. $(CXXARGS)
+CXX = g++
 
-OBJECTS = main.o sha256.o cmdline.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o # Los archivos compilados individuales
-PROGR = miner.exe # Nombre del archivo ejecutable
-CPPFLAGS = -g -Wall -pedantic -Werror# -g opcion de g++ para debugear
+all: tp0
 
-# Compiladores #
-CC = g++ -std=c++17 # Para linux
-CCW = i686-w64-mingw32-g++ --static # Para windows (requiere mingw32)
+cmdline.o: cmdline.cc cmdline.h
+	$(CXX) $(CXXFLAGS) -c cmdline.cc
 
-$(PROGR) : $(OBJECTS)
-	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
-main.o : main.cpp cmdline.h BlockChainManager.h
-	$(CC) $(CPPFLAGS) -c main.cpp
-cmdline.o : cmdline.cc cmdline.h
-	$(CC) $(CPPFLAGS) -c cmdline.cc
-sha246.o : sha246.cpp sha246.h
-	$(CC) $(CPPFLAGS) -c sha246.cpp
-BlockChainManager.o : BlockChainManager.cpp BlockChainManager.h BlockChainFileManager.h BlockChainBuilder.h BlockChainStatus.h
-	$(CC) $(CPPFLAGS) -c BlockChainManager.cpp
-BlockChainFileManager.o : BlockChainFileManager.cpp BlockChainFileManager.h BlockChainBuilder.h BlockChainDataTypes.h BlockChainStatus.h
-	$(CC) $(CPPFLAGS) -c BlockChainFileManager.cpp
-BlockChainBuilder.o : BlockChainBuilder.cpp BlockChainBuilder.h lista.h sha256.h Block.h TiposHash.h BlockChainDataTypes.h BlockChainStatus.h
-	$(CC) $(CPPFLAGS) -c BlockChainBuilder.cpp
-Block.o : Block.cpp Block.h Transaction.h lista.h TiposHash.h BlockChainDataTypes.h
-	$(CC) $(CPPFLAGS) -c Block.cpp
-Transaction.o : Transaction.cpp Transaction.h lista.h TransactionOutput.h TransactionInput.h  BlockChainDataTypes.h
-	$(CC) $(CPPFLAGS) -c Transaction.cpp
-TransactionOutput.o : TransactionOutput.cpp TransactionOutput.h
-	$(CC) $(CPPFLAGS) -c TransactionOutput.cpp
-TransactionInput.o : TransactionInput.cpp TransactionInput.h
-	$(CC) $(CPPFLAGS) -c TransactionInput.cpp
-	
-	
+sha256.o: sha256.cpp sha256.h
+	$(CXX) $(CXXFLAGS) -c sha256.cpp
 
+Block.o: Block.cpp Block.h lista.h Transaction.h TiposHash.h sha256.cpp sha256.h vector.h
+	$(CXX) $(CXXFLAGS) -c Block.cpp
+
+Transaction.o: Transaction.cpp Transaction.h
+	$(CXX) $(CXXFLAGS) -c Transaction.cpp
+
+TransactionInput.o: TransactionInput.cpp TransactionInput.h
+	$(CXX) $(CXXFLAGS) -c TransactionInput.cpp
+
+TransactionOutput.o: TransactionOutput.cpp TransactionOutput.h
+	$(CXX) $(CXXFLAGS) -c TransactionOutput.cpp
+
+BlockChainManager.o: BlockChainManager.cpp BlockChainManager.h BlockChainStatus.h lista.h Block.h
+	$(CXX) $(CXXFLAGS) -c BlockChainManager.cpp
+
+BlockChainBuilder.o: BlockChainBuilder.cpp BlockChainBuilder.h TiposHash.h sha256.h lista.h Block.h BlockChainDataTypes.h
+	$(CXX) $(CXXFLAGS) -c BlockChainBuilder.cpp
+
+BlockChainFileManager.o: BlockChainFileManager.cpp BlockChainFileManager.h BlockChainDataTypes.h
+	$(CXX) $(CXXFLAGS) -c BlockChainFileManager.cpp
+
+tp0: main.cpp BlockChainManager.h BlockChainBuilder.h BlockChainFileManager.h BlockChainStatus.h TiposHash.h Transaction.h TransactionInput.h TransactionOutput.h lista.h vector.h sha256.h sha256.o Block.o Transaction.o TransactionInput.o TransactionOutput.o cmdline.o BlockChainManager.o BlockChainBuilder.o BlockChainFileManager.o
+	$(CXX) $(CXXFLAGS) -o tp0 main.cpp sha256.o Block.o cmdline.o BlockChainManager.o BlockChainBuilder.o BlockChainFileManager.o Transaction.o TransactionInput.o TransactionOutput.o
 
 clean:
-	rm -f core $(PROGR) $(OBJECTS)
-all: $(PROGR)
-	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
-run : $(PROGR)
-	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o output.txt -d 3
+	rm -f *.o tp0
