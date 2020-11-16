@@ -7,33 +7,99 @@
  
 #include "BlockChainManager.h"
 
+status_t BlockChainManager::state = STATUS_READING_COMMANDS;
 
 void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
-	BlockChainBuilder builder(BlockChainManager::getUserDefinedDifficulty());
+	std::string command;
+	payload_t payload;
 	BlockChainFileManager fileManager;
 
-	std::cout<< "Begin Validate ...";
-	BlockChainManager::proccesStatus( fileManager.validate(iss) );
+	while (BlockChainManager::state == STATUS_READING_COMMANDS  ){
 
-	std::cout<< "Begin Parsing ..." ;
-	BlockChainManager::proccesStatus( fileManager.parse(iss,builder.getRawPointer()) );
+		BlockChainManager::proccesStatus( fileManager.translateCommands(iss,payload) );
+		std::cout<< "Begin Parse Command ...";
+		switch(payload.command)
+		{
+			case Commands::init:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			case Commands::transfer:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+			break;
+			case Commands::mine:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			case Commands::block:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			case Commands::balance:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			case Commands::txn:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			case Commands::save:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
+			default:
+				std::cout<< "Error Not Defined"<< std::endl;
+				break;
+		}
 
-	std::cout<< "Begin Creating Block ..." ;
-	BlockChainManager::proccesStatus( builder.createBlockChain() );
+	}
+
+//	BlockChainBuilder builder(BlockChainManager::getUserDefinedDifficulty());
 
 
-	std::cout<< "Begin Converting Block to File ..." << std::endl;
-	BlockChainManager::proccesStatus( fileManager.convert(oss,builder.getBlockChainPointer()) );
-
-	std::cout<< std::endl;
-	std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+//	std::cout<< "Begin Validate ...";
+//	BlockChainManager::proccesStatus( fileManager.validate(iss) );
+//
+//	std::cout<< "Begin Parsing ..." ;
+//	BlockChainManager::proccesStatus( fileManager.parse(iss,builder.getRawPointer()) );
+//
+//	std::cout<< "Begin Creating Block ..." ;
+//	BlockChainManager::proccesStatus( builder.createBlockChain() );
+//
+//
+//	std::cout<< "Begin Converting Block to File ..." << std::endl;
+//	BlockChainManager::proccesStatus( fileManager.convert(oss,builder.getBlockChainPointer()) );
+//
+//	std::cout<< std::endl;
+//	std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
 }
 
 void BlockChainManager::proccesStatus(status_t status){
+	state = status;
 	switch(status){
-
+	case STATUS_READING_COMMANDS:
+		std::cout << "Reading.." << std::endl;
+		break;
+	case STATUS_ERROR_COMMAND_NOT_FOUND:
+		std::cout << "FAIL" << std::endl;
+		std::cerr << "Error Comando no conocido" << std::endl;
+		std::abort();
+		break;
+	case STATUS_ERROR_COMMAND_PAYLOAD:
+		std::cout << "FAIL" << std::endl;
+		std::cerr << "Error Comando con argumentos invalidos" << std::endl;
+		std::abort();
+		break;
 	case STATUS_OK:
-		std::cout << "Done" << std::endl;
+		//std::cout << "Done" << std::endl;
 		break;
 	case STATUS_FINISH_CONVERT_SUCCESSFULY:
 		break;

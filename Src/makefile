@@ -1,7 +1,7 @@
 
-OBJECTS = main.o sha256.o cmdline.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o # Los archivos compilados individuales
+OBJECTS = main.o sha256.o cmdline.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o Queue.o # Los archivos compilados individuales
 PROGR = miner.exe # Nombre del archivo ejecutable
-CPPFLAGS = -g -Wall -pedantic -Werror# -g opcion de g++ para debugear
+CPPFLAGS = -g -Wall -pedantic -Werror # -g opcion de g++ para debugear
 
 # Compiladores #
 CC = g++ -std=c++17 # Para linux
@@ -15,9 +15,11 @@ cmdline.o : cmdline.cc cmdline.h
 	$(CC) $(CPPFLAGS) -c cmdline.cc
 sha246.o : sha246.cpp sha246.h
 	$(CC) $(CPPFLAGS) -c sha246.cpp
+queue.o : Queue.cpp Queue.h
+	$(CC) $(CPPFLAGS) -c Queue.cpp	
 BlockChainManager.o : BlockChainManager.cpp BlockChainManager.h BlockChainFileManager.h BlockChainBuilder.h BlockChainStatus.h
 	$(CC) $(CPPFLAGS) -c BlockChainManager.cpp
-BlockChainFileManager.o : BlockChainFileManager.cpp BlockChainFileManager.h BlockChainBuilder.h BlockChainDataTypes.h BlockChainStatus.h
+BlockChainFileManager.o : BlockChainFileManager.cpp BlockChainFileManager.h BlockChainBuilder.h BlockChainDataTypes.h BlockChainStatus.h Queue.h
 	$(CC) $(CPPFLAGS) -c BlockChainFileManager.cpp
 BlockChainBuilder.o : BlockChainBuilder.cpp BlockChainBuilder.h lista.h sha256.h Block.h TiposHash.h BlockChainDataTypes.h BlockChainStatus.h
 	$(CC) $(CPPFLAGS) -c BlockChainBuilder.cpp
@@ -38,4 +40,4 @@ clean:
 all: $(PROGR)
 	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
 run : $(PROGR)
-	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o output.txt -d 3
+	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o -

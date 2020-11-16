@@ -14,8 +14,9 @@
 #include "BlockChainBuilder.h"
 
 class BlockChainManager {
-	status_t state;
+	static status_t state;
 	static unsigned int userDefinedDifficulty;
+	static void parseCommands(std::string command,payload_t & payload);
 public:
 
 	static void	proccesBlockChain( std::istream *iss, std::ostream *oss );

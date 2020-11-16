@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+*.bat
+
+# Eclipse Dirs & Files
+*/.metadata/
+*/.settings/
+*.xml

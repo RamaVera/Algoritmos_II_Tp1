@@ -20,7 +20,6 @@ static istream* iss = 0;
 static ostream* oss = 0;
 static fstream ifs;
 static fstream ofs;
-static string outputFileName;
 
 /*=====================================================================================*/
 // 									PROTOTIPOS
@@ -29,8 +28,7 @@ static string outputFileName;
 
 static void opt_input(string const &);
 static void opt_output(string const &);
-static void opt_difficulty(string const &);
-static void opt_help(string const &);
+
 
 
 /*=====================================================================================*/
@@ -40,8 +38,6 @@ static void opt_help(string const &);
 static option_t options[] = {
 	{1, "i", "input", "-", opt_input, OPT_DEFAULT},
 	{1, "o", "output", "-", opt_output, OPT_DEFAULT},
-	{1, "d", "difficulty", NULL, opt_difficulty, OPT_MANDATORY},
-	{0, "h", "help", NULL, opt_help, OPT_DEFAULT},
 	{0, },
 };
 
@@ -53,7 +49,7 @@ static option_t options[] = {
 
 int main(int argc, char * const argv[]){
 
-	std::cout<<"AlgoChain v1.1.1 - Grupo 5 : Galvan - Vera - Dreszman"<<std::endl;
+	std::cout<<"AlgoChain v2.1.1 - Grupo 5 : Galvan - Vera - Dreszman"<<std::endl;
 
 	//------Valido Argumentos ------//
 	cmdline cmdl(options);
@@ -126,7 +122,7 @@ static void opt_output(string const &arg)
 	// est?dar. De lo contrario, abrimos un archivo en modo
 	// de escritura.
 	//
-	outputFileName = arg.c_str();
+	//outputFileName = arg.c_str();
 
 	if (arg == "-") {
 		oss = &cout;	// Establezco la salida estandar cout como flujo de salida
@@ -139,64 +135,3 @@ static void opt_output(string const &arg)
 
 }
 
-static void opt_difficulty(string const &arg)
-{
-	stringstream iss(arg);
-	cout<< "La dificultad elegida es = " <<arg.c_str() <<endl;
-
-	// Intentamos extraer el factor de la l?ea de comandos.
-	// Para detectar argumentos que ?nicamente consistan de
-	// n?meros enteros, vamos a verificar que EOF llegue justo
-	// despu? de la lectura exitosa del escalar.
-	//
-
-	if (iss.bad()) {
-		cerr << "cannot read integer factor."
-			 << endl;
-		std::abort();
-	}
-	int num;
-	iss>>num;
-	BlockChainManager::setUserDefinedDifficulty(num);
-}
-
-static void
-opt_help(string const &arg)
-{
-	cout << "cmdline [-i file] [-o file] [-d dificulty ]" << endl;
-	cout << "La dificultad debe ser un valor entero mayor a 0 " << endl;
-	cout << "El formato de entrada debe ser el presentado en el"
-			"enunciado y no debe terminar con una nueva linea" << endl;
-	std::abort();
-}
-//
-//
-//static bool
-//openOutputFile(){
-//
-//
-//	if(outputFileName == "-")
-//	{
-//		oss = & cout;
-//	}
-//	else{
-//		ofs.open(outputFileName.c_str(), ios::out);
-//		oss = &ofs;
-//
-//	}
-//	// Verificamos que el stream este OK.
-//	//
-//	if (!oss->good()) {
-//		cerr << "cannot open "
-//		<< outputFileName
-//		<< "."
-//		<< endl;
-//
-//		ifs.close();
-//		return false;
-//
-//	}
-//
-//	return true;
-//
-//}

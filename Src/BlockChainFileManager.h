@@ -15,6 +15,7 @@
 #include "BlockChainBuilder.h"
 #include "BlockChainDataTypes.h"
 #include "TiposHash.h"
+#include "Queue.h"
 
 class BlockChainFileManager {
 private:
@@ -28,12 +29,18 @@ private:
 	int  getTxIndexFromStream(std::istream *iss,char delim = '\n');
 	std::string getHashFromStream(std::istream *iss,char delim = '\n');
 	float getBTCValueFromStream(std::istream *iss,char delim = '\n');
+
+	bool isOnValidCommandTable(std::string command,Commands & commandType);
+	unsigned int getNumberOfValidFunctions( void );
+	void safeValuePayload(payload_t & payload);
 public:
 	BlockChainFileManager();
 	~BlockChainFileManager();
 	status_t validate(std::istream * iss);
 	status_t parse(std::istream * iss,raw_t * &pRawData);
 	status_t convert(std::ostream * oss,const lista <Block *> & BlockChain);
+
+	status_t translateCommands(std::istream * iss, payload_t & payload);
 };
 
 #endif /* BLOCKCHAINFILEMANAGER_H_ */
