@@ -14,7 +14,7 @@
 
 // Constructores
 Block::Block()
-	: pre_block(""), txns_hash(""), bits(3  /* El valor por default establecido en el TP0 */), nonce(""), eBlock(StatusBlock::BlockSinDatos), txn_count(0), CurTran(NULL)
+	: pre_block(""), txns_hash(""), bits(3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos), txn_count(0), CurTran(NULL)
 	// ver el #define DIFFICULTY_DEFAULT_VALUE 3
 {
 	//this->ListaTran = NULL;
@@ -24,7 +24,7 @@ Block::Block()
 }
 
 Block::Block( const raw_t & raw )
-	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(""), eBlock(StatusBlock::BlockSinDatos)
+	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos)
 {
 	/* Básicamente:
 			se instancia un objeto Transaction, se asume que se reciben datos consistentes.
@@ -60,17 +60,16 @@ Block::~Block() {
 		   que necesito para calcular el Hash.
 		*/
 		it = this->ListaTran.primero();
-		do {
+		while ( ! it.extremo() ) {
 			delete it.dato();
 			it.avanzar();
-		} while ( ! it.extremo() );
+		}
 	}
 }
 
 // Getters
-int Block::getCantTransacciones() {
-	// ToDo
-	return 0;
+size_t Block::gettxn_count() {
+	return this->txn_count;
 }
 
 std::string Block::getpre_block() {
@@ -86,7 +85,7 @@ unsigned int Block::getbits() {
 }
 
 std::string Block::getnonce() {
-	return this->nonce;
+	return std::to_string( this->nonce );
 }
 
 std::string Block::getcadenaprehash() {
@@ -96,7 +95,6 @@ std::string Block::getcadenaprehash() {
 double Block::tiempominado() {
 	return this->seconds;
 }
-
 
 // Setters
 bool Block::setpre_block( std::string valor ) {
@@ -133,7 +131,7 @@ bool Block::settxns_hash( std::string valor ) {
 	return true;
 }
 
-bool Block::setbits( unsigned int valor ) {
+bool Block::setbits( size_t valor ) {
 	if ( !valor ) {
 		this->bits = 0;
 		// Hay que anotar, en un status ?, el error o disparar un throw
@@ -144,15 +142,8 @@ bool Block::setbits( unsigned int valor ) {
 	return true;
 }
 
-bool Block::setnonce( std::string valor ) {
-	if ( valor.empty() ) {
-		this->nonce = "";
-		// Hay que anotar, en un status ?, el error o disparar un throw
-	}
-	else {
-		/* No se valida nada, puede ser cualquier dato */
-		this->nonce = valor;
-	}
+bool Block::setnonce( size_t valor ) {
+	this->nonce = valor;
 	return true;
 }
 
@@ -197,6 +188,12 @@ std::string Block::RecalculoHash( void ) {
 	}
 	else this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 	return cadena;
+}
+
+std::string Block::Calculononce() {
+	size_t contador = 0;
+	this->nonce = contador++;
+	return std::to_string( this->nonce );
 }
 
 std::string Block::ArbolMerkle( void ) {

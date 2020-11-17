@@ -31,8 +31,8 @@ class Block {
 		// Atributos Seccion Header
 		std::string pre_block;
 		std::string txns_hash;	// <- retiene el hash256(hash256(cadena_prehash))
-		size_t bits;	/* La dificultad de bits */
-		std::string nonce;
+		size_t bits;			// La dificultad de bits
+		size_t nonce;
 		std::string hash_Merkle;
 		StatusBlock eBlock;
 		// Atributos Seccion Body;
@@ -56,22 +56,24 @@ class Block {
         // Destructor
         ~Block();
 		// Getters
-        int getCantTransacciones();
+		size_t gettxn_count();
 		std::string getpre_block();
 		std::string gettxns_hash();
 		unsigned int getbits();
 		std::string getnonce();
 		std::string getcadenaprehash();
 		std::string gethash_Merkle();
-		double tiempominado();
 		// Setters
 		bool setpre_block( std::string valor );
 		bool settxns_hash( std::string valor );		// Debo dejar el método de asignación. El cálculo Hash es externo al objeto block, no está encapsulado.
-		bool setbits( unsigned int valor );
-		bool setnonce( std::string valor );			// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
+		bool setbits( size_t valor );
+		bool setnonce( size_t valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
 		bool setseconds( double segundos );
-		bool settransaction( const raw_t & raw ) ;  // TODO
+		bool settransaction( const raw_t & raw );
 		StatusBlock EstatusBlock();
+		// Métodos públicos
+		double tiempominado();
+		std::string Calculononce();
 
 };
 

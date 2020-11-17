@@ -12,6 +12,10 @@
 #include "TransactionOutput.h"
 #include "BlockChainDataTypes.h"
 #include "lista.h"
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cstddef> // Para NULL
 
 enum class statusTransaction { stOk, stSinChequear, stSF };
 
@@ -21,7 +25,9 @@ private:
 	lista <TransactionInput *> ListaTranIn;      // Lista de inputs
 	int n_tx_out; 								 // Indica cantidad total de outputs
 	lista <TransactionOutput *> ListaTranOut;    // Lista de outputs
+	std::string float_to_string_w_precision(float value, int p);
 	statusTransaction Estatus;
+
 public:
 	//---Constructores---//
 	Transaction();
