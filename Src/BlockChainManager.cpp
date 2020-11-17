@@ -50,6 +50,11 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 					std::cout<< "Done"<< std::endl;
 				}
 				break;
+			case Commands::load:
+				{
+					std::cout<< "Done"<< std::endl;
+				}
+				break;
 			case Commands::save:
 				{
 					std::cout<< "Done"<< std::endl;
