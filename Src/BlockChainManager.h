@@ -12,6 +12,7 @@
 #include "BlockChainStatus.h"
 #include "BlockChainFileManager.h"
 #include "BlockChainBuilder.h"
+#include "BlockChainBookkeeper.h"
 
 class BlockChainManager {
 	static status_t state;

@@ -1,2 +1,3 @@
 init ramiro 10000 4
 transfer ramiro alan 100 sergio 100 lucio 8
+load output.txt

@@ -23,68 +23,179 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 			case Commands::init:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string usr	 = payload.user;
+					// float value 		 = payload.value;
+					// unsigned int bits = payload.bits;
+					//--------------------------------------------------------------//
+
+					//BlockChainBookkeeper bookkeeper;
+					//BlockChainBuilder builder(payload.bits);
+
+					// Builder crea un bloque origen con los datos suministrados en payload
+					// BlockChainManager::proccesStatus( builder.createOriginBlock(payload) );
+					// std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+
+					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
+					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook(builder.getBlockChainPointer());
+
 				}
 				break;
 			case Commands::transfer:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// raw_t * pRaw = payload.pRaw;
+
+					// OBSERVACION IMPORTANTE:
+					// El raw_t que se tiene por comandos no esta completo puesto que no se sabe
+					// el valor del outpoint (no se da esos datos por comando).
+					// El Bookkeeper debe completar los datos del outpoint del history book de lo
+					// contrario devolver error puesto que no existe el usuario
+					//--------------------------------------------------------------//
+
+					//BlockChainBookkeeper bookkeeper;
+
+					// Bookkeeper intenta completar el raw_t, funciona como validacion puesto que
+					// si no lo logra completar, el usario no existe en la historia
+					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload) )
+
+					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
+					// BlockChainManager::proccesStatus( bookkeeper.saveInMempool(payload) );
+
 				}
 			break;
 			case Commands::mine:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// unsigned int bits = payload.bits;
+					//--------------------------------------------------------------//
+					// BlockChainBookkeeper bookkeeper;
+					// BlockChainBuilder builder(payload.bits);
+
+					// Builder le pide la mempool a bookkeeper y la guarda en su raw
+					// BlockChainManager::proccesStatus( builder.setRawData( bookkeeper.getMempool() ) )
+
+					// Builder mina el bloque como lo hacia anteriormente
+					// BlockChainManager::proccesStatus( builder.createBlockChain() );
+					// std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+
+					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
+					//BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook(builder.getBlockChainPointer());
 				}
 				break;
 			case Commands::block:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string id = payload.id;
+					//--------------------------------------------------------------//
+					// BlockChainBookkeeper bookkeeper;
+
+					// Blockkeeper busca en su libro contable el bloque requerido.
+					// 'Block' es un tipo enumerativo interno de bookkeeper para
+					// buscar solo mirando los hash de bloques.
+					// BlockChainManager::proccesStatus( bookkeeper.searchInHistoryBook( 'Block', payload.id );
 				}
 				break;
 			case Commands::balance:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string usr = payload.usr;
+					//--------------------------------------------------------------//
+					// BlockChainBookkeeper bookkeeper;
+
+					// Blockkeeper busca en su libro lista de usuarios al usr correspondiente
+					// BlockChainManager::proccesStatus( bookkeeper.searchInUserList( payload.usr );
 				}
 				break;
 			case Commands::txn:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string id = payload.id;
+					//--------------------------------------------------------------//
+					// BlockChainBookkeeper bookkeeper;
+
+					// Blockkeeper busca en su libro contable la transaccion requerida.
+					// 'Transaction' es un tipo enumerativo interno de bookkeeper para
+					// buscar solo mirando los hash de Transaction.
+					// BlockChainManager::proccesStatus( bookkeeper.searchInMempool( 'Transaction', payload.id );
 				}
 				break;
 			case Commands::load:
 				{
 					std::cout<< "Done"<< std::endl;
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string filename = payload.filename;
+					//--------------------------------------------------------------//
+					// El filemanager ya esta intanciado antes.
+					// BlockChainBookkeeper bookkeeper;
+
+					// Filemanager abre el archivo pasado como argumento dentro del payload.
+					// BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
+
+						// ifs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+						// try {
+						//	ifs.open(arg.c_str(), ios::in); // c_str(): Returns a pointer to an array that contains a null-terminated
+															// sequence of characters (i.e., a C-string) representing
+															// the current value of the string object.
+						//}
+						//catch (std::system_error& e) {
+						//	std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
+
+					// Filemanager valida que la estructura de la blockchain este correctamente
+					// BlockChainManager::proccesStatus( filemanager.validate( payload.filename ) )
+
+					// Aca se me ocurre el laburo de 2 maneras, pero no estoy seguro.
+					// 1)  Hacer que filemanager aprenda el formato de lista<Bloques> y trabaje con ella
+					// y le pase la lista de bloques a bookkeeper y el la agrege en la historia. En el Tp0
+					// solo usaba lista de bloques para convertir, pero nunca habia tenido que leer lista
+					// de bloques
+					// o
+					// 2)  Instanciar a builder que ya aprendio a usar lista de bloques y que filemanager
+					// lo cargue con setters de builder y que luego bookkeeper toma la lista de bloques de builder
+
+					// Bookkeeper guarda en la historia
+					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( X.getBlockChainPointer());
+
+					// Filemanager cierra el archivo pasado como argumento dentro del payload.
+					// BlockChainManager::proccesStatus( filemanager.close( payload.filename ) )
 				}
 				break;
 			case Commands::save:
 				{
 					std::cout<< "Done"<< std::endl;
-				}
+					//--------------------------------------------------------------//
+					// Datos del payload que sirven en este caso.
+					// std::string filename = payload.filename;
+					//--------------------------------------------------------------//
+					// El filemanager ya esta intanciado antes.
+					// BlockChainBookkeeper bookkeeper;
+
+					// Filemanager abre el archivo pasado como argumento dentro del payload.
+					// BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
+
+					//std::cout<< "Begin Converting Block to File ..." << std::endl;
+					//BlockChainManager::proccesStatus( fileManager.convert(fileManager.oss, bookkeeper.getHistoryBook() );
+
+
+}
 				break;
 			default:
 				std::cout<< "Error Not Defined"<< std::endl;
 				break;
 		}
-
 	}
-
-//	BlockChainBuilder builder(BlockChainManager::getUserDefinedDifficulty());
-
-
-//	std::cout<< "Begin Validate ...";
-//	BlockChainManager::proccesStatus( fileManager.validate(iss) );
-//
-//	std::cout<< "Begin Parsing ..." ;
-//	BlockChainManager::proccesStatus( fileManager.parse(iss,builder.getRawPointer()) );
-//
-//	std::cout<< "Begin Creating Block ..." ;
-//	BlockChainManager::proccesStatus( builder.createBlockChain() );
-//
-//
-//	std::cout<< "Begin Converting Block to File ..." << std::endl;
-//	BlockChainManager::proccesStatus( fileManager.convert(oss,builder.getBlockChainPointer()) );
-//
-//	std::cout<< std::endl;
-//	std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
 }
 
 void BlockChainManager::proccesStatus(status_t status){
