@@ -39,6 +39,8 @@ public:
 	int getNumTransactionOut();
 	TransactionInput * getTransactionInput(int index);
 	TransactionOutput * getTransactionOutput(int index);
+	lista <TransactionInput *> getListaTransactionInput();
+	lista <TransactionOutput *> getTransactionOutput();
 	//---Setters---//
 	//---Otros---//
 	std::string getConcatenatedTransactions();

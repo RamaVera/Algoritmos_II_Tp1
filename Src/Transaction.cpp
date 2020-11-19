@@ -57,7 +57,6 @@ Transaction::Transaction( const raw_t & Raw ){
 	}
 }
 
-
 //Descripcion: Destruye elemento de Transaction
 //Precondicion: Si se envia una transaccion nula no es necesario que se realice accion
 //Postcondicion: Objeto destruido, memoria liberada, punteros a null y parametros a cero.
@@ -132,6 +131,14 @@ TransactionOutput * Transaction::getTransactionOutput(int index){
 	}
 }
 
+lista <TransactionInput *> Transaction::getListaTransactionInput() {
+	return this->ListaTranIn;
+}
+
+lista <TransactionOutput *> Transaction::getTransactionOutput() {
+	return this->ListaTranOut;
+}
+
 //Descripcion: Devuelve un string de los valores concatenados de la listas
 //para ser aplicado el hash correspondiente por fuera
 //Precondicion: Se considera todo precargado antes
@@ -171,7 +178,6 @@ std::string Transaction::getConcatenatedTransactions( void ){
       //return concatenation.str();
       return concatenation;
 }
-
 
 std::string Transaction::float_to_string_w_precision(float val, int p)
 {

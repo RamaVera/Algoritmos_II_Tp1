@@ -68,64 +68,63 @@ void Extracto::imprimirdetalle() {
 	}
 }
 
-bool Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta ) {
+lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta ) {
 	// TODO
 	if ( cuenta.empty() ) {
 		cuenta = this->addr;
 	}
 	std::string cuentaorigen = "";
-	bool resultado = false;
 	if ( ! AlgoChain.vacia() ) {
 		lista <Block *>::iterador it( AlgoChain );
 		it = AlgoChain.primero();
 		do {
 			// Se itera dentro de las transacciones
 			lista <Transaction *> trns;
-			Block * BlockAux;
-			BlockAux = it.dato();
+			// Block * BlockAux;
+			// BlockAux = it.dato();
 			trns = it.dato()->getListaTran();
 			lista <Transaction *>::iterador itTrans( trns );
+			itTrans = trns.primero();
 			if ( ! trns.vacia() ) {
 				do {
-					// Se itera dentro de In
-					lista <TransactionInput *> int;
-					int = itTrans.dato();
-					lista <TransactionInput *>::iterador itIn( int );
-					if ( ! int.vacia() ) {
+					Transaction * Trans = itTrans.dato();
+					lista <TransactionInput *> intputs = Trans->getListaTransactionInput();
+					lista <TransactionInput *>::iterador itIn( intputs );
+					if ( ! intputs.vacia() ) {
 						// Si hay entradas a addr se cargan en lista->detalle como crédito
-						if ( itIn->dato()->getAddr() ==  cuenta ) {
+						if ( itIn.dato()->getAddr() == cuenta ) {
 							// Se carga en detalle
 							// Cargar el lista detalle
 							cuentaorigen = cuenta;
 						}
 					}
 					// Se itera dentro de Outs
-					lista <TransactionOutput *> out;
-					lista <TransactionOutput *>::iterador itOut( out );
-					if ( ! out.vacia() ) {
+					lista <TransactionOutput *> outputs = Trans->getTransactionOutput();
+					lista <TransactionOutput *>::iterador itOut( outputs );
+					if ( ! outputs.vacia() ) {
 						// Si hay salidas desde addr se cargan en lista->detalle como débito
 						do {
 							if ( ! cuentaorigen.empty() ) {
-								if ( itOut->dato()->getAddr() ==  cuenta ) {
+								if ( itOut.dato()->getAddr() ==  cuenta ) {
 									// Se carga en detalle el crédito
-									movimientos_t * salida = new movimientos_t;
+									movimientos_t * entrada = new movimientos_t;
 									// Cargar datos
-									movimientos_t->txns_hash = AlgoChain->gettxns_hash();
-									movimientos_t->addr = itOut->dato()->getAddr();
-									movimientos_t->value = itOut->dato()->getValue();
-									this->detalle.insertar( movimientos_t );
-									this->saldo += movimientos_t->value;
+									entrada->txns_hash = it.dato()->gettxns_hash();
+									entrada->addr = itOut.dato()->getAddr();
+									entrada->value = itOut.dato()->getValue();
+									this->detalle.insertar( entrada );
+									this->saldo += entrada->value;
 								}
 							}
 							else {
 								// Son todas salidas de débitos en la cuenta
 								movimientos_t * salida = new movimientos_t;
 								// Cargar datos
-								movimientos_t->txns_hash = AlgoChain->gettxns_hash();
-								movimientos_t->addr = itOut->dato()->getAddr();
-								movimientos_t->value = - itOut->dato()->getValue();
-								this->detalle.insertar( movimientos_t );
-								this->saldo -= movimientos_t->value;
+								salida->txns_hash = it.dato()->gettxns_hash();
+								salida->addr = itOut.dato()->getAddr();
+								salida->value = - itOut.dato()->getValue();
+								this->detalle.insertar( salida );
+								this->saldo -= salida->value;
 							}
 							itOut.avanzar();
 						} while ( ! itOut.extremo() );
@@ -136,5 +135,5 @@ bool Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta )
 			it.avanzar();
 		} while ( ! it.extremo() );
 	}
-	return resultado;
+	return this->detalle;
 }
