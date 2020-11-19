@@ -96,6 +96,10 @@ double Block::tiempominado() {
 	return this->seconds;
 }
 
+lista <Transaction *> Block::getListaTran() {
+	return this->ListaTran;
+}
+
 // Setters
 bool Block::setpre_block( std::string valor ) {
 	if ( valor.empty() ) {

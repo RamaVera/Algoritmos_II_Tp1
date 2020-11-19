@@ -68,7 +68,7 @@ Transaction::~Transaction(){
 		do {
 			delete it.dato();
 			it.avanzar();
-		}while ( ! it.extremo() );
+		} while ( ! it.extremo() );
 	}
 	if ( ! this->ListaTranOut.vacia() ) {
 		lista <TransactionOutput *>::iterador it(ListaTranOut);
@@ -76,7 +76,7 @@ Transaction::~Transaction(){
 		do {
 			delete it.dato();
 			it.avanzar();
-		}while ( ! it.extremo() );
+		} while ( ! it.extremo() );
 	}
 }
 
@@ -106,7 +106,7 @@ TransactionInput * Transaction::getTransactionInput(int index){
 	else{
 		lista <TransactionInput *>::iterador it(this->ListaTranIn);
 		int counter = 0;
-		while(counter != index){
+		while (counter != index){
 			it.avanzar();
 			counter++;
 		}
@@ -144,7 +144,7 @@ std::string Transaction::getConcatenatedTransactions( void ){
 // 	   concatenation << this->n_tx_in << '\n';
        concatenation += std::to_string( this->n_tx_in );
 	   concatenation += '\n';
-       for(itIn = ListaTranIn.primero(); !itIn.extremo() ; itIn.avanzar()){
+       for (itIn = ListaTranIn.primero(); !itIn.extremo() ; itIn.avanzar()) {
 //               concatenation<< itIn.dato()->getTxId() <<' ';
 //               concatenation<< itIn.dato()->getIdx()  <<' ';
 //               concatenation<< itIn.dato()->getAddr() <<'\n';
@@ -159,7 +159,7 @@ std::string Transaction::getConcatenatedTransactions( void ){
       concatenation += std::to_string( this->n_tx_out );
       concatenation += '\n';
 // 	  concatenation << this->n_tx_out << '\n';
-      for(itOut = ListaTranOut.primero(); !itOut.extremo() ; itOut.avanzar()){
+      for (itOut = ListaTranOut.primero(); !itOut.extremo() ; itOut.avanzar()) {
 //               concatenation<< itOut.dato()->getValue() <<' ';
 //               concatenation<< itOut.dato()->getAddr()  <<'\n';
     	  	  	 concatenation += float_to_string_w_precision( itOut.dato()->getValue() , 1 );

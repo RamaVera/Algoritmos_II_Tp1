@@ -46,6 +46,8 @@ class Block {
 		std::string RecalculoHash( void );
 		std::string ArbolMerkle( void );
 
+		friend class Extracto; 
+
 	public:
     // Métodos
         // Constructores
@@ -63,6 +65,7 @@ class Block {
 		std::string getnonce();
 		std::string getcadenaprehash();
 		std::string gethash_Merkle();
+		lista <Transaction *> getListaTran();
 		// Setters
 		bool setpre_block( std::string valor );
 		bool settxns_hash( std::string valor );		// Debo dejar el método de asignación. El cálculo Hash es externo al objeto block, no está encapsulado.

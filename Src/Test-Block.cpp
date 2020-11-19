@@ -80,9 +80,10 @@ int main() {
 				resultado = BlocklActual->getpre_block() + '\n';          // <- getter que extrae la clave doble hash del Block previo.
 				resultado += BlocklActual->getcadenaprehash() + '\n'; 	  // <- getter que extrae el string en la Clase Transaction.
 				resultado += BlocklActual->getbits() + '\n'; 
-				BlocklActual->setnonce( BlockChainBuilder::Calculononce() );	// Cada llamada genera un nonce <>, se guarda en Block
-				resultado += BlocklActual->getnonce() + '\n';
-				nonce = BlockChainBuilder::Calculononce();	// Cada llamada genera un nonce <>
+				// BlocklActual->setnonce( BlocklActual->Calculononce() );	// Cada llamada genera un nonce <>, se guarda en Block
+				// resultado += BlocklActual->getnonce() + '\n';
+				nonce = BlocklActual->Calculononce() + '\n';
+				// nonce = BlockChainBuilder::Calculononce();	// Cada llamada genera un nonce <>
 				if ( resultado.length() > 0 || nonce.length() ) {
 					int test;
 					hash_resultado = sha256( resultado + nonce );

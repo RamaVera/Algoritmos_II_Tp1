@@ -12,10 +12,10 @@
 
 class TransactionInput {
 private:
-	struct outpoint{
+	struct outpoint {
 	   std::string tx_id;
 	   int	idx;
-	}outpoint;
+	} outpoint;
 	std::string addr;
 public:
 	//---Constructores---//
