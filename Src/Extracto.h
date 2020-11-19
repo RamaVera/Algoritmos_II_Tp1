@@ -50,8 +50,9 @@ public:
 	//---Otros---//
 	void imprimirdetalle();
 	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta );
-	TransactionOutPut_t obtenerOutput( TransactionInput_t TI );
-	Block obtenerBlock( std::string txns_hash );
+	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
+	Block obtenerBlock( lista <Block *> & AlgoChain, std::string txns_hash );
+
 };
 
 #endif /* EXTRACTO_H_ */

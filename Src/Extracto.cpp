@@ -137,3 +137,18 @@ lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, s
 	}
 	return this->detalle;
 }
+
+TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI ) {
+	TransactionOutPut_t TO;
+	if ( TI.txns_hash.empty()  ) return TO;
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+		do {
+			// Se debe cortar la iteración al llegar al Block
+			if  ( it.dato()->gettxns_hash() == TI.txns_hash ) break;
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return TO;
+}
