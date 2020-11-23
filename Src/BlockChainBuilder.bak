@@ -30,8 +30,8 @@ BlockChainBuilder::~BlockChainBuilder() {
 
 }
 
-size_t BlockChainBuilder::CheckHexa( const std::string value ) {
-	size_t i;
+int BlockChainBuilder::CheckHexa( string value ) {
+	unsigned int i;
 	for (i = 0; i != value.length(); ++i) {
 		if ( ! isxdigit ( value[i] ) ) break;
 	}
@@ -39,7 +39,7 @@ size_t BlockChainBuilder::CheckHexa( const std::string value ) {
 	return 0;
 }
 
-bool BlockChainBuilder::CheckHash( const std::string valor, TiposHash Tipo ) {
+bool BlockChainBuilder::CheckHash( std::string valor, TiposHash Tipo ) {
 	if ( valor.empty() ) {
 		return false;
 	}
@@ -52,7 +52,7 @@ bool BlockChainBuilder::CheckHash( const std::string valor, TiposHash Tipo ) {
 		return false;
 	}
 	else {
-		size_t i = BlockChainBuilder::CheckHexa( valor );
+		int i = CheckHexa( valor );
 		if ( i > 0 ) {
 			// Anotar la posición y valor del dígito erróneo
 			return false;
@@ -198,15 +198,4 @@ int BlockChainBuilder::CheckDificultadOk( const std::string & cadenaHexa, const 
 	d = dificultad( cadenaHexa, dif);
 	if ( d < 0 ) return -1;
 	return (size_t) d >= dif ? 1 : 0;
-}
-
-
-status_t BlockChainBuilder::createBlockChain( void ){
-	Block * newBlock = new Block(*pRawData);
-	newBlock->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" );
-	newBlock->settxns_hash(sha256(sha256(newBlock->getcadenaprehash())));
-	newBlock->setbits(this->bits);
-	this->ListaBlocks.insertar(newBlock);
-	this->Minando();
-	return STATUS_OK;
 }
