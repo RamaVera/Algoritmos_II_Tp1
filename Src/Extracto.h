@@ -19,13 +19,14 @@ typedef struct {
 
 typedef struct {
 	std::string txns_hash;						// Id del BlockChain Actual
-	TransactionInput TI;						// Transaction Input a buscar el outPut
+	TransactionInput * TransIn;					// Transaction Input a buscar el OutPut
 } TransactionInput_t;
 
 typedef struct {
-	std::string txns_hash;						// Id del BlockChain del outPut
-	size_t to_index;						    // ID del Transaction Output en el BlockChain
-	TransactionOutput TO;						// Transaction Output
+	std::string txns_hash;						// Id del BlockChain del OutPut
+	std::string addr;							// Id Cuenta Origen
+	int to_index;						    	// ID del Transaction OutPut en el BlockChain
+	TransactionOutput * TO;						// Transaction OutPut
 } TransactionOutPut_t;
 
 class Extracto {
@@ -48,7 +49,7 @@ public:
 	//---Setters---//
 	bool setaddr( std::string valor );
 	//---Otros---//
-	void imprimirdetalle();
+	void imprimirdetalle( const lista <movimientos_t *> );
 	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta );
 	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 	Block obtenerBlock( lista <Block *> & AlgoChain, std::string txns_hash );
