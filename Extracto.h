@@ -49,7 +49,7 @@ public:
 	//---Setters---//
 	bool setaddr( std::string valor );
 	//---Otros---//
-	void imprimirdetalle();
+	void imprimirdetalle( const lista <movimientos_t *> );
 	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta );
 	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 	Block obtenerBlock( lista <Block *> & AlgoChain, std::string txns_hash );

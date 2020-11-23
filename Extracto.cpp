@@ -55,7 +55,7 @@ bool Extracto::setaddr( std::string valor ) {
 
 //---Otros---//
 
-void Extracto::imprimirdetalle() {
+void Extracto::imprimirdetalle( const lista <movimientos_t *> ) {
 	// TODO
 	// Imprimir cabecera siempre.
 	// Movimientos
