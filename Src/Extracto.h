@@ -9,6 +9,7 @@
 #include "TransactionInput.h"
 #include "TransactionOutput.h"
 #include "BlockChainDataTypes.h"
+#include "BlockChainBuilder.h"
 #include "lista.h"
 
 typedef struct {
@@ -52,8 +53,12 @@ public:
 	void imprimirdetalle( const lista <movimientos_t *> );
 	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta );
 	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
-	Block obtenerBlock( lista <Block *> & AlgoChain, std::string txns_hash );
+	lista <movimientos_t *> obtenerdetalle( std::string cuenta, lista <Block *> & AlgoChain );
 
+	// Para usar con la línea de comandos block <id>
+	Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_hash, std::string & errores );
+	// Para usar con la lÍnea de comandos txn <id>
+	TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, const std::string tx_id, std::string & errores );
 };
 
 #endif /* EXTRACTO_H_ */

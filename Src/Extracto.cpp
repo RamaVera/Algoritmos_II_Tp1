@@ -175,3 +175,88 @@ TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput
 	}
 	return TO;
 }
+
+Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_hash, std::string & errores ) {
+	Block * B = NULL;
+	std::string b_prev = "";
+
+	for ( size_t i = 0; i < 256; i++) { b_prev += '0'; }  // Bloque cero
+	// Checks
+	if ( txns_hash.empty()  ) {
+		errores = "Hash del Bloque a buscar vacío" + '\n';
+		return B;
+	}
+	else if ( ! BlockChainBuilder::CheckHash( txns_hash, TiposHash::clavehash256 ) ) { 
+		errores = "Hash del Bloque con longitud errónea" + '\n';
+		return B;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( txns_hash ) ) {
+		errores = "Hash del Bloque con caracteres erróneos" + '\n';
+		return B;
+	}
+	// End Checks
+
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+			errores = "Mal definido el Bloque Zero" + '\n';
+		}
+		do {
+			B = it.dato();
+			if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+				errores += "no coincide el bloque previo en " + B->gettxns_hash() + '\n';
+				b_prev = it.dato()->getpre_block();
+			}
+			if ( ! ( B->gettxns_hash() == txns_hash ) ) break;
+			it.avanzar();
+		} while ( ! it.extremo() );
+		if ( it.extremo() ) errores += "Bloque no encontrado" + '\n';
+	else errores = "No hay Bloques en AlgoChain" + '\n';
+	}
+	return B;
+}
+
+TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, const std::string tx_id, std::string &  errores ) {
+	Block * B = NULL;
+	std::string b_prev = "";
+	TransactionInput * TI = NULL;
+
+	// Checks
+	if ( tx_id.empty()  ) {
+		errores = "Hash del Bloque a buscar vacío" + '\n';
+		return TI;
+	}
+	else if ( ! BlockChainBuilder::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
+		errores = "Hash del Bloque con longitud errónea" + '\n';
+		return TI;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( tx_id ) ) {
+		errores = "Hash del Bloque con caracteres erróneos" + '\n';
+		return TI;
+	}
+	// End Checks
+	
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+			errores = "Mal definido el Bloque Zero" + '\n';
+		}
+		do {
+			B = it.dato();
+			if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+				errores += "no coincide el bloque previo en " + B->gettxns_hash() + '\n';
+				b_prev = it.dato()->getpre_block();
+			}
+			// Debo abrir un segundo bloque de iteraciones soble la lista de TI
+			
+			it.avanzar();
+		} while ( ! it.extremo() );
+		if ( it.extremo() ) errores += "Bloque no encontrado" + '\n';
+	else errores = "No hay Bloques en AlgoChain" + '\n';
+	}
+
+	return TI;
+	
+}
