@@ -7,15 +7,8 @@
 
 #include<string>
 
+#include "Extracto.h"
 #include "lista.h"
-
-typedef struct {
-	std::string addr;							// Id Cuenta, formato SHA256
-	std::string alias;							// Id Cuenta Alias
-	size_t numerocuenta;						// Id Número Cuenta, autonumérico?
-	float saldo;								// Saldo
-	float pendiente;							// Pendiente en MemPool -> + o -, si es - abs(pendiente) <= saldo
-} cuentas_t;
 
 class Cuentas {
 private:
@@ -33,10 +26,13 @@ public:
 	std::string getalias( const std::string addr );
 	size_t getnumerocuenta( const std::string addr );
 	size_t getnumerocuenta( const std::string addr, const std::string alias = "" );
+	const cuentas_t * getdetallecuenta( const std::string addr );
+
 	//---Setters---//
 	bool setalias( const std::string addr, const std::string alias );
 	bool setsaldo( const std::string addr, const float monto );
 	bool setpendiente( const std::string addr, const float monto );
+
 	//---Otros---//
 	bool addcuenta( const std::string addr, const std::string alias = "", const float monto = 0 );
 	bool addcuenta( const std::string addr, const std::string alias = "" );

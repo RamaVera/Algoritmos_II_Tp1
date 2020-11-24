@@ -55,23 +55,23 @@ bool Extracto::setaddr( std::string valor ) {
 
 //---Otros---//
 
-void Extracto::imprimirdetalle( const lista <movimientos_t *> ) {
+void Extracto::imprimirdetalle( const cuentas_t * cuenta ) {
 	// TODO
 	// Imprimir cabecera siempre.
 	// Movimientos
-	if ( ! this->detalle.vacia() ) {
-		lista <movimientos_t *>::iterador it( detalle );
-		it = this->detalle.primero();
+	if ( ! cuenta->detalle.vacia() ) {
+		lista <movimientos_t *>::iterador it( cuenta->detalle );
+		it = cuenta->detalle.primero();
 		do {
 			it.avanzar();
 		} while ( ! it.extremo() );
 	}
 }
 
-lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta ) {
+lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string addr ) {
 	// TODO
-	if ( cuenta.empty() ) {
-		cuenta = this->addr;
+	if ( addr.empty() ) {
+		addr = this->addr;
 	}
 	std::string cuentaorigen = "";
 	if ( ! AlgoChain.vacia() ) {
@@ -90,10 +90,10 @@ lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, s
 					lista <TransactionInput *>::iterador itIn( intputs );
 					if ( ! intputs.vacia() ) {
 						// Si hay entradas a addr se cargan en lista->detalle como crédito
-						if ( itIn.dato()->getAddr() == cuenta ) {
+						if ( itIn.dato()->getAddr() == addr ) {
 							// Se carga en detalle
 							// Cargar el lista detalle
-							cuentaorigen = cuenta;
+							cuentaorigen = addr;
 						}
 					}
 					// Se itera dentro de Outs
@@ -103,7 +103,7 @@ lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, s
 						// Si hay salidas desde addr se cargan en lista->detalle como débito
 						do {
 							if ( ! cuentaorigen.empty() ) {
-								if ( itOut.dato()->getAddr() ==  cuenta ) {
+								if ( itOut.dato()->getAddr() ==  addr ) {
 									// Se carga en detalle el crédito
 									movimientos_t * entrada = new movimientos_t;
 									// Cargar datos
@@ -115,7 +115,7 @@ lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, s
 								}
 							}
 							else {
-								// Son todas salidas de débitos en la cuenta
+								// Son todas salidas de débitos en la addr
 								movimientos_t * salida = new movimientos_t;
 								// Cargar datos
 								salida->txns_hash = it.dato()->gettxns_hash();

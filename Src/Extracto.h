@@ -30,6 +30,15 @@ typedef struct {
 	TransactionOutput * TO;						// Transaction OutPut
 } TransactionOutPut_t;
 
+typedef struct {
+	std::string addr;							// Id Cuenta, formato SHA256
+	std::string alias;							// Id Cuenta Alias
+	size_t numerocuenta;						// Id Número Cuenta, autonumérico?
+	float saldo;								// Saldo
+	float pendiente;							// Pendiente en MemPool -> + o -, si es - abs(pendiente) <= saldo
+	lista <movimientos_t *> detalle;			// Extracto de la cuenta
+} cuentas_t;
+
 class Extracto {
 private:
 	std::string addr;							// Id Cuenta
@@ -50,8 +59,8 @@ public:
 	//---Setters---//
 	bool setaddr( std::string valor );
 	//---Otros---//
-	void imprimirdetalle( const lista <movimientos_t *> );
-	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string cuenta );
+	static void imprimirdetalle( const cuentas_t * cuenta );
+	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string addr );
 	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 	lista <movimientos_t *> obtenerdetalle( std::string cuenta, lista <Block *> & AlgoChain );
 
