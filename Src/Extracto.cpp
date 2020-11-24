@@ -249,14 +249,36 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 				errores += "no coincide el bloque previo en " + B->gettxns_hash() + '\n';
 				b_prev = it.dato()->getpre_block();
 			}
-			// Debo abrir un segundo bloque de iteraciones soble la lista de TI
-			
+			// Debo abrir un segundo bloque de iteraciones sobre la lista de TI
+			lista <Transaction *> trns;
+			trns = it.dato()->getListaTran();
+			lista <Transaction *>::iterador itTrans( trns );
+			// La lista a iterar es la de TransactionInput
+			itTrans = trns.primero();
+			if ( ! trns.vacia() ) {
+				do {
+					// De las dos listas, itero las de TI
+					lista <TransactionInput *> tInput;
+					tInput = itTrans.dato()->getListaTransactionInput();
+					lista <TransactionInput *>::iterador itTransInput( tInput );
+					itTransInput = tInput.primero();
+					if ( ! tInput.vacia() ) {
+						do {
+							if ( itTransInput.dato()->getTxId() == tx_id ) {
+								TI->setTxId( itTransInput.dato()->getTxId() );
+								TI->setIdx( itTransInput.dato()->getIdx() );
+								TI->setAddr( itTransInput.dato()->getAddr() );
+								break;
+							}
+							itTransInput.avanzar();
+						}  while ( ! itTransInput.extremo() );
+					}
+				} while ( ! itTrans.extremo() );
+			} 
 			it.avanzar();
 		} while ( ! it.extremo() );
 		if ( it.extremo() ) errores += "Bloque no encontrado" + '\n';
-	else errores = "No hay Bloques en AlgoChain" + '\n';
+		else errores = "No hay Bloques en AlgoChain" + '\n';
 	}
-
 	return TI;
-	
 }
