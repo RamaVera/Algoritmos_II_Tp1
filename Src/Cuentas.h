@@ -26,7 +26,7 @@ public:
 	float getpendiente( const std::string addr );
 	std::string getalias( const std::string addr );
 	size_t getnumerocuenta( const std::string addr );
-	size_t getnumerocuenta( const std::string addr, const std::string alias = "" );
+	size_t getnumerocuenta( const std::string addr, const std::string alias );
 	const cuentas_t * getdetallecuenta( const std::string addr );
 
 	//---Setters---//
