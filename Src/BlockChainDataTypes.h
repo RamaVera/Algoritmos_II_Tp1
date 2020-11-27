@@ -8,6 +8,7 @@
 #ifndef BLOCKCHAINDATATYPES_H_
 #define BLOCKCHAINDATATYPES_H_
 #include <string>
+#include <fstream>
 //Interfaz entre FileManager Hacia Builder
 typedef struct{
 	int inTx;
@@ -46,5 +47,21 @@ typedef struct{
 }payload_t;
 
 
+enum class FileTypes{
+	userCommandInputFiles,
+	userCommandResponseFiles,
+	loadBlockChainFile,
+	saveBlockChainFile,
+	indefinedFile,
+};
 
+struct file_t{
+		std::string fileID ;
+		std::fstream fs;
+		std::istream * iss;
+		std::ostream * oss;
+		std::ios_base::openmode mode;
+		FileTypes type;
+		bool isStandard;
+	};
 #endif /* BLOCKCHAINDATATYPES_H_ */

@@ -11,16 +11,20 @@
 #include <iostream>
 #include <sstream>
 #include <ostream>
+#include <fstream>
 #include "BlockChainStatus.h"
 #include "BlockChainBuilder.h"
 #include "BlockChainDataTypes.h"
 #include "TiposHash.h"
 #include "Queue.h"
+#include "lista.h"
+
 
 class BlockChainFileManager {
 private:
-	raw_t * pRawData;
 
+	raw_t * pRawData;
+	static lista<file_t *> fileList;
 	bool isEmpty(std::istream  * iss);
 	bool isTxIndexFromStream(std::istream *iss,char delim = '\n', int * pValue = NULL);
 	bool isHashFromStream(std::istream *iss,char delim = '\n', std::string * pString = NULL);
@@ -33,14 +37,21 @@ private:
 	bool isOnValidCommandTable(std::string command,Commands & commandType);
 	unsigned int getNumberOfValidFunctions( void );
 	void safeValuePayload(payload_t & payload);
+
+	bool getFilefromList(FileTypes type,std::fstream * & fs);
+	bool getIssfromList(FileTypes type,std::istream * & iss);
+	bool getOssfromList(FileTypes type,std::ostream * & oss);
+
+
 public:
 	BlockChainFileManager();
 	~BlockChainFileManager();
 	status_t validate(std::istream * iss);
 	status_t parse(std::istream * iss,raw_t * &pRawData);
 	status_t convert(std::ostream * oss,const lista <Block *> & BlockChain);
+	status_t translateCommands(payload_t & payload);
+	status_t addNewFile( file_t & newFile);
 
-	status_t translateCommands(std::istream * iss, payload_t & payload);
 };
 
 #endif /* BLOCKCHAINFILEMANAGER_H_ */

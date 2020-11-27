@@ -7,13 +7,16 @@
 
 #include "BlockChainFileManager.h"
 
+lista<file_t *> BlockChainFileManager::fileList;
+
 
 BlockChainFileManager::BlockChainFileManager() {
-	pRawData = NULL;
+	this->pRawData = NULL;
 }
 
+
 BlockChainFileManager::~BlockChainFileManager() {
-	if(this->pRawData != NULL){
+		if(this->pRawData != NULL){
 		pRawData->inTx = 0;
 		delete [] pRawData->IN_tableOfTxId; 		pRawData->IN_tableOfTxId    = NULL;
 		delete [] pRawData->IN_tableOfIndex;		pRawData->IN_tableOfIndex   = NULL;
@@ -221,7 +224,48 @@ status_t BlockChainFileManager::convert(std::ostream * iss, const lista <Block *
 }
 
 
-status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t & payload){
+bool BlockChainFileManager::getFilefromList(FileTypes type,std::fstream * & fs){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			fs = & (it.dato()->fs);
+			return true;
+		}
+		it.avanzar();
+	}
+	return false;
+}
+
+bool BlockChainFileManager::getIssfromList(FileTypes type,std::istream * & iss){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			iss = it.dato()->iss;
+			return true;
+		}
+		it.avanzar();
+	}
+	return false;
+}
+
+bool BlockChainFileManager::getOssfromList(FileTypes type,std::ostream * & oss){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			oss = it.dato()->oss;
+			return true;
+		}
+		it.avanzar();
+	}
+	return false;
+}
+
+status_t BlockChainFileManager::translateCommands( payload_t & payload){
+	std::istream * iss;
+	if( ! this->getIssfromList(FileTypes::userCommandInputFiles,iss)) return STATUS_BAD_READ_INPUT_FILE;
 	std::string command,line;
 	bool eof = false;
 	Commands commandType = Commands::commandNotDefined;
@@ -492,3 +536,56 @@ void BlockChainFileManager::safeValuePayload(payload_t & payload){
 	payload.value = 0;
 	payload.bits = 0;
 }
+
+
+status_t BlockChainFileManager::addNewFile( file_t & newFile ){
+
+	file_t * pFile = new file_t;
+	pFile->fileID = newFile.fileID;
+	pFile->mode = newFile.mode;
+	pFile->type = newFile.type;
+	pFile->isStandard = newFile.isStandard;
+
+
+
+	if( pFile->mode == ios::in){
+		if(pFile->isStandard ){
+			pFile->iss = & cin;
+		}
+		else{
+			pFile->fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+			try {
+				pFile->fs.open(pFile->fileID,pFile->mode);
+			}catch (std::system_error& e) {
+				std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
+				delete pFile;
+				return STATUS_BAD_READ_INPUT_FILE;
+			}
+			pFile->iss = & pFile->fs;
+
+		}
+		pFile->oss = NULL;
+	}
+	else if( pFile->mode == ios::out){
+		if(pFile->isStandard){
+			pFile->oss = & cout;
+		}
+		else{
+			pFile->fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+			try {
+				pFile->fs.open(pFile->fileID,pFile->mode);
+			}catch (std::system_error& e) {
+				std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
+				delete pFile;
+				return STATUS_BAD_READ_INPUT_FILE;
+			}
+			pFile->oss = & pFile->fs;
+		}
+		pFile->iss = NULL;
+	}
+
+
+	fileList.insertar(pFile);
+	return STATUS_OK;
+}
+

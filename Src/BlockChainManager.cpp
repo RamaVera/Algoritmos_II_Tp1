@@ -7,16 +7,23 @@
  
 #include "BlockChainManager.h"
 
-status_t BlockChainManager::state = STATUS_READING_COMMANDS;
+status_t BlockChainManager::state = STATUS_OK;
 
-void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
+// Descripcion: proccesBlockChain es un metodo que encapsula toda la logica interna de blockchain
+// en este metodo, dependiendo el comando de entrada, se instanciaran las clases BlockChainBuilder,
+// BlockChainBookkeeper y BlockChainFileManafer que realizaran la tarea seleccionada.
+// Precondicion: Toda logica relacionada a blockchain debe estar invocada desde esta zona
+// Postcondicion:
+void BlockChainManager::proccesBlockChain(){
+	BlockChainManager::proccesStatus(STATUS_READING_COMMANDS);
 	std::string command;
 	payload_t payload;
 	BlockChainFileManager fileManager;
 
+
 	while (BlockChainManager::state == STATUS_READING_COMMANDS  ){
 
-		BlockChainManager::proccesStatus( fileManager.translateCommands(iss,payload) );
+		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
 		std::cout<< "Begin Parse Command ...";
 		switch(payload.command)
 		{
@@ -180,14 +187,16 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 					// std::string filename = payload.filename;
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
-					// BlockChainBookkeeper bookkeeper;
+					 BlockChainBookkeeper bookkeeper;
 
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
-					// BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
+					 //BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
 
-					//std::cout<< "Begin Converting Block to File ..." << std::endl;
+					std::cout<< "Begin Converting Block to File ..." << std::endl;
 					//BlockChainManager::proccesStatus( fileManager.convert(fileManager.oss, bookkeeper.getHistoryBook() );
 
+					// Filemanager cierra el archivo pasado como argumento dentro del payload.
+					//BlockChainManager::proccesStatus( filemanager.close( payload.filename ) )
 
 }
 				break;
@@ -198,6 +207,11 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 	}
 }
 
+// Descripcion: proccesStatus es un metodo que analiza los estados de salida de las clases
+// BlockChainBuilder,BlockChainBookkeeper y BlockChainFileManafer que son las que realizan
+// las tareas. En base a dichos estados BlockChainManager decide el flujo del programa.
+// Precondicion:
+// Postcondicion:
 void BlockChainManager::proccesStatus(status_t status){
 	state = status;
 	switch(status){
@@ -275,10 +289,17 @@ void BlockChainManager::proccesStatus(status_t status){
 	}
 }
 
+//-----------------------------------------------------------------------------------//
 
 #define DIFFICULTY_DEFAULT_VALUE 3
 unsigned int BlockChainManager::userDefinedDifficulty = DIFFICULTY_DEFAULT_VALUE;
 
+
+// Descripcion: Metodo que se utilizo en la version 1.1.1 (Tp0) para cargar el valor de
+// dificultad (bits) desde la clase cmdline. En la version 2.1.1 (Tp1) ya no se vuelve a usar
+// Precondicion: Debe llegar un int para verificar el signo
+// Postcondicion: Debe cargarse un unsined_int en la variable estatica userDefinedDifficulty
+// con el valor de entrada
 void BlockChainManager::setUserDefinedDifficulty(int d){
 	if( d < 0 ){
 		std::cout << "Error de Formato: Dificultad debe ser mayor a cero " << std::endl;
@@ -288,7 +309,63 @@ void BlockChainManager::setUserDefinedDifficulty(int d){
 	userDefinedDifficulty = (unsigned int) d;
 }
 
-
+// Descripcion: Metodo que se utilizo en la version 1.1.1 (Tp0) devolver el valor de
+// userDefinedDifficulty. En la version 2.1.1 (Tp1) ya no se vuelve a usar
+// Precondicion: Debe haberse cargado userDefinedDifficulty previamente con el metodo setter
+// Postcondicion: Devuelve el valor de userDefinedDifficulty
 unsigned int BlockChainManager::getUserDefinedDifficulty( void ){
 	return userDefinedDifficulty;
+}
+
+//-----------------------------------------------------------------------------------//
+
+lista<file_t *> BlockChainManager::userFiles;
+// Descripcion: setUserFilename es un metodo utilizado en cmdline en la version 2.1.1
+// con el objetivo de cargar una lista dinamica de "archivos pasados como argumentos por
+// el usuario". Esta lista solo cargara algunas caracteristicas de lo pedido por el usuario
+// pero no se encargara de abrirlos ni operarlos.
+// Precondicion: La lista dinamica pedida por este metodo sera entregada a FileManager
+// quien la terminara de completar, por ende, se decidio que sea FileManager quien se
+// ocupe de cerrarla.
+// Postcondicion: Se carga una lista de file_t con los valores que el usuario paso como argumento
+void BlockChainManager::setUserFilename(ios_base::openmode mode, std::string filename, bool isStandard){
+	BlockChainFileManager fileManager;
+	//---Si es un archivo de entrada---//
+	if( mode == ios::in){
+		if(isStandard){
+			filename += " Input";
+			cout << "La direccion del archivo Origen es : Cin (Entrada Standard)" << endl;
+		}
+		else{
+			cout<<	"La direccion del archivo Origen es : "<< filename << endl;
+		}
+		file_t usrFile;
+		usrFile.fileID = filename;
+		usrFile.mode = mode;
+		usrFile.type = FileTypes::userCommandInputFiles;
+		usrFile.isStandard = isStandard;
+		//BlockChainManager::userFiles.insertar(usrFile);
+		BlockChainManager::proccesStatus( fileManager.addNewFile(usrFile) );
+	}else //---Si es un archivo de salida---//
+		if( mode == ios::out){
+		if(isStandard){
+			filename += " Output";
+			cout<< "La direccion del archivo Destino es: Cout (Salida Standard)" << endl;
+		}
+		else{
+			cout<< "La direccion del archivo Destino es : "<< filename <<endl;;
+		}
+		file_t usrFile;
+		usrFile.fileID = filename;
+		usrFile.mode = mode;
+		usrFile.type = FileTypes::userCommandResponseFiles;
+		usrFile.isStandard = isStandard;
+		//BlockChainManager::userFiles.insertar(usrFile);
+		//BlockChainManager::proccesStatus( BlockChainFileManager::addNewFile(mode,filename,isStandard,FileTypes::userCommandResponseFiles) );
+		BlockChainManager::proccesStatus( fileManager.addNewFile(usrFile) );
+	}
+}
+
+lista<file_t *> & BlockChainManager::getUserFilename(void){
+	return BlockChainManager::userFiles;
 }
