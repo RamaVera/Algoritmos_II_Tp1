@@ -276,6 +276,11 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 	//Detecto de la primer linea, solo el comando
 	if (std::getline(*iss,line).eof() )
 		eof = true;
+
+	//Compatibilidad de archivos de Windows
+	if(line.back() == '\r')
+		line.pop_back();
+
 	//Encuentro el primer delimitador de comando
 	size_t delim1 = line.find(' ');
 	if ( delim1 == std::string::npos) 							return STATUS_ERROR_COMMAND_PAYLOAD;
