@@ -56,19 +56,31 @@ bool Extracto::setaddr( std::string valor ) {
 //---Otros---//
 
 void Extracto::imprimirdetalle( const cuentas_t * cuenta ) {
+	float saldo = 0;
+	size_t movimientos = 0;
 	// TODO
 	// Imprimir cabecera siempre.
 	// Movimientos
+	cout << "--------------------------------------------------";
+	cout << "Hash Cuenta : " << cuenta->addr << '\n';
+	cout << "Alias Cuenta: " << cuenta->alias << '\n';
+	cout << "-------------------------------------------------------------------------------";
+	cout << "[Cuenta Origen]" << '\n';
+	cout << "[AlgoChain Id]" << '\n';
+	cout << "    Crédito             Débito             Saldo" << '\n';
 	if ( ! cuenta->detalle.vacia() ) {
 		lista <movimientos_t *>::iterador it( cuenta->detalle );
 		it = cuenta->detalle.primero();
 		do {
+			saldo += it.dato()->value;
+			movimientos++;
 			it.avanzar();
 		} while ( ! it.extremo() );
 	}
+	cout << "-------------------------------------------------------------------------------";
 }
 
-lista <movimientos_t *> Extracto::obtenerdetalle( lista <Block *> & AlgoChain, std::string addr ) {
+lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoChain, std::string addr ) {
 	// TODO
 	if ( addr.empty() ) {
 		addr = this->addr;
@@ -281,4 +293,32 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 		else errores = "No hay Bloques en AlgoChain" + '\n';
 	}
 	return TI;
+}
+
+static lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::string addr, std::string & errores ) {
+	movimientos_t * detalle = NULL;
+
+	// Checks
+	if ( addr.empty()  ) {
+		errores = "Hash del Dirección vacío" + '\n';
+		return detalle;
+	}
+	else if ( ! BlockChainBuilder::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
+		errores = "Hash de Dirección con longitud errónea" + '\n';
+		return detalle;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( tx_id ) ) {
+		errores = "Hash de Dirección con caracteres erróneos" + '\n';
+		return detalle;
+	}
+	// End Checks
+
+	/* 
+		Dada las características hay dos bucles.
+		1) Búsqueda en reversa hasta el primer Output de la cuenta.
+		2) Desde este punto tomar los Outputs acumulados.
+		// Para evitar la doble recorrida, se hace la pasada en reversa encolando las transacciones.
+	*/
+
+	return detalle;
 }

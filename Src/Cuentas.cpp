@@ -80,7 +80,33 @@ float Cuentas::getsaldo( const std::string addr ) {
 	return saldo;
 }
 
-const cuentas_t * Cuentas::getdetallecuenta( const std::string addr ) {
+float Cuentas::getpendiente( const std::string addr ) {
+	float pendiente = 0;
+	if ( addr.empty() ) { 
+		return pendiente;
+	}
+	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+		return pendiente;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
+		return pendiente;
+	}
+
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->addr == addr ) {
+				pendiente = it.dato()->pendiente;
+				break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return pendiente;
+}
+
+const cuentas_t * Cuentas::getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain ) {
 	cuentas_t * C = NULL;
 	if ( addr.empty() ) { 
 		return C;
@@ -97,12 +123,15 @@ const cuentas_t * Cuentas::getdetallecuenta( const std::string addr ) {
 		it = this->listadocuentas.primero();
 		do {
 			if ( it.dato()->addr == addr ) {
+				Extracto E(addr);
 				C->addr = addr;
 				C->alias = it.dato()->alias;;
 				C->saldo = it.dato()->saldo;
 				C->numerocuenta = it.dato()->numerocuenta;
 				C->pendiente = it.dato()->pendiente;		// No lo tengo
 				// lista <movimientos_t *> detalle;			// Extracto de la cuenta, necesito la AlgoChain
+				//lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoChain, std::string addr ) {
+				C->detalle = E.obtenerdetalle( AlgoChain, addr );
 				break;
 			}
 			it.avanzar();
@@ -160,6 +189,12 @@ bool Cuentas::setalias( const std::string addr, const std::string alias ) {
 
 	// Checks
 	if ( addr.empty() ) { return false; }
+	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+		return false;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
+		return false;
+	}
 
 	if ( ! this->listadocuentas.vacia() ) {
 		lista <cuentas_t *>::iterador it( listadocuentas );
@@ -167,6 +202,32 @@ bool Cuentas::setalias( const std::string addr, const std::string alias ) {
 		do {
 			if ( it.dato()->addr == addr ) {
 				it.dato()->alias = alias;
+				break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+		return ( ! it.extremo() );
+	}
+	else { return false; }
+}
+
+bool Cuentas::setpendiente( const std::string addr, const float monto ) {
+	// Checks
+	if ( addr.empty() ) { return false; }
+	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+		return false;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
+		return false;
+	}
+	if ( monto == 0 ) { return false; }
+
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->addr == addr ) {
+				it.dato()->pendiente = monto;
 				break;
 			}
 			it.avanzar();

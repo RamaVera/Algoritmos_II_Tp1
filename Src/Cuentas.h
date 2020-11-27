@@ -27,7 +27,7 @@ public:
 	std::string getalias( const std::string addr );
 	size_t getnumerocuenta( const std::string addr );
 	size_t getnumerocuenta( const std::string addr, const std::string alias );
-	const cuentas_t * getdetallecuenta( const std::string addr );
+	const cuentas_t * getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain );
 
 	//---Setters---//
 	bool setalias( const std::string addr, const std::string alias );

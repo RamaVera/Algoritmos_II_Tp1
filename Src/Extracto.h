@@ -14,6 +14,8 @@
 
 typedef struct {
 	std::string txns_hash;						// Id del BlockChain
+	std::string tx_id;							// Id del TransactionInput
+	int	idx;									// Ubicación en la lista de inputs
 	std::string addr;							// Id Cuenta Origen o Destino
 	float value;								// monto, débito < 0, crédito > 0
 } movimientos_t;
@@ -60,9 +62,10 @@ public:
 	bool setaddr( std::string valor );
 	//---Otros---//
 	static void imprimirdetalle( const cuentas_t * cuenta );
-	lista <movimientos_t *> obtenerdetalle( lista <Block *> & AlgoChain, std::string addr );
+	lista <movimientos_t *> obtenerdetalle( const lista <Block *> & AlgoChain, std::string addr );
 	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
-	lista <movimientos_t *> obtenerdetalle( std::string cuenta, lista <Block *> & AlgoChain );
+	lista <movimientos_t *> obtenerdetalle( std::string cuenta, const lista <Block *> & AlgoChain );
+	static lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::string addr, std::string & errores );
 
 	// Para usar con la línea de comandos block <id>
 	Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_hash, std::string & errores );
