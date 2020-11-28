@@ -63,8 +63,10 @@ public:
 	//---Otros---//
 	static void imprimirdetalle( const cuentas_t * cuenta );
 	lista <movimientos_t *> obtenerdetalle( const lista <Block *> & AlgoChain, std::string addr );
-	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 	lista <movimientos_t *> obtenerdetalle( std::string cuenta, const lista <Block *> & AlgoChain );
+	TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
+
+	//  TODO
 	static lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::string addr, std::string & errores );
 
 	// Para usar con la línea de comandos block <id>

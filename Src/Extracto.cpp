@@ -102,7 +102,7 @@ lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoCh
 					lista <TransactionInput *>::iterador itIn( intputs );
 					if ( ! intputs.vacia() ) {
 						// Si hay entradas a addr se cargan en lista->detalle como crédito
-						if ( itIn.dato()->getAddr() == addr ) {
+						if ( itIn.dato()->getAddr() != addr ) {
 							// Se carga en detalle
 							// Cargar el lista detalle
 							cuentaorigen = addr;
@@ -120,21 +120,33 @@ lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoCh
 									movimientos_t * entrada = new movimientos_t;
 									// Cargar datos
 									entrada->txns_hash = it.dato()->gettxns_hash();
-									entrada->addr = itOut.dato()->getAddr();
+									entrada->addr = cuentaorigen;
 									entrada->value = itOut.dato()->getValue();
 									this->detalle.insertar( entrada );
 									this->saldo += entrada->value;
 								}
 							}
-							else {
+							else if ( cuentaorigen ==  addr ) {
 								// Son todas salidas de débitos en la addr
-								movimientos_t * salida = new movimientos_t;
-								// Cargar datos
-								salida->txns_hash = it.dato()->gettxns_hash();
-								salida->addr = itOut.dato()->getAddr();
-								salida->value = - itOut.dato()->getValue();
-								this->detalle.insertar( salida );
-								this->saldo -= salida->value;
+								if ( itOut.dato()->getAddr() !=  addr ) {
+									movimientos_t * salida = new movimientos_t;
+									// Cargar datos
+									salida->txns_hash = it.dato()->gettxns_hash();
+									salida->addr = itOut.dato()->getAddr();
+									salida->value = - itOut.dato()->getValue();
+									this->detalle.insertar( salida );
+									this->saldo -= salida->value;
+								}
+								else {
+									// Debo anotar salida en - y entrada en +, es un movimiento de orden
+									movimientos_t * salida = new movimientos_t;
+									// Cargar datos
+									salida->txns_hash = it.dato()->gettxns_hash();
+									salida->addr = addr;
+									salida->value = - itOut.dato()->getValue();
+									this->detalle.insertar( salida );
+									// this->saldo -= salida->value;   // No afecta el saldo.
+								}
 							}
 							itOut.avanzar();
 						} while ( ! itOut.extremo() );
@@ -295,19 +307,19 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 	return TI;
 }
 
-static lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::string addr, std::string & errores ) {
-	movimientos_t * detalle = NULL;
+lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::string addr, std::string & errores ) {
+	lista <movimientos_t *> detalle;
 
 	// Checks
 	if ( addr.empty()  ) {
 		errores = "Hash del Dirección vacío" + '\n';
 		return detalle;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
+	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		errores = "Hash de Dirección con longitud errónea" + '\n';
 		return detalle;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( tx_id ) ) {
+	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		errores = "Hash de Dirección con caracteres erróneos" + '\n';
 		return detalle;
 	}
