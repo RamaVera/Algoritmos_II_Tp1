@@ -429,7 +429,7 @@ bool Cuentas::openlista( const std::string file ) {
 
 	return true;
 }
-	
+
 bool Cuentas::savelista( const std::string file ) {
 	
 	if ( file.empty() ) return false;
@@ -440,6 +440,24 @@ bool Cuentas::savelista( const std::string file ) {
 		cerr << "Error al abrir: " << file << endl;
 		return false;
 	}
+
+	if ( ! this->listadocuentas.vacia() ) {
+		std::string linea = "", alias = "", hashcuenta = "";
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->alias.empty() ) {
+				archivoClientes << it.dato()->addr << endl;
+			}
+			else {
+				archivoClientes << it.dato()->addr << ", " << it.dato()->alias << endl;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+		return ( it.extremo() );	// Toda la lista grabada
+	}
+	else { return false; }
+	
 	archivoClientes.close();
 
 	return true;
