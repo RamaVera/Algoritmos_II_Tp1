@@ -32,6 +32,7 @@ public:
 	size_t getnumerocuenta( const std::string addr );
 	size_t getnumerocuenta( const std::string addr, const std::string alias );
 	const cuentas_t * getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain );
+	size_t getcantidad();
 
 	//---Setters---//
 	bool setalias( const std::string addr, const std::string alias );

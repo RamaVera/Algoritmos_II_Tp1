@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Cuentas.cpp
  */
 
@@ -28,15 +28,16 @@ Cuentas::~Cuentas() {
 
 //---Getters---//
 
+size_t Cuentas::getcantidad() {
+	return this->cantidad;
+}
+
 std::string Cuentas::getalias( const std::string addr ) {
 	std::string alias = "";
 	if ( addr.empty() ) { 
 		return alias;
 	}
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
-		return alias;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		return alias;
 	}
 
@@ -63,9 +64,6 @@ size_t Cuentas::iscuenta( const std::string addr ) {
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return numero;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
-		return numero;
-	}
 
 	if ( ! this->listadocuentas.vacia() ) {
 		lista <cuentas_t *>::iterador it( listadocuentas );
@@ -87,9 +85,6 @@ float Cuentas::getsaldo( const std::string addr ) {
 		return saldo;
 	}
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
-		return saldo;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		return saldo;
 	}
 
@@ -115,9 +110,6 @@ float Cuentas::getpendiente( const std::string addr ) {
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return pendiente;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
-		return pendiente;
-	}
 
 	if ( ! this->listadocuentas.vacia() ) {
 		lista <cuentas_t *>::iterador it( listadocuentas );
@@ -139,9 +131,6 @@ const cuentas_t * Cuentas::getdetallecuenta( const std::string addr, lista <Bloc
 		return C;
 	}
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
-		return C;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		return C;
 	}
 
@@ -172,9 +161,6 @@ size_t Cuentas::getnumerocuenta( const std::string addr ) {
 	// Checks
 	if ( addr.empty() ) { return 0; }
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
-		return 0;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		return 0;
 	}
 
@@ -219,9 +205,6 @@ bool Cuentas::setalias( const std::string addr, const std::string alias ) {
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return false;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
-		return false;
-	}
 
 	if ( ! this->listadocuentas.vacia() ) {
 		lista <cuentas_t *>::iterador it( listadocuentas );
@@ -242,9 +225,6 @@ bool Cuentas::setpendiente( const std::string addr, const float monto ) {
 	// Checks
 	if ( addr.empty() ) { return false; }
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
-		return false;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
 		return false;
 	}
 	if ( monto == 0 ) { return false; }
@@ -303,9 +283,6 @@ bool Cuentas::addcuenta( const std::string addr, const std::string alias, const 
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return false;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
-		return false;
-	}
 
 	try {
 		C = new cuentas_t;
@@ -314,6 +291,7 @@ bool Cuentas::addcuenta( const std::string addr, const std::string alias, const 
 		C->alias = alias;
 		C->numerocuenta = Cuentas::NuevoNumero();
 		this->listadocuentas.insertar( C );
+		cantidad++;
 	}
 	catch (std::bad_alloc& ba)
 	{
@@ -386,44 +364,48 @@ bool Cuentas::openlista( const std::string file ) {
 		return false;
 	}
 
-	while ( archivoClientes.eof() ) {
+	while ( ! archivoClientes.eof() ) {
 		getline( archivoClientes, linea );
-		if ( archivoClientes.good() ){
-			if ( linea.empty() ) break;
-			if ( linea.length() > (size_t) LargoHash::LargoHashEstandar ) {
-				size_t pos = 0;
-				try {
-					// Formato clavehash + ", " + alias
-					hashcuenta = linea.substr( 0, (size_t) LargoHash::LargoHashEstandar );
-					alias = linea.substr( (size_t) LargoHash::LargoHashEstandar + 1 );;
+		if ( linea.empty() ) break;
+		if ( linea.length() >= (size_t) LargoHash::LargoHashEstandar ) {
+			size_t pos = 0;
+			try {
+				// Formato clavehash + ", " + alias
+				hashcuenta = linea.substr( 0, (size_t) LargoHash::LargoHashEstandar );
+				if ( linea.length() > (size_t) LargoHash::LargoHashEstandar ) {
+					alias = linea.substr( (size_t) LargoHash::LargoHashEstandar + 1 );
 					pos = alias.find( ", " );
 					if ( pos != std::string::npos ) {
 						alias = alias.substr( pos + 2 );
 					}
-					if ( BlockChainBuilder::CheckHash( hashcuenta, TiposHash::clavehash256 ) ) {
-						// Ver si ya está en la lista
-						if ( ! iscuenta( hashcuenta ) ) {
-							cuentas_t * cuenta;
-							cuenta = new cuentas_t;
-							cuenta->addr = hashcuenta;
-							cuenta->alias = alias;
-							cuenta->saldo = 0;
-							cuenta->pendiente = 0;
-							cuenta->numerocuenta = NuevoNumero();
-							this->listadocuentas.insertar( cuenta );
-							cantidad++;
-						}
+				}
+				else {
+					alias = "";
+				}
+				if ( BlockChainBuilder::CheckHash( hashcuenta, TiposHash::clavehash256 ) ) {
+					// Ver si ya está en la lista
+					if ( ! iscuenta( hashcuenta ) ) {
+						cuentas_t * cuenta;
+						cuenta = new cuentas_t;
+						cuenta->addr = hashcuenta;
+						cuenta->alias = alias;
+						cuenta->saldo = 0;
+						cuenta->pendiente = 0;
+						cuenta->numerocuenta = NuevoNumero();
+						this->listadocuentas.insertar( cuenta );
+						cantidad++;
 					}
 				}
-				catch ( const std::length_error& e )  {
-					std::cerr << e.what() << '\n';
-				}
-				catch (std::bad_alloc& ba) {
-					std::cerr << "bad_alloc caught: " << ba.what() << '\n';
-				}
+				else {}
 			}
-			
+			catch ( const std::length_error& e )  {
+				std::cerr << e.what() << '\n';
+			}
+			catch (std::bad_alloc& ba) {
+				std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+			}
 		}
+		else {}
 	}
 	archivoClientes.close();
 

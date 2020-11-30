@@ -215,10 +215,6 @@ Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_
 		errores = "Hash del Bloque con longitud errónea" + '\n';
 		return B;
 	}
-	else if ( ! BlockChainBuilder::CheckHexa( txns_hash ) ) {
-		errores = "Hash del Bloque con caracteres erróneos" + '\n';
-		return B;
-	}
 	// End Checks
 
 	if ( ! AlgoChain.vacia() ) {
@@ -254,10 +250,6 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 	}
 	else if ( ! BlockChainBuilder::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
 		errores = "Hash del Bloque con longitud errónea" + '\n';
-		return TI;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( tx_id ) ) {
-		errores = "Hash del Bloque con caracteres erróneos" + '\n';
 		return TI;
 	}
 	// End Checks
@@ -318,10 +310,6 @@ lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::s
 	}
 	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		errores = "Hash de Dirección con longitud errónea" + '\n';
-		return detalle;
-	}
-	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
-		errores = "Hash de Dirección con caracteres erróneos" + '\n';
 		return detalle;
 	}
 	// End Checks
