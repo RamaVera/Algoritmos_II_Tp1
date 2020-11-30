@@ -30,9 +30,12 @@ private:
 	bool isHashFromStream(std::istream *iss,char delim = '\n', std::string * pString = NULL);
 	bool isBTCValueFromStream(std::istream *iss,char delim = '\n', float * pFloat = NULL);
 	bool isEofFromStream(std::istream *iss);
+
 	int  getTxIndexFromStream(std::istream *iss,char delim = '\n');
 	std::string getHashFromStream(std::istream *iss,char delim = '\n');
 	float getBTCValueFromStream(std::istream *iss,char delim = '\n');
+
+	bool isHashFromString(std::string line);
 
 	bool isOnValidCommandTable(std::string command,Commands & commandType);
 	unsigned int getNumberOfValidFunctions( void );

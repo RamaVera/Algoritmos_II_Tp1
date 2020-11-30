@@ -216,7 +216,7 @@ void BlockChainManager::proccesBlockChain(){
 				break;
 		}
 	}
-	fileManager.removeAllFiles();
+	BlockChainManager::proccesStatus(fileManager.removeAllFiles());
 }
 
 // Descripcion: proccesStatus es un metodo que analiza los estados de salida de las clases
@@ -228,6 +228,7 @@ void BlockChainManager::proccesStatus(status_t status){
 	BlockChainFileManager fileManager;
 	state = status;
 	switch(status){
+	// -------- Terminaciones Correctas-----//
 	case STATUS_OK:
 		fileManager << "OK\n";
 		//std::cout << "Done" << std::endl;
@@ -235,6 +236,11 @@ void BlockChainManager::proccesStatus(status_t status){
 	case STATUS_READING_COMMANDS:
 		//std::cout << "Reading.." << std::endl;
 		break;
+	case STATUS_OPEN_FILE_SUCCESSFULY:
+		break;
+	case STATUS_FINISH_CONVERT_SUCCESSFULY:
+		break;
+	//-------- Errores ------------------//
 	case STATUS_ERROR_COMMAND_NOT_FOUND:
 		fileManager << "FAIL\n";
 		std::cerr << "Error Comando no conocido" << std::endl;
@@ -244,8 +250,6 @@ void BlockChainManager::proccesStatus(status_t status){
 		fileManager << "FAIL\n";
 		std::cerr << "Error Comando con argumentos invalidos" << std::endl;
 		//std::abort();
-		break;
-	case STATUS_FINISH_CONVERT_SUCCESSFULY:
 		break;
 	case STATUS_CORRUPT_FORMAT:
 		fileManager << "FAIL\n";

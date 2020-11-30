@@ -268,16 +268,14 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 			{
 				//std::cout<< "block" << std::endl;
 				std::string id;
-				std::string::size_type sz;
 				id = line.substr(delim1 + 1);
 
 				//------------Debug -------------//
 				//std::cout<< id << std::endl;
+				if( ! this->isHashFromString(id) )	 return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				payload.command = commandType;
-				payload.id = std::stoi(id,&sz);
-				if( sz != id.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+				payload.id = id;
 			}
 			break;
 		case Commands::balance:
@@ -297,16 +295,15 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 			{
 				//std::cout<< "txn" << std::endl;
 				std::string id;
-				std::string::size_type sz;
 				id = line.substr(delim1 + 1);
 
 				//------------Debug -------------//
 				//std::cout<< id << std::endl;
 
+				if( ! this->isHashFromString(id) )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+
 				payload.command = commandType;
-				payload.id = std::stoi(id,&sz);
-				if( sz != id.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+				payload.id = id;
 			}
 			break;
 		case Commands::load:
@@ -441,7 +438,7 @@ status_t BlockChainFileManager::addFile( file_t & newFile ){
 
 
 	fileList.insertar(pFile);
-	return STATUS_OK;
+	return STATUS_OPEN_FILE_SUCCESSFULY;
 }
 
 // Descripcion: Destruye el elemento type de la lista de archivos, liberando memoria
@@ -470,7 +467,7 @@ status_t BlockChainFileManager::removeFile(FileTypes type){
 		it.avanzar();
 	}
 	fileList.borrar(it.dato());
-	return STATUS_OK;
+	return STATUS_CLOSE_FILE_SUCCESSFULY;
 }
 
 // Descripcion: Destruye la lista de file_t del FileManager, liberando toda la memoria pedida
@@ -493,26 +490,37 @@ status_t BlockChainFileManager::removeAllFiles(){
 		delete it.dato();
 		it.avanzar();
 	}
-	return STATUS_OK;
+	return STATUS_CLOSE_FILE_SUCCESSFULY;
 }
 
 static FileTypes GlobalType = FileTypes::userCommandResponseFiles;
 
+
+// Descripcion: Sobrecarga del operador << para tipos FileTypes. Este metodo
+// carga la variable global GlobalType con el tipo de archivo donde se desea
+// imprimir el mensaje y luego junto la sobrecarga de << para strings imprime
+// el mensaje.
+// Precondicion:
+// PostCondicion:Variable global cargada con el valor type pasada como argumentos
 BlockChainFileManager& BlockChainFileManager::operator<<(FileTypes type){
 	GlobalType = type;
 	return *this;
 }
 
+
+// Descripcion: Sobrecarga del operador << para strings. Este metodo imprime el mensaje
+// en el archivo determinado por la variable global GlobalType. Por defecto los mensajes
+// siempre se imprimen en el archivo con asociado al tipo FileTypes::userCommandResponseFiles.
+// Sin embargo, puede cambiarse usando el metodo de sobrecarga << de Filetypes para cambiar
+// el archivo de salida.
+// Precondicion: Si no encuentra el archivo especificado no imprime nada.
+// PostCondicion: Mensaje impreso en el archivo asociado al tipo definido por GlobalType
 BlockChainFileManager& BlockChainFileManager::operator<<(std::string message){
 	std::ostream * oss;
 	if(! this->getOssfromList(GlobalType, oss)) return *this;
 	*oss << message;
-	GlobalType = FileTypes::userCommandResponseFiles;
 	return *this;
 }
-
-
-
 
 // Descripcion:
 // Precondicion:
@@ -535,6 +543,13 @@ status_t BlockChainFileManager::convert(std::ostream * iss, const lista <Block *
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
 
+bool BlockChainFileManager::isHashFromString(std::string line){
+if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
+	for (unsigned int i = 0; i < line.length(); ++i) {
+		if ( ! isxdigit ( line[i] ) ) 							return false;
+	}
+	return true;
+}
 
 
 //---------------------------------------------------------------------------------//
@@ -612,15 +627,11 @@ bool BlockChainFileManager::isHashFromStream(std::istream *iss,char delim, std::
 	if( line.back() == '\r'){  				//Para portabilidad Linux - Window
 		line.substr(0, line.size()-1);
 	}
-	if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
-	for (unsigned int i = 0; i < line.length(); ++i) {
-		if ( ! isxdigit ( line[i] ) ) 								return false;
-	}
+	bool state = this->isHashFromString(line);
 	//Debug
 	//std::cout << line << std::endl;
 	if(pString != NULL) *pString = line;
-	return true;
-
+	return state;
 }
 
 // Descripcion:
