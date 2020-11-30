@@ -6,15 +6,19 @@
 #define CUENTAS_H_
 
 #include<string>
+#include<iostream>
+#include<fstream>
 
 #include "Extracto.h"
+#include "TiposHash.h"
+
 #include "lista.h"
 
 class Cuentas {
 private:
 	lista <cuentas_t *> listadocuentas;	      	// Lista de cuentas_t
 	size_t cantidad; 							// Total de cuentas_t
-	static size_t NuevoNumero();
+	size_t NuevoNumero();
 
 public:
 	//---Constructores---//
@@ -35,6 +39,7 @@ public:
 	bool setpendiente( const std::string addr, const float monto );
 
 	//---Otros---//
+	size_t iscuenta( const std::string addr );
 	bool addcuenta( const std::string addr, const std::string alias = "", const float monto = 0 );
 	bool addcuenta( const std::string addr, const std::string alias = "" );
 	bool addcuenta( const std::string addr, const float monto );
@@ -43,6 +48,10 @@ public:
 	bool depositopendiente( const std::string addr, const float monto );
 	bool extraccionpendiente( const std::string addr, const float monto );
 	void listadototal( const float saldominimo = 0 );
+
+	// Persistencia del Objeto //
+	bool openlista( const std::string file );
+	bool savelista( const std::string file );
 
 };
 

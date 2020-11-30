@@ -4,6 +4,7 @@
 
 #include "Extracto.h"
 #include "Transaction.h"
+#include "TiposHash.h"
 
 #include "lista.h"
 
@@ -204,7 +205,7 @@ Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_
 	Block * B = NULL;
 	std::string b_prev = "";
 
-	for ( size_t i = 0; i < 256; i++) { b_prev += '0'; }  // Bloque cero
+	for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Bloque cero
 	// Checks
 	if ( txns_hash.empty()  ) {
 		errores = "Hash del Bloque a buscar vacío" + '\n';

@@ -54,6 +54,33 @@ std::string Cuentas::getalias( const std::string addr ) {
 	return alias;
 }
 
+size_t Cuentas::iscuenta( const std::string addr ) {
+	size_t numero = 0;
+	std::string alias = "";
+	if ( addr.empty() ) { 
+		return numero;
+	}
+	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+		return numero;
+	}
+	else if ( ! BlockChainBuilder::CheckHexa( addr ) ) {
+		return numero;
+	}
+
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->addr == addr ) {
+				numero = it.dato()->numerocuenta;
+				break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return numero;
+}
+
 float Cuentas::getsaldo( const std::string addr ) {
 	float saldo = -1;
 	if ( addr.empty() ) { 
@@ -347,4 +374,73 @@ bool Cuentas::extraccion( const std::string addr, const float monto ) {
 		return false;
 	}
 	else { return false; }
+}
+
+bool Cuentas::openlista( const std::string file ) {
+	std::string linea = "", alias = "", hashcuenta = "";
+	if ( file.empty() ) return false;
+
+	ifstream archivoClientes( file, ios::in );
+	if ( !archivoClientes ) {
+		cerr << "Error al abrir: " << file << endl;
+		return false;
+	}
+
+	while ( archivoClientes.eof() ) {
+		getline( archivoClientes, linea );
+		if ( archivoClientes.good() ){
+			if ( linea.empty() ) break;
+			if ( linea.length() > (size_t) LargoHash::LargoHashEstandar ) {
+				size_t pos = 0;
+				try {
+					// Formato clavehash + ", " + alias
+					hashcuenta = linea.substr( 0, (size_t) LargoHash::LargoHashEstandar );
+					alias = linea.substr( (size_t) LargoHash::LargoHashEstandar + 1 );;
+					pos = alias.find( ", " );
+					if ( pos != std::string::npos ) {
+						alias = alias.substr( pos + 2 );
+					}
+					if ( BlockChainBuilder::CheckHash( hashcuenta, TiposHash::clavehash256 ) ) {
+						// Ver si ya está en la lista
+						if ( ! iscuenta( hashcuenta ) ) {
+							cuentas_t * cuenta;
+							cuenta = new cuentas_t;
+							cuenta->addr = hashcuenta;
+							cuenta->alias = alias;
+							cuenta->saldo = 0;
+							cuenta->pendiente = 0;
+							cuenta->numerocuenta = NuevoNumero();
+							this->listadocuentas.insertar( cuenta );
+							cantidad++;
+						}
+					}
+				}
+				catch ( const std::length_error& e )  {
+					std::cerr << e.what() << '\n';
+				}
+				catch (std::bad_alloc& ba) {
+					std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+				}
+			}
+			
+		}
+	}
+	archivoClientes.close();
+
+	return true;
+}
+	
+bool Cuentas::savelista( const std::string file ) {
+	
+	if ( file.empty() ) return false;
+	if ( this->listadocuentas.vacia() ) return false;
+
+	ofstream archivoClientes( file, ios::out );
+	if ( !archivoClientes ) {
+		cerr << "Error al abrir: " << file << endl;
+		return false;
+	}
+	archivoClientes.close();
+
+	return true;
 }
