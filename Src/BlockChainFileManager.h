@@ -50,7 +50,12 @@ public:
 	status_t parse(std::istream * iss,raw_t * &pRawData);
 	status_t convert(std::ostream * oss,const lista <Block *> & BlockChain);
 	status_t translateCommands(payload_t & payload);
-	status_t addNewFile( file_t & newFile);
+	status_t addFile( file_t & newFile);
+	status_t removeFile(FileTypes type);
+	status_t removeAllFiles();
+
+	BlockChainFileManager& operator<<(std::string message);
+	BlockChainFileManager& operator<<(FileTypes type);
 
 };
 

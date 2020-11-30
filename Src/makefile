@@ -42,4 +42,4 @@ clean:
 all: $(PROGR)
 	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
 run : $(PROGR)
-	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o -
+	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o output.txt

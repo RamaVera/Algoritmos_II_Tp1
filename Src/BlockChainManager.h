@@ -28,7 +28,6 @@ public:
 	static unsigned int getUserDefinedDifficulty(void);
 
 	static void setUserFilename(ios_base::openmode  mode , std::string filename = "Standard",bool isStandar = true);
-	static lista<file_t *> & getUserFilename(void);
 };
 
 #endif /* BLOCKCHAINMANAGER_H_ */
