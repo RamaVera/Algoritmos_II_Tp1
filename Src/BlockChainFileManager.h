@@ -37,21 +37,22 @@ private:
 	std::string getHashFromStream(std::istream *iss,char delim = '\n');
 	float getBTCValueFromStream(std::istream *iss,char delim = '\n');
 
+	bool hasNewLineAtTheEnd(std::istream * iss,unsigned int * pos = NULL);
+
 	// ---- Metodos sobre Strings -------//
 	bool isHashFromString(std::string line);
 	bool isPositiveIntNumberFromString(std::string line);
 	bool isPositiveFloatNumberFromString(std::string line);
-
 
 	unsigned int getPositiveNumberFromString(std::string line);
 
 	std::string getSubString(std::string line,size_t delim,unsigned int substringNum,bool * pState = NULL);
 
 	// --- Metodos sobre lista de Archivos --//
-	bool getFilefromList(FileTypes type,std::fstream * & fs);
-	bool getIssfromList(FileTypes type,std::istream * & iss);
-	bool getOssfromList(FileTypes type,std::ostream * & oss);
-
+	bool getFilefromList(FileTypes type,std::fstream ** fs);
+	bool getIssfromList(FileTypes type,std::istream ** iss);
+	bool getOssfromList(FileTypes type,std::ostream ** oss);
+	bool getIsStandarfromList(FileTypes type);
 
 	bool isOnValidCommandTable(std::string command,Commands & commandType);
 	unsigned int getNumberOfValidFunctions( void );

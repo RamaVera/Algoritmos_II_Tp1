@@ -8,6 +8,7 @@
 #include "BlockChainManager.h"
 
 status_t BlockChainManager::state = STATUS_OK;
+status_t BlockChainManager::command = STATUS_READING_COMMANDS;
 
 // Descripcion: proccesBlockChain es un metodo que encapsula toda la logica interna de blockchain
 // en este metodo, dependiendo el comando de entrada, se instanciaran las clases BlockChainBuilder,
@@ -20,7 +21,7 @@ void BlockChainManager::proccesBlockChain(){
 	payload_t payload;
 	BlockChainFileManager fileManager;
 
-	while (BlockChainManager::state != STATUS_NO_MORE_COMMANDS ){
+	while (BlockChainManager::command != STATUS_NO_MORE_COMMANDS ){
 		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
 		std::cout<< "Begin Parse Command ...";
 		switch(payload.command)
@@ -65,7 +66,7 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Bookkeeper intenta completar el raw_t, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload) )
+					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload.raw) )
 
 					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
 					// BlockChainManager::proccesStatus( bookkeeper.saveInMempool(payload) );
@@ -83,7 +84,7 @@ void BlockChainManager::proccesBlockChain(){
 					// BlockChainBuilder builder(payload.bits);
 
 					// Builder le pide la mempool a bookkeeper y la guarda en su raw
-					// BlockChainManager::proccesStatus( builder.setRawData( bookkeeper.getMempool() ) )
+					// BlockChainManager::proccesStatus( builder.setTransaction( bookkeeper.getMempool() ) )
 
 					// Builder mina el bloque como lo hacia anteriormente
 					// BlockChainManager::proccesStatus( builder.createBlockChain() );
@@ -195,11 +196,13 @@ void BlockChainManager::proccesBlockChain(){
 				}
 				break;
 			default:
+				BlockChainManager::command  = STATUS_NO_MORE_COMMANDS;
 				std::cout<< "Fail: Error Not Defined"<< std::endl;
 				break;
 		}
 	}
 	BlockChainManager::proccesStatus(fileManager.removeAllFiles());
+	cout << "Finishing Execution " << endl;
 }
 
 // Descripcion: proccesStatus es un metodo que analiza los estados de salida de las clases
@@ -216,6 +219,11 @@ void BlockChainManager::proccesStatus(status_t status){
 		//std::cout << "Done" << std::endl;
 		break;
 	case STATUS_READING_COMMANDS:
+		command = STATUS_READING_COMMANDS;
+		//std::cout << "Reading.." << std::endl;
+		break;
+	case STATUS_NO_MORE_COMMANDS:
+		command = STATUS_NO_MORE_COMMANDS;
 		//std::cout << "Reading.." << std::endl;
 		break;
 	case STATUS_OPEN_FILE_SUCCESSFULY:
@@ -240,6 +248,18 @@ void BlockChainManager::proccesStatus(status_t status){
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Formato Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Formato Incorrecto" << std::endl;
+		//std::abort();
+		break;
+	case STATUS_CORRUPT_FORMAT_BAD_BITS:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
+		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
+		//std::abort();
+		break;
+	case STATUS_CORRUPT_FORMAT_BAD_NONCE:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
+		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_HASH:

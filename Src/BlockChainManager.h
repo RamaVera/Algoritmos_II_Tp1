@@ -16,6 +16,7 @@
 
 class BlockChainManager {
 	static status_t state;
+	static status_t command;
 	static unsigned int userDefinedDifficulty;
 	static lista<file_t *> userFiles;
 	static void parseCommands(std::string command,payload_t & payload);
