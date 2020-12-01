@@ -284,6 +284,24 @@ bool Cuentas::addcuenta( const std::string addr, const std::string alias, const 
 		return false;
 	}
 
+	// Verificar si esta duplicada
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->addr == addr ) {
+				// Actualizar el monto y/o el alias
+				if ( !alias.empty() ) {
+					it.dato()->alias = alias;
+					cout << "datos actualizados: Alias -> " << it.dato()->alias << endl;
+				}
+				it.dato()->saldo = monto;
+				cout << "datos actualizados: Monto -> " << it.dato()->saldo << endl;
+				return false;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
 	try {
 		C = new cuentas_t;
 		C->addr = addr;
@@ -373,10 +391,13 @@ bool Cuentas::openlista( const std::string file ) {
 				// Formato clavehash + ", " + alias
 				hashcuenta = linea.substr( 0, (size_t) LargoHash::LargoHashEstandar );
 				if ( linea.length() > (size_t) LargoHash::LargoHashEstandar ) {
-					alias = linea.substr( (size_t) LargoHash::LargoHashEstandar + 1 );
-					pos = alias.find( ", " );
+					alias = linea.substr( (size_t) LargoHash::LargoHashEstandar );
+					pos = alias.find( "," );
 					if ( pos != std::string::npos ) {
-						alias = alias.substr( pos + 2 );
+						alias = alias.substr( pos + 1 );
+					}
+					if ( alias.substr(0, 1) == " " ) {
+						alias = alias.substr( 1 );
 					}
 				}
 				else {
