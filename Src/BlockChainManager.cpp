@@ -20,7 +20,7 @@ void BlockChainManager::proccesBlockChain(){
 	payload_t payload;
 	BlockChainFileManager fileManager;
 
-	while (BlockChainManager::state == STATUS_READING_COMMANDS  ){
+	while (BlockChainManager::state != STATUS_NO_MORE_COMMANDS ){
 		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
 		std::cout<< "Begin Parse Command ...";
 		switch(payload.command)
@@ -153,32 +153,15 @@ void BlockChainManager::proccesBlockChain(){
 					newFile.isStandard = false;
 					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-						// ifs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-						// try {
-						//	ifs.open(arg.c_str(), ios::in); // c_str(): Returns a pointer to an array that contains a null-terminated
-															// sequence of characters (i.e., a C-string) representing
-															// the current value of the string object.
-						//}
-						//catch (std::system_error& e) {
-						//	std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
 
 					// Filemanager valida que la estructura de la blockchain este correctamente
-					// BlockChainManager::proccesStatus( filemanager.validate( payload.filename ) )
-
-					// Aca se me ocurre el laburo de 2 maneras, pero no estoy seguro.
-					// 1)  Hacer que filemanager aprenda el formato de lista<Bloques> y trabaje con ella
-					// y le pase la lista de bloques a bookkeeper y el la agrege en la historia. En el Tp0
-					// solo usaba lista de bloques para convertir, pero nunca habia tenido que leer lista
-					// de bloques
-					// o
-					// 2)  Instanciar a builder que ya aprendio a usar lista de bloques y que filemanager
-					// lo cargue con setters de builder y que luego bookkeeper toma la lista de bloques de builder
+					BlockChainManager::proccesStatus( fileManager.validateBlockChain() );
 
 					// Bookkeeper guarda en la historia
 					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( X.getBlockChainPointer());
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
-					// BlockChainManager::proccesStatus( filemanager.close( payload.filename ) )
+					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
 				}
 				break;
 			case Commands::save:
@@ -212,7 +195,7 @@ void BlockChainManager::proccesBlockChain(){
 				}
 				break;
 			default:
-				std::cout<< "Error Not Defined"<< std::endl;
+				std::cout<< "Fail: Error Not Defined"<< std::endl;
 				break;
 		}
 	}
@@ -230,7 +213,6 @@ void BlockChainManager::proccesStatus(status_t status){
 	switch(status){
 	// -------- Terminaciones Correctas-----//
 	case STATUS_OK:
-		fileManager << "OK\n";
 		//std::cout << "Done" << std::endl;
 		break;
 	case STATUS_READING_COMMANDS:
@@ -238,75 +220,78 @@ void BlockChainManager::proccesStatus(status_t status){
 		break;
 	case STATUS_OPEN_FILE_SUCCESSFULY:
 		break;
+	case STATUS_CLOSE_FILE_SUCCESSFULY:
+		break;
 	case STATUS_FINISH_CONVERT_SUCCESSFULY:
+		fileManager << FileTypes::userCommandResponseFiles << "OK\n";
 		break;
 	//-------- Errores ------------------//
 	case STATUS_ERROR_COMMAND_NOT_FOUND:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		std::cerr << "Error Comando no conocido" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_ERROR_COMMAND_PAYLOAD:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		std::cerr << "Error Comando con argumentos invalidos" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Formato Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Formato Incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_HASH:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXINDEX:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Indice de Tx incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice de Tx incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXIN:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Indice Tx In Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice Tx In Incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXOUT:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Indice Tx Out Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice Tx Out Incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_BTCVALUE:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Formato: Valor de Bitcoin Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Valor de Bitcoin Incorrecto" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_BAD_ALLOC:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de sistema: Memoria insuficiente" << std::endl;
 		std::cerr << "Error de sistema: Memoria insuficiente" << std::endl;
 		std::abort();
 		break;
 	case STATUS_BAD_READ_INPUT_FILE:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Lectura: Archivo de entrada da�ado" << std::endl;
 		std::cerr << "Error de Lectura: Archivo de entrada da�ado" << std::endl;
 		std::abort();
 		break;
 	case STATUS_BAD_READ_OUTPUT_FILE:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Lectura: Archivo de salida da�ado" << std::endl;
 		std::cerr << "Error de Lectura: Archivo de salida da�ado" << std::endl;
 		std::abort();
 		break;
 		case STATUS_NO_BLOCKS_TO_CONVERT:
-		fileManager << "FAIL\n";
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
 		std::cerr << "Error de Conversion: No hay nada que convertir" << std::endl;
 		//std::abort();

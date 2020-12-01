@@ -336,7 +336,7 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 			break;
 	}
 
-	if( eof == true) return STATUS_OK;
+	if( eof == true) return STATUS_NO_MORE_COMMANDS;
 
 	return STATUS_READING_COMMANDS;
 }
@@ -543,6 +543,120 @@ status_t BlockChainFileManager::convert(std::ostream * iss, const lista <Block *
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
 
+#define BLOCK_1_LINE_PREVIOUS_HASH 1
+#define BLOCK_2_LINE_BLOCK_HASH 2
+#define BLOCK_3_LINE_BITS 3
+#define BLOCK_4_LINE_NONCE 4
+#define BLOCK_TRANSAC_TX_INPUT_INDEX 5
+#define BLOCK_TRANSAC_INPUTS 6
+#define BLOCK_TRANSAC_TX_OUTPUT_INDEX 7
+#define BLOCK_TRANSAC_OUTPUTS 8
+
+status_t BlockChainFileManager::validateBlockChain(void){
+	std::istream * iss;
+	std::string line,aux;
+	if(! this->getIssfromList(FileTypes::loadBlockChainFile, iss)) return STATUS_BAD_READ_INPUT_FILE;
+	unsigned int blockLineCounter = 0, trasnferCounter = 0;
+	unsigned int inTx,outTx = 0;
+	while( std::getline(*iss, line)){
+		//Compatibilidad de archivos de Windows
+		if(line.back() == '\r')
+			line.pop_back();
+
+		blockLineCounter++;
+		switch(blockLineCounter){
+		case BLOCK_1_LINE_PREVIOUS_HASH:
+			if( this->isHashFromString(line) == false){			  	return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_2_LINE_BLOCK_HASH:
+			if( this->isHashFromString(line) == false){			  	return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_3_LINE_BITS:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_4_LINE_NONCE:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_TRANSAC_TX_INPUT_INDEX:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			inTx = getPositiveNumberFromString(line);
+			break;
+		case BLOCK_TRANSAC_INPUTS:
+			trasnferCounter ++;
+			if( this->isHashFromString(this->getSubString(line,' ', 1)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if( this->isPositiveIntNumberFromString(this->getSubString(line,' ', 2)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if( this->isHashFromString(this->getSubString(line,' ', 3)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if (trasnferCounter != inTx) blockLineCounter--;
+			else trasnferCounter = 0;
+			break;
+		case BLOCK_TRANSAC_TX_OUTPUT_INDEX:
+			if( this->isPositiveIntNumberFromString(line) == false){ return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			outTx = getPositiveNumberFromString(line);
+			break;
+		case BLOCK_TRANSAC_OUTPUTS:
+			trasnferCounter ++;
+			if( this->isPositiveFloatNumberFromString(this->getSubString(line,' ', 1)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if( this->isHashFromString(this->getSubString(line,' ', 2)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if (trasnferCounter != outTx) blockLineCounter--;
+			else{
+				trasnferCounter = 0;
+				blockLineCounter = 0;
+			}
+			if ((*iss).eof()) {
+			   return STATUS_OK;
+			}
+			break;
+		}
+	}
+
+	return STATUS_OK;
+}
+
+std::string BlockChainFileManager::getSubString(std::string line,size_t delim,unsigned int substringNum,bool *pState){
+	//Encuentro el primer delimitador de comando
+	const unsigned int MAX_ALLOWED_SUBSTRING = 5;
+	if (substringNum > MAX_ALLOWED_SUBSTRING){
+		if( pState ) *pState = false;
+		return "";
+	}
+	size_t delimPos = line.find(delim);
+	if ( delimPos == std::string::npos){
+		if( pState ) *pState = false;
+		return "";
+	}
+	if (substringNum == 1){
+		if( pState ) *pState = false;
+		string aux = line.substr(0, delimPos);
+		return aux;
+	}
+	else{
+		for(unsigned int posCounter = 2; posCounter != MAX_ALLOWED_SUBSTRING ; posCounter++){
+			size_t delimPosNext = line.find(delim,delimPos+1);
+
+			if( posCounter == substringNum)
+			{
+				if ( delimPosNext == std::string::npos){
+					string aux = line.substr(delimPos+1);
+					if( pState ) *pState = true;
+					return aux;
+				}else{
+					string aux = line.substr(delimPos+1,delimPosNext - (delimPos+1));
+					if( pState ) *pState = true;
+					return aux;
+				}
+			}else{
+				delimPos = delimPosNext;
+			}
+		}
+	}
+	if( pState ) *pState = false;
+	return "";
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
 bool BlockChainFileManager::isHashFromString(std::string line){
 if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
 	for (unsigned int i = 0; i < line.length(); ++i) {
@@ -551,7 +665,39 @@ if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
 	return true;
 }
 
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isPositiveIntNumberFromString(std::string line){
+	int IndexValue;
+	std::stringstream ss;
+	ss.str(line);
+	if ((ss >> IndexValue).fail())	  return false;
+	if (IndexValue < 0) 			  return false;
+	return true;
+}
 
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isPositiveFloatNumberFromString(std::string line){
+	float btcValue;
+	std::stringstream ss;
+	ss.str(line);
+	if ((ss >> btcValue).fail())	  return false;
+	if (btcValue < 0) 			  	return false;
+	return true;
+}
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+unsigned int BlockChainFileManager::getPositiveNumberFromString(std::string line){
+	unsigned int IndexValue;
+	std::stringstream ss;
+	ss.str(line);
+	ss >> IndexValue;
+	return IndexValue;
+}
 //---------------------------------------------------------------------------------//
 // OBSOLETO PARA LA VERSION 2.1.1 (TP1)
 
@@ -607,13 +753,14 @@ bool BlockChainFileManager::isTxIndexFromStream(std::istream *iss,char delim , i
 	std::stringstream ss;
 
 	std::getline(*iss, line,delim);
-	ss.str(line);
-	if ((ss >> IndexValue).fail())	  return false;
-	if (IndexValue < 0) 			  return false;
+
+	bool state = this->isPositiveIntNumberFromString(line);
 	//Debug
 	//std::cout << line << std::endl;
+	ss.str(line);
+	ss >> IndexValue;
 	if(pValue != NULL) *pValue = IndexValue;
-	return true;
+	return state;
 }
 
 // Descripcion:
