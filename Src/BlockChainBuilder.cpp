@@ -5,14 +5,12 @@
  *      Author: Ramiro
  */
 
-#include <time.h> 
-
 #include "BlockChainBuilder.h"
 
 
 BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( 3 /* El valor por default establecido en el TP0 */), pRawData(NULL){}
 
-BlockChainBuilder::BlockChainBuilder(size_t d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
+BlockChainBuilder::BlockChainBuilder(unsigned int d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
 
 BlockChainBuilder::~BlockChainBuilder() {
 	if ( ! this->ListaBlocks.vacia() ){
@@ -30,46 +28,43 @@ BlockChainBuilder::~BlockChainBuilder() {
 
 }
 
-size_t BlockChainBuilder::CheckHexa( const std::string value ) {
-	size_t i;
-	for (i = 0; i != value.length(); ++i) {
-		if ( ! isxdigit ( value[i] ) ) break;
-	}
-	if ( i < value.length() ) return i;
-	return 0;
-}
+//int BlockChainBuilder::CheckHexa( string value ) {
+//	unsigned int i;
+//	for (i = 0; i != value.length(); ++i) {
+//		if ( ! isxdigit ( value[i] ) ) break;
+//	}
+//	if ( i < value.length() ) return i;
+//	return 0;
+//}
+//
+//bool BlockChainBuilder::CheckHash( std::string valor, TiposHash Tipo ) {
+//	if ( valor.empty() ) {
+//		return false;
+//	}
+//	//else if ( Tipo  == TiposHash::clavehash256 && valor.length() != LargoHashEstandar ) {
+//	else if ( Tipo  == TiposHash::clavehash256 && valor.length() != (size_t) LargoHash::LargoHashEstandar ) {
+//		return false;
+//	}
+//	//else if ( Tipo  == TiposHash::clavefirma && valor.length() != LargoHashFirma ) {
+//	else if ( Tipo  == TiposHash::clavefirma && valor.length() != (size_t) LargoHash::LargoHashFirma ) {
+//		return false;
+//	}
+//	else {
+//		int i = CheckHexa( valor );
+//		if ( i > 0 ) {
+//			// Anotar la posición y valor del dígito erróneo
+//			return false;
+//		}
+//		else return true;
+//	}
+//}
 
-bool BlockChainBuilder::CheckHash( const std::string valor, TiposHash Tipo ) {
-	if ( valor.empty() ) {
-		return false;
-	}
-	//else if ( Tipo  == TiposHash::clavehash256 && valor.length() != LargoHashEstandar ) {
-	else if ( Tipo  == TiposHash::clavehash256 && valor.length() != (size_t) LargoHash::LargoHashEstandar ) {
-		return false;
-	}
-	//else if ( Tipo  == TiposHash::clavefirma && valor.length() != LargoHashFirma ) {
-	else if ( Tipo  == TiposHash::clavefirma && valor.length() != (size_t) LargoHash::LargoHashFirma ) {
-		return false;
-	}
-	else {
-		size_t i = BlockChainBuilder::CheckHexa( valor );
-		if ( i > 0 ) {
-			// Anotar la posición y valor del dígito erróneo
-			return false;
-		}
-		else return true;
-	}
-}
-
-/*
-// Esto es incoherente, implica recalcula afuera, con variables externas a Block y almacenar el resultado dentro de Block
-// Un ida y vuelta crítico.
-std::string BlockChainBuilder::Calculononce() {
-	static int contador = 0;
-	return std::to_string( ++contador );
+unsigned int BlockChainBuilder::Calculononce() {
+	static unsigned int contador = 0;
+	contador++;
+	return contador;
 
 }
-*/
 
 bool BlockChainBuilder::CalculoBits( std::string hash, size_t bits ) {
 	int resultado;
@@ -92,7 +87,7 @@ bool BlockChainBuilder::CalculoBits( std::string hash, size_t bits ) {
 }
 
 bool BlockChainBuilder::Minando() {
-	std::string resultado = "";
+	std::string resultado;
 	
 	if ( ! this->ListaBlocks.vacia() ) {
 		lista <Block *>::iterador it;
@@ -100,40 +95,28 @@ bool BlockChainBuilder::Minando() {
 		   que necesito para calcular el Hash.
 		*/
 		it = this->ListaBlocks.primero();
-
 		do  {
-			time_t timer1, timer2;
-			time(&timer1);  	/* get current time; same as: timer = time(NULL)  */
 			this->BlocklActual = it.dato();
-			resultado = this->BlocklActual->getpre_block() + '\n';          // <- getter que extrae la clave doble hash del Block previo.
-			resultado += this->BlocklActual->getcadenaprehash() + '\n'; 	// <- getter que extrae el string en la Clase Transaction.
-			resultado += std::to_string( this->BlocklActual->getbits() ) + '\n';
-			if ( resultado.length() > 0 ) {
-				while ( true ) {
-					std::string nonce_temp = "";
-					nonce_temp = this->BlocklActual->Calculononce();
-					this->hash_resultado = sha256 ( sha256( resultado + nonce_temp ) );
-					if ( CalculoBits( this->hash_resultado, this->bits ) ) {
-						//this->BlocklActual->setnonce( BlockChainBuilder::Calculononce() );	 // Cada llamada genera un nonce <>, se guarda en Block
-						if ( this->BlocklActual->settxns_hash ( this->hash_resultado ) ) {   // <- setter que guarda el string del hash de hash en la Clase Transaction.
-							break;	// Corto el bucle y pasaria a un siguiente Block que ahora no hay.
-						}
-						else {
-							// TODO -> Error al almacenar?
-						}
-					}
-				}
-			}
-			time(&timer2);
-			this->BlocklActual->setseconds( difftime( timer1, timer2 ) );
+			do{		
+				resultado = "";
+				resultado += this->BlocklActual->getpre_block();
+				resultado += '\n';
+				resultado += this->BlocklActual->gettxns_hash(); 
+				resultado += '\n';
+				resultado += std::to_string( this->BlocklActual->getbits() );
+				resultado += '\n';
+				resultado += this->BlocklActual->Calculononce();
+				//std::cout << resultado << std::endl;//DEBUG
+				//if ( resultado.length() > 0  ) {
+				this->hash_resultado = sha256 ( sha256( resultado ) );
+				//std::cout << this->hash_resultado << std::endl; //DEBUG
+				//}
+			}while(! CalculoBits( this->hash_resultado, this->bits ) );
 			it.avanzar();
 		} while ( ! it.extremo() );
+		return true;
 	}
 	return false;
-}
-
-double BlockChainBuilder::tiempominado() {
-	return this->seconds;
 }
 
 const char* BlockChainBuilder::hex_char_to_bin( char c )
@@ -175,7 +158,7 @@ std::string BlockChainBuilder::hex_str_to_bin_str( const std::string & hex )
     return bin;
 }
 
-int BlockChainBuilder::dificultad( const std::string & value, const size_t dif ) {
+int BlockChainBuilder::dificultad( const std::string value, const size_t dif ) {
 	// Se corta el recorrido de la cadena una vez alcanzado el valor dif
 	size_t j = 0;
 
@@ -186,12 +169,12 @@ int BlockChainBuilder::dificultad( const std::string & value, const size_t dif )
 		if ( value[ i ] == '0' ) j++;
 		else if ( value[ i ] == '1' ) break;
 		else return -1;
-		if ( j >= dif ) break; 
+		if ( j >= dif ) break;
 	}
 	return j;
 }
 
-int BlockChainBuilder::CheckDificultadOk( const std::string & cadenaHexa, const size_t dif ) {
+int BlockChainBuilder::CheckDificultadOk( std::string cadenaHexa, const size_t dif ) {
 	int d;
 	if ( cadenaHexa.empty() ) return -3;
 	if ( dif == 0 ) return -2;

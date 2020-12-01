@@ -211,7 +211,7 @@ Block * obtenerBlock( const lista <Block *> & AlgoChain, const std::string txns_
 		errores = "Hash del Bloque a buscar vacío" + '\n';
 		return B;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( txns_hash, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( txns_hash, TiposHash::clavehash256 ) ) { 
 		errores = "Hash del Bloque con longitud errónea" + '\n';
 		return B;
 	}
@@ -248,7 +248,7 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 		errores = "Hash del Bloque a buscar vacío" + '\n';
 		return TI;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( tx_id, TiposHash::clavehash256 ) ) { 
 		errores = "Hash del Bloque con longitud errónea" + '\n';
 		return TI;
 	}
@@ -308,7 +308,7 @@ lista <movimientos_t *> obtenerinputs( const lista <Block *> & AlgoChain, std::s
 		errores = "Hash del Dirección vacío" + '\n';
 		return detalle;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		errores = "Hash de Dirección con longitud errónea" + '\n';
 		return detalle;
 	}

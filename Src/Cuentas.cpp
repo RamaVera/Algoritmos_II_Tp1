@@ -4,7 +4,6 @@
 
 #include "Cuentas.h"
 
-
 //---Constructores---//
 
 Cuentas::Cuentas() {
@@ -37,7 +36,7 @@ std::string Cuentas::getalias( const std::string addr ) {
 	if ( addr.empty() ) { 
 		return alias;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return alias;
 	}
 
@@ -61,7 +60,7 @@ size_t Cuentas::iscuenta( const std::string addr ) {
 	if ( addr.empty() ) { 
 		return numero;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return numero;
 	}
 
@@ -84,7 +83,7 @@ float Cuentas::getsaldo( const std::string addr ) {
 	if ( addr.empty() ) { 
 		return saldo;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return saldo;
 	}
 
@@ -107,7 +106,7 @@ float Cuentas::getpendiente( const std::string addr ) {
 	if ( addr.empty() ) { 
 		return pendiente;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return pendiente;
 	}
 
@@ -130,7 +129,7 @@ const cuentas_t * Cuentas::getdetallecuenta( const std::string addr, lista <Bloc
 	if ( addr.empty() ) { 
 		return C;
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return C;
 	}
 
@@ -160,7 +159,7 @@ size_t Cuentas::getnumerocuenta( const std::string addr ) {
 
 	// Checks
 	if ( addr.empty() ) { return 0; }
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return 0;
 	}
 
@@ -202,7 +201,7 @@ bool Cuentas::setalias( const std::string addr, const std::string alias ) {
 
 	// Checks
 	if ( addr.empty() ) { return false; }
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return false;
 	}
 
@@ -224,7 +223,7 @@ bool Cuentas::setalias( const std::string addr, const std::string alias ) {
 bool Cuentas::setpendiente( const std::string addr, const float monto ) {
 	// Checks
 	if ( addr.empty() ) { return false; }
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return false;
 	}
 	if ( monto == 0 ) { return false; }
@@ -266,21 +265,23 @@ bool Cuentas::setsaldo( const std::string addr, const float monto ) {
 }
 
 //---Otros---//
-
 size_t Cuentas::NuevoNumero() {
 	// Genera un automumérico.
 	static size_t Id = 1;	// Arranca de 1, 0 -> error
 	return Id++;
 }
 
-bool Cuentas::addcuenta( const std::string addr, const std::string alias, const float monto ) {
+bool Cuentas::addcuenta( std::string addr, const std::string alias, const float monto ) {
 	cuentas_t * C = NULL;
 
 	// Checks
 	if ( addr.empty() ) { 
-		return false;
+		if ( alias.empty() ) {
+			return false;
+		}
+		addr = sha256( sha256( alias ) );
 	}
-	else if ( ! BlockChainBuilder::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
 		return false;
 	}
 
@@ -403,7 +404,7 @@ bool Cuentas::openlista( const std::string file ) {
 				else {
 					alias = "";
 				}
-				if ( BlockChainBuilder::CheckHash( hashcuenta, TiposHash::clavehash256 ) ) {
+				if ( Block::CheckHash( hashcuenta, TiposHash::clavehash256 ) ) {
 					// Ver si ya está en la lista
 					if ( ! iscuenta( hashcuenta ) ) {
 						cuentas_t * cuenta;

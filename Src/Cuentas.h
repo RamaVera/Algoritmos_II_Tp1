@@ -12,6 +12,7 @@
 #include "Extracto.h"
 #include "TiposHash.h"
 
+#include "sha256.h"
 #include "lista.h"
 
 class Cuentas {
@@ -41,9 +42,9 @@ public:
 
 	//---Otros---//
 	size_t iscuenta( const std::string addr );
-	bool addcuenta( const std::string addr, const std::string alias = "", const float monto = 0 );
-	bool addcuenta( const std::string addr, const std::string alias = "" );
-	bool addcuenta( const std::string addr, const float monto );
+	bool addcuenta( std::string addr, const std::string alias = "", const float monto = 0 );
+	bool addcuenta( std::string addr, const std::string alias = "" );
+	bool addcuenta( std::string addr, const float monto );
 	bool deposito( const std::string addr, const float monto );
 	bool extraccion( const std::string addr, const float monto );
 	bool depositopendiente( const std::string addr, const float monto );
