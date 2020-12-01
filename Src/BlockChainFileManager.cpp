@@ -490,6 +490,8 @@ status_t BlockChainFileManager::removeFile(FileTypes type){
 		}
 		it.avanzar();
 	}
+	// TODO IMPLEMENTAR UN METODO MEJOR DE BORRADO PUESTO QUE ESTE NO
+	// OBEDECE LA DIRECCION DEL DATO
 	fileList.borrar(it.dato());
 	return STATUS_CLOSE_FILE_SUCCESSFULY;
 }
@@ -549,20 +551,42 @@ BlockChainFileManager& BlockChainFileManager::operator<<(std::string message){
 // Descripcion:
 // Precondicion:
 // PostCondicion:
-status_t BlockChainFileManager::convert(std::ostream * iss, const lista <Block *> & BlockChain){
-	lista <Block *> ::iterador it(BlockChain);
-	std::string obtainedHash;
+status_t BlockChainFileManager::convert(FileTypes type, const lista <Block *> & BlockChain){
 
-	if(!iss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
+	switch(type){
+	case FileTypes::saveBlockChainFile:
+		ostream * oss;
+		if( !this->getOssfromList(type,&oss) ) return STATUS_BAD_READ_OUTPUT_FILE;
+		return this->convert(oss, BlockChain);
+		break;
+	case FileTypes::userCommandResponseFiles:
+	case FileTypes::userCommandInputFiles:
+	case FileTypes::loadBlockChainFile:
+	default:
+		return STATUS_NO_BLOCKS_TO_CONVERT;
+		break;
+	}
+	return STATUS_BAD_READ_OUTPUT_FILE;
+}
+
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *> & BlockChain){
+	lista <Block *> ::iterador it(BlockChain);
+	it = BlockChain.ultimo();
+
+	if(!oss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
 	if( BlockChain.vacia() )				return STATUS_NO_BLOCKS_TO_CONVERT;
 	while(!it.extremo()){
-		*iss << it.dato()->getpre_block() << '\n';
-		*iss << it.dato()->gettxns_hash() << '\n';
-		*iss << it.dato()->getbits( )	  << '\n';
-		*iss << it.dato()->getnonce()	  << '\n';
-		*iss << it.dato()->gettxn_count() << '\n';
-		*iss << it.dato()->getcadenaprehash();
-		it.avanzar();
+		*oss << it.dato()->getpre_block() << '\n';
+		*oss << it.dato()->gettxns_hash() << '\n';
+		*oss << it.dato()->getbits( )	  << '\n';
+		*oss << it.dato()->getnonce()	  << '\n';
+		*oss << it.dato()->gettxn_count() << '\n';
+		*oss << it.dato()->getcadenaprehash();
+		it.retroceder();
 	}
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
@@ -606,7 +630,7 @@ status_t BlockChainFileManager::validateBlockChain(void){
 		case BLOCK_3_LINE_BITS:
 			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_BITS;} break;
 		case BLOCK_4_LINE_NONCE:
-			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_NONCE;} break;
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_NONCE;}break;
 		case BLOCK_TRANSAC_TX_INPUT_INDEX:
 			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_TXIN;}
 			inTx = getPositiveNumberFromString(line);

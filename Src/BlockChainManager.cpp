@@ -183,12 +183,32 @@ void BlockChainManager::proccesBlockChain(){
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
+					lista<Block*> BlockChainFantasma;
+					Block * BlocklActual1;
+					Block * BlocklActual2;
+					Block * BlocklActual3;
+					BlocklActual1 = new Block();
+					BlocklActual1->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
+					BlocklActual1->settxns_hash( "e9dc0f0fbcb9021dc39ec104dfa51e813a86c8205a77d3be6c8cd6140b941e0c" ) ;
+					BlocklActual1->setbits( 3  );
+					BlocklActual1->setnonce(1000 );
+					BlockChainFantasma.insertar( BlocklActual1 );
+					BlocklActual2 = new Block();
+					BlocklActual2->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" )  ;
+					BlocklActual2->settxns_hash( "cd372fb85148700fa88095e3492d3f9f5beb43e555e5ff26d95f5a6adc36f8e6" )  ;
+					BlocklActual2->setbits( 3  ) ;
+					BlocklActual2->setnonce(2000 );
+					BlockChainFantasma.insertar( BlocklActual2 );
+					BlocklActual3 = new Block();
+					BlocklActual3->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
+					BlocklActual3->settxns_hash( "155dc94b29dce95bb2f940cdd2d7e0bce66dca9370c3ed96d50a30b3d84f8c4c" ) ;
+					BlocklActual3->setbits( 3  ) ;
+					BlocklActual3->setnonce(3000 );
+					BlockChainFantasma.insertar( BlocklActual3 );
 
-					fileManager << newFile.type << "Mensaje Especial\n";
-					fileManager << newFile.type << "Mensaje Especial 2 \n";
 
 					std::cout<< "Begin Converting Block to File ..." << std::endl;
-					//BlockChainManager::proccesStatus( fileManager.convert(fileManager.oss, bookkeeper.getHistoryBook() );
+					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::saveBlockChainFile, BlockChainFantasma) );
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
