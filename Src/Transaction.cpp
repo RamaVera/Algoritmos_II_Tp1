@@ -132,6 +132,14 @@ TransactionOutput * Transaction::getTransactionOutput(int index){
 	}
 }
 
+lista <TransactionInput *> Transaction::getListaTransactionInput() {
+	return this->ListaTranIn;
+}
+
+lista <TransactionOutput *> Transaction::getTransactionOutput() {
+	return this->ListaTranOut;
+}
+
 //Descripcion: Devuelve un string de los valores concatenados de la listas
 //para ser aplicado el hash correspondiente por fuera
 //Precondicion: Se considera todo precargado antes

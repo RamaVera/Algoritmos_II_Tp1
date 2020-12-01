@@ -27,30 +27,33 @@ private:	// Redundante pero más legible
 	size_t bits;	/* La dificultad de bits */
 	//  Nuevo
 	raw_t * pRawData;  // raw_t es el dato raw que devuelve filemanager. De aca builder saca los datos
-	bool CalculoBits( std::string hash, size_t bits );
+	static bool CalculoBits( std::string hash, size_t bits );
 	bool Minando();
 	static std::string hex_str_to_bin_str( const std::string & hex );
 	static const char* hex_char_to_bin( char c );
-	static int dificultad( const std::string value, const size_t dif );  					// -1 -> Error
-	
+	static int dificultad( const std::string & value, const size_t dif );  					// -1 -> Error
+	// Para medir tiempos de minado x Block.
+	double seconds;
 public:
 	BlockChainBuilder();
-	BlockChainBuilder(unsigned int d);
+	BlockChainBuilder(size_t d);
 	virtual ~BlockChainBuilder();
 		// Getters
-	unsigned int getbits();
+	// size_t getbits();
 	std::string getObtainedHash(){return hash_resultado;};
 	raw_t *& getRawPointer(){return pRawData;}
 	lista <Block *> getBlockChainPointer(){return ListaBlocks;};
+	double tiempominado();
 	// Setters
-	bool setbits( unsigned int valor );
+	bool setbits( size_t valor );
 	// Métodos
-	unsigned int cantidadBlocks();
-	static int CheckDificultadOk( const std::string cadenaHexa, const size_t dif );  // Error -> < 0, No -> 0, 0k -> 1
-	//static bool CheckHash( std::string valor, TiposHash Tipo = TiposHash::clavehash256 );
-	static unsigned int Calculononce();
+	size_t cantidadBlocks(); // VS me canta que no se usa
+	static int CheckDificultadOk( const std::string & cadenaHexa, const size_t dif );  // Error -> < 0, No -> 0, 0k -> 1
+	static std::string Calculononce();
 	status_t createBlockChain(void);
-
+	// removidas?
+	//static bool CheckHash( const std::string valor, TiposHash Tipo = TiposHash::clavehash256 );
+	//static size_t CheckHexa( const std::string value );
 };
 
 #endif /* BLOCKCHAINBUILDER_H_ */
