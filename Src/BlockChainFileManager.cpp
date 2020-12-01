@@ -7,13 +7,27 @@
 
 #include "BlockChainFileManager.h"
 
+// BlockChainFileManager::fileList es una lista estatica
+// visible para cualquier instancia de filemanager.
+// En esta se encuentran todos los archivos abiertos y operados
+// por filemanager. BlockChainFileManager::fileList solo puede contener
+// un archivo de cada type.
+lista<file_t *> BlockChainFileManager::fileList;
 
+
+// Descripcion: Constructor de un objeto filemanager
+// Precondicion:
+// PostCondicion: Atributos inicializado a valores adecuados.
 BlockChainFileManager::BlockChainFileManager() {
-	pRawData = NULL;
+	this->pRawData = NULL;
 }
 
+// Descripcion: Destructor de un objeto filemanager
+// Precondicion: Si el objeto pidio memoria dinamica, debe liberarse y
+// cargarse a valores adecuados.
+// PostCondicion:
 BlockChainFileManager::~BlockChainFileManager() {
-	if(this->pRawData != NULL){
+		if(this->pRawData != NULL){
 		pRawData->inTx = 0;
 		delete [] pRawData->IN_tableOfTxId; 		pRawData->IN_tableOfTxId    = NULL;
 		delete [] pRawData->IN_tableOfIndex;		pRawData->IN_tableOfIndex   = NULL;
@@ -25,204 +39,90 @@ BlockChainFileManager::~BlockChainFileManager() {
 		pRawData = NULL;
 	}
 }
-status_t BlockChainFileManager::validate(std::istream * iss){
-	if( ! this->isEmpty(iss)){
-			int inTxTotal,outTxTotal;
-		if( this->isTxIndexFromStream(iss,'\n',&inTxTotal) == false ) 	return STATUS_CORRUPT_FORMAT_BAD_TXIN;
-		for(int inTx = 0 ; inTx < inTxTotal ; inTx++){
-			if( this->isHashFromStream(iss,' ') == false ) 				return STATUS_CORRUPT_FORMAT_BAD_HASH;
-			if( this->isTxIndexFromStream(iss,' ') == false ) 			return STATUS_CORRUPT_FORMAT_BAD_TXINDEX;
-			if( this->isHashFromStream(iss) == false ) 					return STATUS_CORRUPT_FORMAT_BAD_HASH;
+
+// Descripcion: Devuelve en un puntero a fstream pasado como argumento el valor de
+// fs correspondiente al file_t de la lista de archivos.
+// Precondicion: type debe ser pasado correctamente.
+// PostCondicion: Devuelve true/false si encuentra o no dicho file_t en la lista.
+bool BlockChainFileManager::getFilefromList(FileTypes type,std::fstream ** fs){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			(*fs) = & (it.dato()->fs);
+			return true;
 		}
-		if( this->isTxIndexFromStream(iss,'\n',&outTxTotal) == false ) 	return STATUS_CORRUPT_FORMAT_BAD_TXOUT;
-		for(int outTx = 0 ; outTx < outTxTotal ; outTx++){
-			if( this->isBTCValueFromStream(iss,' ') == false ) 			return STATUS_CORRUPT_FORMAT_BAD_BTCVALUE;
-			if( this->isHashFromStream(iss) == false ) 				    return STATUS_CORRUPT_FORMAT_BAD_HASH;
-		}
-		if( this->isEofFromStream(iss) == false ) 						return STATUS_CORRUPT_FORMAT;
-	}
-	return STATUS_OK;
-}
-
-bool BlockChainFileManager::isEmpty(std::istream  * iss)
-{
-	// PRECONDICION: ESTA FUNCION SOLO DEBE USARSE ANTES DE HACER
-	// EL TRABAJO DEL ARCHIVO PUESTO QUE AL TERMINAR DEJA APUNTANDO
-	// AL PRINCIPIO
-
-	bool empty;
-	//Voy al final de File
-	iss->seekg(0, ios::end);
-	empty = (iss->tellg() == 0)? true: false;
-	//Vuelvo al principio del File
-	iss->clear();
-	iss->seekg(0, iss->beg);
-	return empty;
-
-}
-
-bool BlockChainFileManager::isTxIndexFromStream(std::istream *iss,char delim , int * pValue)
-{
-	int IndexValue;
-	std::string line;
-	std::stringstream ss;
-
-	std::getline(*iss, line,delim);
-	ss.str(line);
-	if ((ss >> IndexValue).fail())	  return false;
-	if (IndexValue < 0) 			  return false;
-	//Debug
-	//std::cout << line << std::endl;
-	if(pValue != NULL) *pValue = IndexValue;
-	return true;
-}
-
-bool BlockChainFileManager::isHashFromStream(std::istream *iss,char delim, std::string * pString)
-{
-	std::string line;
-	std::stringstream ss;
-	std::getline(*iss, line,delim);
-	if( line.back() == '\r'){  				//Para portabilidad Linux - Window
-		line.substr(0, line.size()-1);
-	}
-	if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
-	for (unsigned int i = 0; i < line.length(); ++i) {
-		if ( ! isxdigit ( line[i] ) ) 								return false;
-	}
-	//Debug
-	//std::cout << line << std::endl;
-	if(pString != NULL) *pString = line;
-	return true;
-
-}
-
-bool BlockChainFileManager::isBTCValueFromStream(std::istream *iss,char delim,float * pFloat)
-{
-	float floatValue;
-	std::string line;
-	std::stringstream ss;
-
-	std::getline(*iss, line,delim);
-	ss.str(line);
-	if ((ss >> floatValue).fail())	  return false;
-	if (floatValue < 0) 			  return false;
-	//Debug
-	//std::cout << line << std::endl;
-	if(pFloat != NULL) *pFloat = floatValue;
-	return true;
-}
-
-bool BlockChainFileManager::isEofFromStream(std::istream *iss){
-	std::string line;
-	if (iss->eof()) return true;
-	try{
-		if (std::getline(*iss, line,'\r').fail() ) return true;
-	}catch(const std::ios_base::failure& ex) {
-		//std::cerr << "Caught: std::ios_base::failure" << std::endl;
-		iss->clear();
-		return true;
-	}
-	if (line.size() != 0 )
-		return false;
-	return true;
-}
-
-
-status_t BlockChainFileManager::parse(std::istream * iss, raw_t * &pBuilderRawData){
-
-	//Creo el archivo raw_t en el entorno del filemanager
-	this->pRawData = new raw_t{0};
-	if ( ! this->isEmpty(iss)){
-		if(pRawData == NULL) return STATUS_BAD_ALLOC;
-		pRawData->inTx = this->getTxIndexFromStream(iss,'\n');
-
-		pRawData->IN_tableOfTxId = new std::string[pRawData->inTx];
-		pRawData->IN_tableOfIndex = new int[pRawData->inTx];
-		pRawData->IN_tableOfAddr = new std::string[pRawData->inTx];
-		if(		pRawData->IN_tableOfTxId == NULL  ||
-				pRawData->IN_tableOfIndex == NULL ||
-				pRawData->IN_tableOfAddr == NULL ) 	return STATUS_BAD_ALLOC;
-
-		for(int i = 0; i < pRawData->inTx; i++)
-		{
-			pRawData->IN_tableOfTxId[i]  = this->getHashFromStream(iss,' ');
-			pRawData->IN_tableOfIndex[i] = this->getTxIndexFromStream(iss,' ');
-			pRawData->IN_tableOfAddr[i]  = this->getHashFromStream(iss);
-		}
-
-		pRawData->outTx = this->getTxIndexFromStream(iss,'\n');
-		pRawData->OUT_tableOfValues = new float[pRawData->outTx];
-		pRawData->OUT_tableOfAddr = new std::string[pRawData->outTx];
-		if(		pRawData->OUT_tableOfValues == NULL  ||
-				pRawData->OUT_tableOfAddr   == NULL  ) 	return STATUS_BAD_ALLOC;
-
-		for(int i = 0; i < pRawData->outTx; i++)
-		{
-			pRawData->OUT_tableOfValues[i]  = this->getBTCValueFromStream(iss,' ');
-			pRawData->OUT_tableOfAddr[i] = this->getHashFromStream(iss);
-		}
-	}
-	pBuilderRawData = this->pRawData;
-
-	return STATUS_OK;
-}
-
-
-int BlockChainFileManager::getTxIndexFromStream(std::istream *iss,char delim)
-{
-	int IndexValue;
-	std::string line;
-	std::stringstream ss;
-
-	std::getline(*iss, line,delim);
-	ss.str(line);
-	ss >> IndexValue;
-	return IndexValue;
-}
-
-std::string BlockChainFileManager::getHashFromStream(std::istream *iss,char delim)
-{
-	std::string line;
-	std::stringstream ss;
-	std::getline(*iss, line,delim);
-	return line;
-}
-
-float BlockChainFileManager::getBTCValueFromStream(std::istream *iss,char delim)
-{
-	float floatValue;
-	std::string line;
-	std::stringstream ss;
-
-	std::getline(*iss, line,delim);
-	ss.str(line);
-	ss >> floatValue;
-	return floatValue;
-}
-
-
-
-status_t BlockChainFileManager::convert(std::ostream * iss, const lista <Block *> & BlockChain){
-	lista <Block *> ::iterador it(BlockChain);
-	std::string obtainedHash;
-
-	if(!iss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
-	if( BlockChain.vacia() )				return STATUS_NO_BLOCKS_TO_CONVERT;
-	while(!it.extremo()){
-		*iss << it.dato()->getpre_block() << '\n';
-		*iss << it.dato()->gettxns_hash() << '\n';
-		*iss << it.dato()->getbits( )	  << '\n';
-		*iss << it.dato()->getnonce()	  << '\n';
-		*iss << it.dato()->gettxn_count() << '\n';
-		*iss << it.dato()->getcadenaprehash();	
 		it.avanzar();
 	}
-	return STATUS_FINISH_CONVERT_SUCCESSFULY;
+	return false;
+}
+
+// Descripcion: Devuelve en un puntero a istream pasado como argumento el valor de
+// iss correspondiente al file_t de la lista de archivos.
+// Precondicion: type debe ser pasado correctamente.
+// PostCondicion: Devuelve true/false si encuentra o no dicho file_t en la lista.
+bool BlockChainFileManager::getIssfromList(FileTypes type,std::istream ** iss){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			(*iss) = it.dato()->iss;
+			return true;
+		}
+		it.avanzar();
+	}
+	return false;
+}
+
+// Descripcion: Devuelve en un puntero a ostream pasado como argumento el valor de
+// oss correspondiente al file_t de la lista de archivos.
+// Precondicion: type debe ser pasado correctamente.
+// PostCondicion: Devuelve true/false si encuentra o no dicho file_t en la lista.
+bool BlockChainFileManager::getOssfromList(FileTypes type,std::ostream ** oss){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			(*oss) = it.dato()->oss;
+			return true;
+		}
+		it.avanzar();
+	}
+	return false;
 }
 
 
-status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t & payload){
+
+// Descripcion: Devuelve en un puntero a ostream pasado como argumento el valor de
+// oss correspondiente al file_t de la lista de archivos.
+// Precondicion: type debe ser pasado correctamente.
+// PostCondicion: Devuelve true/false si encuentra o no dicho file_t en la lista.
+bool BlockChainFileManager::getIsStandarfromList(FileTypes type){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(! it.extremo())
+	{
+		if(it.dato()->type == type){
+			return it.dato()->isStandard;
+		}
+		it.avanzar();
+	}
+	return false;
+}
+
+// Descripcion: Es funcion hace una traduccion del lenguaje de archivo a un tipo de dato conocido
+// por el sistema (payload_t). Basicamente sera llamada siempre que haya comandos por ingresar o si hay un txt con comandos
+// y los parseara en un tipo de dato payload_t. Este tipo de dato permite limitar el alcance del archivo solo
+// al scope de FileManager puesto que pasada esta funcion no existe el concepto de archivo y se utiliza el de payload_t.
+// Precondicion: Se le da un payload que debe ser inicializado a valores seguros previo a la conversion.
+// PostCondicion: Si los comandos son validos debe rellenar el payload.
+status_t BlockChainFileManager::translateCommands( payload_t & payload){
+	std::istream * iss;
+	//Obtengo el archivo de comandos de la lista de archivos
+	if( ! this->getIssfromList(FileTypes::userCommandInputFiles,&iss)) return STATUS_BAD_READ_INPUT_FILE;
+
 	std::string command,line;
+	int subStringNum = 1;
+	bool state;
 	bool eof = false;
 	Commands commandType = Commands::commandNotDefined;
 
@@ -230,15 +130,17 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 	this->safeValuePayload(payload);
 
 	//Detecto de la primer linea, solo el comando
-	if (std::getline(*iss,line).eof() )
-		eof = true;
+	if (std::getline(*iss,line).eof() )	eof = true;
+
+	//Compatibilidad de archivos de Windows
+	if(line.back() == '\r')	line.pop_back();
+
 	//Encuentro el primer delimitador de comando
-	size_t delim1 = line.find(' ');
-	if ( delim1 == std::string::npos) 							return STATUS_ERROR_COMMAND_PAYLOAD;
-	command = line.substr(0, delim1);
+	command = getSubString(line, ' ', subStringNum++, &state);
 
 	//Valido y obtengo el comando
-	if ( ! this->isOnValidCommandTable(command,commandType) ) 	return STATUS_ERROR_COMMAND_NOT_FOUND;
+	if( !state )										return STATUS_ERROR_COMMAND_PAYLOAD;
+	if( !isOnValidCommandTable(command,commandType) ) 	return STATUS_ERROR_COMMAND_NOT_FOUND;
 
 	//Completo el payload en base al comando
 	switch(commandType)
@@ -247,75 +149,49 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 			{
 				//std::cout<< "init" << std::endl;
 				std::string usr,value,bits;
-				std::string::size_type sz;
 
-				size_t delim2 = line.find(' ',delim1+1);
-				if ( delim2 == std::string::npos) 	return STATUS_ERROR_COMMAND_PAYLOAD;
-				size_t delim3 = line.find(' ',delim2+1);
-				if ( delim3 == std::string::npos) 	return STATUS_ERROR_COMMAND_PAYLOAD;
-
-				usr = line.substr(delim1 + 1,delim2 - delim1 - 1 );
-				value = line.substr(delim2 + 1,delim3 - delim2 -1);
-				bits = line.substr(delim3 + 1);
+				usr =  getSubString(line, ' ', subStringNum++, &state);		if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
+				value = getSubString(line, ' ',subStringNum++, &state);		if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
+				bits = getSubString(line, ' ', subStringNum++, &state);		if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				//------------Debug -------------//
 				//std::cout<< usr << std::endl;
 				//std::cout<< value << std::endl;
 				//std::cout<< bits << std::endl;
+				if (! isPositiveIntNumberFromString(value))  return STATUS_ERROR_COMMAND_PAYLOAD;
+				if (! isPositiveIntNumberFromString(bits))   return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				payload.command = commandType;
 				payload.user = usr;
-				payload.value = std::stof(value,&sz);
-				if( sz != value.size() ) return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.value < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				payload.bits = std::stoi(bits,&sz);
-				if( sz != bits.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-
+				payload.value = std::stof(value);
+				payload.bits = std::stoi(bits);	;
 			}
 			break;
 		case Commands::transfer:
 			{
 				//std::cout<< "transfer" << std::endl;
 				std::string src,dest,value;
-				std::string::size_type sz;
-
-				size_t delim2 = line.find(' ',delim1+1);
-				if ( delim2 == std::string::npos) 	return STATUS_ERROR_COMMAND_PAYLOAD;
-				size_t delim3;
-				size_t delim4;
-				float auxValue;
-				Queue<string> argQueue;
 				size_t inTx = 1 ;
 				size_t outTx = 0;
-				src = line.substr(delim1 + 1,delim2 - delim1 - 1 );
+				Queue<string> argQueue;
+
+				bool MoreParameters;
+
+				src = getSubString(line, ' ', subStringNum++, &state);	if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
 				argQueue.enqueue(src);
-				// Esta pasada valida, aucumula los datos
-				// y cuenta la cantidad de destinos
+				// Esta pasada valida, aucumula los datos y cuenta la cantidad de destinos
 				// Para luego pedir memoria dinamica con datos veraces.
 				do{
-					delim3 = line.find(' ',delim2+1);
-					if ( delim3 == std::string::npos) 	return STATUS_ERROR_COMMAND_PAYLOAD;
-					delim4 = line.find(' ',delim3+1);
-					if ( delim3 != std::string::npos)
+					dest = getSubString(line, ' ', subStringNum++, &MoreParameters);	if (! MoreParameters) break;
+					value = getSubString(line, ' ', subStringNum++, &state);
 
-					dest = line.substr(delim2 + 1,delim3 - delim2 -1);
+					if( !state ) 									return STATUS_ERROR_COMMAND_PAYLOAD;
+					if (! isPositiveFloatNumberFromString(value))  	return STATUS_ERROR_COMMAND_PAYLOAD;
+
 					argQueue.enqueue(dest);
-
-					if ( delim4 != std::string::npos)
-						value = line.substr(delim3 + 1,delim4 - delim3 -1);
-					else{
-						value = line.substr(delim3 + 1);
-						if(value.empty()) 		return STATUS_ERROR_COMMAND_PAYLOAD;
-					}
-					auxValue = std::stof(value,&sz);
-					if( sz != value.size() ) 	return STATUS_ERROR_COMMAND_PAYLOAD;
-					if( auxValue < 0 )			return STATUS_ERROR_COMMAND_PAYLOAD;
 					argQueue.enqueue(value);
-
 					outTx ++;
-					delim2 = delim4;
-				}while( delim4 != std::string::npos);
+				}while( MoreParameters );
 
 				// Comienzo a rellenar el payload
 
@@ -369,39 +245,41 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 			{
 				//std::cout<< "mine" << std::endl;
 				std::string bits;
-				std::string::size_type sz;
-				bits = line.substr(delim1 + 1);
+
+				bits = getSubString(line, ' ', subStringNum++, &state);
+
+				if( !state ) 								return STATUS_ERROR_COMMAND_PAYLOAD;
+				if (!isPositiveIntNumberFromString(bits))  	return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				//------------Debug -------------//
 				//std::cout<< bits << std::endl;
-
 				payload.command = commandType;
-				payload.bits = std::stoi(bits,&sz);
-				if( sz != bits.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+				payload.bits = std::stoi(bits);
+
 			}
 			break;
 		case Commands::block:
 			{
 				//std::cout<< "block" << std::endl;
 				std::string id;
-				std::string::size_type sz;
-				id = line.substr(delim1 + 1);
+				id =  getSubString(line, ' ', subStringNum++, &state);
 
 				//------------Debug -------------//
 				//std::cout<< id << std::endl;
+				if( !state ) 						return STATUS_ERROR_COMMAND_PAYLOAD;
+				if( ! this->isHashFromString(id) )	return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				payload.command = commandType;
-				payload.id = std::stoi(id,&sz);
-				if( sz != id.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+				payload.id = id;
 			}
 			break;
 		case Commands::balance:
 			{
 				//std::cout<< "balance" << std::endl;
 				std::string usr;
-				usr = line.substr(delim1 + 1);
+				usr = getSubString(line, ' ', subStringNum++, &state);
+
+				if( !state ) 						return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				//------------Debug -------------//
 				//std::cout<< usr << std::endl;
@@ -414,23 +292,22 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 			{
 				//std::cout<< "txn" << std::endl;
 				std::string id;
-				std::string::size_type sz;
-				id = line.substr(delim1 + 1);
+				id = getSubString(line, ' ', subStringNum++, &state);
 
 				//------------Debug -------------//
 				//std::cout<< id << std::endl;
+				if( !state ) 					return STATUS_ERROR_COMMAND_PAYLOAD;
+				if( !isHashFromString(id) )		return STATUS_ERROR_COMMAND_PAYLOAD;
 
 				payload.command = commandType;
-				payload.id = std::stoi(id,&sz);
-				if( sz != id.size() )	 return STATUS_ERROR_COMMAND_PAYLOAD;
-				if( payload.bits < 0 )	 return STATUS_ERROR_COMMAND_PAYLOAD;
+				payload.id = id;
 			}
 			break;
 		case Commands::load:
 			{
 				//std::cout<< "load" << std::endl;
 				std::string filename;
-				filename = line.substr(delim1 + 1);
+				filename = getSubString(line, ' ', subStringNum++, &state);
 
 				//------------Debug -------------//
 				//std::cout<< filename << std::endl;
@@ -443,7 +320,7 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 			{
 				//std::cout<< "save" << std::endl;
 				std::string filename;
-				filename = line.substr(delim1 + 1);
+				filename = getSubString(line, ' ', subStringNum++, &state);
 
 				//------------Debug -------------//
 				//std::cout<< filename << std::endl;
@@ -456,33 +333,72 @@ status_t BlockChainFileManager::translateCommands(std::istream * iss, payload_t 
 			break;
 	}
 
-	if( eof == true) return STATUS_OK;
-
+	// Evitar problema de ultima linea con \n y getline en archivos
+	if (!this->getIsStandarfromList(FileTypes::userCommandInputFiles)){
+		static unsigned int lastCharpos;
+		static bool hasEndOfLine = this->hasNewLineAtTheEnd(iss,&lastCharpos);
+		if( hasEndOfLine){
+		//	cout<<lastCharpos<<endl;
+		//	cout<<iss->tellg()<<endl;
+			if(abs(lastCharpos - iss->tellg() ) == 1){
+				return STATUS_NO_MORE_COMMANDS;
+			}
+		}
+	}
+	if( eof == true)
+		return STATUS_NO_MORE_COMMANDS;
 	return STATUS_READING_COMMANDS;
 }
 
+bool BlockChainFileManager::hasNewLineAtTheEnd(std::istream *iss,unsigned int * pos){
+	unsigned int prevPos = iss->tellg();
+	iss->seekg(-1,ios_base::end);    // go to one position before the EOF
+	if(pos) *pos = iss->tellg();
+	char c;
+	iss->get(c);                     // Read current character
+	iss->seekg(prevPos,ios_base::beg);
+	if(c =='\n'){
+		return true;
+	}else
+		return false;
+}
+
+
+
+// Descripcion: Verifica si el comando esta en la tabla especificada de comandos y si lo encuentra
+// devuelve en commandType el tipo enumerativo asociado a ese comando.
+// Precondicion: CommandType se debe precargar con algo no definido antes de buscar.
+// PostCondicion: Devuelve verdadero o falso
 bool BlockChainFileManager::isOnValidCommandTable(std::string command, Commands & commandType)
 {
 	size_t i;
 	size_t size = BlockChainFileManager::getNumberOfValidFunctions();
+	commandType = Commands::commandNotDefined;
 	bool functionIsOnTable = false;
 	for(i = 0 ; i < size ; ++i)
 	{
 		if( command.compare(_commands_[i]) == 0 )
 		{
 			functionIsOnTable = true;
+			commandType = static_cast<Commands>(i);
 			break;
 		}
 	}
-	commandType = static_cast<Commands>(i);
+
 	return functionIsOnTable;
 }
 
+// Descripcion:
+// Precondicion:
+// PostCondicion:
 unsigned int BlockChainFileManager::getNumberOfValidFunctions()
 {
 	return sizeof(_commands_)/sizeof(std::string);
 }
 
+// Descripcion: Metodo para cargar los valores por defecto del tipo de dato Payload_t
+// Precondicion:
+// PostCondicion: Todos los campos de Payload_t inicializados a valores correctos.
 void BlockChainFileManager::safeValuePayload(payload_t & payload){
 	payload.command = Commands::commandNotDefined;
 	payload.pRaw = NULL;
@@ -491,4 +407,568 @@ void BlockChainFileManager::safeValuePayload(payload_t & payload){
 	payload.user = "";
 	payload.value = 0;
 	payload.bits = 0;
+}
+
+// Descripcion: Este metodo recibe un tipo de dato file_t, abre el archivo asociado y lo agrega a la lista
+// de file_t de FileManager. Debe ser usado en conjunto con removeFile o removeAllFiles en el momento de
+// terminar el trabajo de fileManager.
+// Precondicion: Tiene que recibir un file_t incompleto pero con los campos filename, type y mode completos
+// PostCondicion: Archivo abierto con los campos del file_t correctamente inicializados iss, oss, fs
+status_t BlockChainFileManager::addFile( file_t & newFile ){
+
+	file_t * pFile = new file_t;
+	pFile->fileID = newFile.fileID;
+	pFile->mode = newFile.mode;
+	pFile->type = newFile.type;
+	pFile->isStandard = newFile.isStandard;
+
+
+
+	if( pFile->mode == ios::in){
+		if(pFile->isStandard ){
+			pFile->iss = & cin;
+		}
+		else{
+			pFile->fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+			try {
+				pFile->fs.open(pFile->fileID,pFile->mode);
+			}catch (std::system_error& e) {
+				std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
+				delete pFile;
+				return STATUS_BAD_READ_INPUT_FILE;
+			}
+			pFile->iss = & pFile->fs;
+
+		}
+		pFile->oss = NULL;
+	}
+	else if( pFile->mode == ios::out){
+		if(pFile->isStandard){
+			pFile->oss = & cout;
+		}
+		else{
+			pFile->fs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+			try {
+				pFile->fs.open(pFile->fileID,pFile->mode);
+			}catch (std::system_error& e) {
+				std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
+				delete pFile;
+				return STATUS_BAD_READ_INPUT_FILE;
+			}
+			pFile->oss = & pFile->fs;
+		}
+		pFile->iss = NULL;
+	}
+
+
+	fileList.insertar(pFile);
+	return STATUS_OPEN_FILE_SUCCESSFULY;
+}
+
+// Descripcion: Destruye el elemento type de la lista de archivos, liberando memoria
+// y cerrando el archivo asociado con el tipo type.
+// Este metodo debe invocarse siempre que se uso el metodo AddNewFile.
+// Precondicion: Debe usarse al final de utilizar AddNewFile.
+// PostCondicion: Elemento de la lista liberado, archivo del del elemento cerrado
+// y variables post inicializadas.
+
+status_t BlockChainFileManager::removeFile(FileTypes type){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	while(!it.extremo()){
+		if(it.dato()->type == type){
+			it.dato()->fileID = "";
+			it.dato()->iss = NULL;
+			it.dato()->oss = NULL;
+			it.dato()->isStandard = NULL;
+			it.dato()->type = FileTypes::indefinedFile;
+			if (! it.dato()->isStandard ){
+				it.dato()->fs.close();
+			}
+			delete it.dato();
+
+			break;
+		}
+		it.avanzar();
+	}
+	// TODO IMPLEMENTAR UN METODO MEJOR DE BORRADO PUESTO QUE ESTE NO
+	// OBEDECE LA DIRECCION DEL DATO
+	fileList.borrar(it.dato());
+	return STATUS_CLOSE_FILE_SUCCESSFULY;
+}
+
+// Descripcion: Destruye la lista de file_t del FileManager, liberando toda la memoria pedida
+// cerrando los archivos abiertos y postinicializando los valores del file_t a valores nulos.
+// Este metodo debe invocarse siempre que se uso el metodo AddNewFile.
+// Precondicion: Debe usarse al final de utilizar AddNewFile.
+// PostCondicion: Lista completamente liberada, todos los archivos que fueron abiertos cerrados
+// y variables post inicializadas.
+status_t BlockChainFileManager::removeAllFiles(){
+	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
+	it = fileList.primero();
+	while(!it.extremo()){
+		it.dato()->fileID = "";
+		it.dato()->iss = NULL;
+		it.dato()->oss = NULL;
+		it.dato()->type = FileTypes::indefinedFile;
+		if (! it.dato()->isStandard ){
+			it.dato()->fs.close();
+		}
+		delete it.dato();
+		it.avanzar();
+	}
+	return STATUS_CLOSE_FILE_SUCCESSFULY;
+}
+
+static FileTypes GlobalType = FileTypes::userCommandResponseFiles;
+
+
+// Descripcion: Sobrecarga del operador << para tipos FileTypes. Este metodo
+// carga la variable global GlobalType con el tipo de archivo donde se desea
+// imprimir el mensaje y luego junto la sobrecarga de << para strings imprime
+// el mensaje.
+// Precondicion:
+// PostCondicion:Variable global cargada con el valor type pasada como argumentos
+BlockChainFileManager& BlockChainFileManager::operator<<(FileTypes type){
+	GlobalType = type;
+	return *this;
+}
+
+
+// Descripcion: Sobrecarga del operador << para strings. Este metodo imprime el mensaje
+// en el archivo determinado por la variable global GlobalType. Por defecto los mensajes
+// siempre se imprimen en el archivo con asociado al tipo FileTypes::userCommandResponseFiles.
+// Sin embargo, puede cambiarse usando el metodo de sobrecarga << de Filetypes para cambiar
+// el archivo de salida.
+// Precondicion: Si no encuentra el archivo especificado no imprime nada.
+// PostCondicion: Mensaje impreso en el archivo asociado al tipo definido por GlobalType
+BlockChainFileManager& BlockChainFileManager::operator<<(std::string message){
+	std::ostream * oss;
+	if(! this->getOssfromList(GlobalType, &oss)) return *this;
+	*oss << message;
+	return *this;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+status_t BlockChainFileManager::convert(FileTypes type, const lista <Block *> & BlockChain){
+
+	switch(type){
+	case FileTypes::saveBlockChainFile:
+		ostream * oss;
+		if( !this->getOssfromList(type,&oss) ) return STATUS_BAD_READ_OUTPUT_FILE;
+		return this->convert(oss, BlockChain);
+		break;
+	case FileTypes::userCommandResponseFiles:
+	case FileTypes::userCommandInputFiles:
+	case FileTypes::loadBlockChainFile:
+	default:
+		return STATUS_NO_BLOCKS_TO_CONVERT;
+		break;
+	}
+	return STATUS_BAD_READ_OUTPUT_FILE;
+}
+
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *> & BlockChain){
+	lista <Block *> ::iterador it(BlockChain);
+	it = BlockChain.ultimo();
+
+	if(!oss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
+	if( BlockChain.vacia() )				return STATUS_NO_BLOCKS_TO_CONVERT;
+	while(!it.extremo()){
+		*oss << it.dato()->getpre_block() << '\n';
+		*oss << it.dato()->gettxns_hash() << '\n';
+		*oss << it.dato()->getbits( )	  << '\n';
+		*oss << it.dato()->getnonce()	  << '\n';
+		*oss << it.dato()->gettxn_count() << '\n';
+		*oss << it.dato()->getcadenaprehash();
+		it.retroceder();
+	}
+	return STATUS_FINISH_CONVERT_SUCCESSFULY;
+}
+
+#define BLOCK_1_LINE_PREVIOUS_HASH 1
+#define BLOCK_2_LINE_BLOCK_HASH 2
+#define BLOCK_3_LINE_BITS 3
+#define BLOCK_4_LINE_NONCE 4
+#define BLOCK_TRANSAC_TX_INPUT_INDEX 5
+#define BLOCK_TRANSAC_INPUTS 6
+#define BLOCK_TRANSAC_TX_OUTPUT_INDEX 7
+#define BLOCK_TRANSAC_OUTPUTS 8
+
+status_t BlockChainFileManager::validateBlockChain(void){
+	std::istream * iss;
+	if(! this->getIssfromList(FileTypes::loadBlockChainFile, &iss)) return STATUS_BAD_READ_INPUT_FILE;
+
+	std::string line,aux;
+	unsigned int blockLineCounter = 0, trasnferCounter = 0;
+	unsigned int inTx,outTx = 0;
+	bool isCompleteBlock = false;
+	bool isEof = false;
+
+
+	while( std::getline(*iss, line)){
+		// Verifico si llegue al fin de archivo
+		if ((*iss).eof()) {
+			isEof = true;
+		}
+		//Compatibilidad de archivos de Windows
+		if(line.back() == '\r')
+			line.pop_back();
+
+		blockLineCounter++;
+		switch(blockLineCounter){
+		case BLOCK_1_LINE_PREVIOUS_HASH:
+			isCompleteBlock = false;
+			if( this->isHashFromString(line) == false){			  	return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_2_LINE_BLOCK_HASH:
+			if( this->isHashFromString(line) == false){			  	return STATUS_CORRUPT_FORMAT_BAD_HASH;} break;
+		case BLOCK_3_LINE_BITS:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_BITS;} break;
+		case BLOCK_4_LINE_NONCE:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_NONCE;}break;
+		case BLOCK_TRANSAC_TX_INPUT_INDEX:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_TXIN;}
+			inTx = getPositiveNumberFromString(line);
+			break;
+		case BLOCK_TRANSAC_INPUTS:
+			trasnferCounter ++;
+			if( this->isHashFromString(this->getSubString(line,' ', 1)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if( this->isPositiveIntNumberFromString(this->getSubString(line,' ', 2)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_TXINDEX;}
+			if( this->isHashFromString(this->getSubString(line,' ', 3)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if (trasnferCounter != inTx) blockLineCounter--;
+			else trasnferCounter = 0;
+			break;
+		case BLOCK_TRANSAC_TX_OUTPUT_INDEX:
+			if( this->isPositiveIntNumberFromString(line) == false){ return STATUS_CORRUPT_FORMAT_BAD_TXOUT;}
+			outTx = getPositiveNumberFromString(line);
+			break;
+		case BLOCK_TRANSAC_OUTPUTS:
+			trasnferCounter ++;
+			if( this->isPositiveFloatNumberFromString(this->getSubString(line,' ', 1)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_BTCVALUE;}
+			if( this->isHashFromString(this->getSubString(line,' ', 2)) == false){
+				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if (trasnferCounter != outTx) blockLineCounter--;
+			else{
+				trasnferCounter = 0;
+				blockLineCounter = 0;
+				isCompleteBlock = true;
+			}
+			break;
+		}
+		// Si se leyo un bloque completo y es el fin de archivo
+		if (isEof){
+			if (isCompleteBlock)
+				return STATUS_OK;
+			else
+				return STATUS_BAD_READ_INPUT_FILE;
+		}
+	}
+	return STATUS_OK;
+}
+
+std::string BlockChainFileManager::getSubString(std::string line,size_t delim,unsigned int substringNum,bool *pState){
+	//Encuentro el primer delimitador de comando
+	const unsigned int MAX_ALLOWED_SUBSTRING = 50;
+	if (substringNum > MAX_ALLOWED_SUBSTRING){
+		if( pState ) *pState = false;
+		return "";
+	}
+	size_t delimPos = line.find(delim);
+	if ( delimPos == std::string::npos){
+		if( pState ) *pState = false;
+		return "";
+	}
+	if (substringNum == 1){
+		if( pState ) *pState = true;
+		string aux = line.substr(0, delimPos);
+		return aux;
+	}
+	else{
+		for(unsigned int posCounter = 2; posCounter != MAX_ALLOWED_SUBSTRING ; posCounter++){
+			size_t delimPosNext = line.find(delim,delimPos+1);
+
+			if( posCounter == substringNum)
+			{
+				if ( delimPosNext == std::string::npos){
+					string aux = line.substr(delimPos+1);
+					if( pState ) *pState = true;
+					return aux;
+				}else{
+					string aux = line.substr(delimPos+1,delimPosNext - (delimPos+1));
+					if( pState ) *pState = true;
+					return aux;
+				}
+			}else{
+				if ( delimPosNext == std::string::npos){
+					if( pState ) *pState = false;
+					return "";
+				}
+				delimPos = delimPosNext;
+			}
+		}
+	}
+	if( pState ) *pState = false;
+	return "";
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isHashFromString(std::string line){
+if ( line.size() != (size_t) LargoHash::LargoHashEstandar ) 	return false;
+	for (unsigned int i = 0; i < line.length(); ++i) {
+		if ( ! isxdigit ( line[i] ) ) 							return false;
+	}
+	return true;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isPositiveIntNumberFromString(std::string line){
+	int IndexValue;
+	std::string::size_type sz;
+	std::stringstream ss;
+	ss.str(line);
+	if ((ss >> IndexValue).fail())	  	return false;
+	if (IndexValue < 0) 			  	return false;
+	IndexValue = std::stoi(line,&sz);
+	if( sz != line.size() )				return false;
+	return true;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isPositiveFloatNumberFromString(std::string line){
+	float btcValue;
+	std::string::size_type sz;
+	std::stringstream ss;
+	ss.str(line);
+	if ((ss >> btcValue).fail())	  	return false;
+	if (btcValue < 0) 			  		return false;
+	btcValue = std::stof(line,&sz);
+	if( sz != line.size() )				return false;
+	return true;
+}
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+unsigned int BlockChainFileManager::getPositiveNumberFromString(std::string line){
+	unsigned int IndexValue;
+	std::stringstream ss;
+	ss.str(line);
+	ss >> IndexValue;
+	return IndexValue;
+}
+//---------------------------------------------------------------------------------//
+// OBSOLETO PARA LA VERSION 2.1.1 (TP1)
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+status_t BlockChainFileManager::validate(std::istream * iss){
+	if( ! this->isEmpty(iss)){
+			int inTxTotal,outTxTotal;
+		if( this->isTxIndexFromStream(iss,'\n',&inTxTotal) == false ) 	return STATUS_CORRUPT_FORMAT_BAD_TXIN;
+		for(int inTx = 0 ; inTx < inTxTotal ; inTx++){
+			if( this->isHashFromStream(iss,' ') == false ) 				return STATUS_CORRUPT_FORMAT_BAD_HASH;
+			if( this->isTxIndexFromStream(iss,' ') == false ) 			return STATUS_CORRUPT_FORMAT_BAD_TXINDEX;
+			if( this->isHashFromStream(iss) == false ) 					return STATUS_CORRUPT_FORMAT_BAD_HASH;
+		}
+		if( this->isTxIndexFromStream(iss,'\n',&outTxTotal) == false ) 	return STATUS_CORRUPT_FORMAT_BAD_TXOUT;
+		for(int outTx = 0 ; outTx < outTxTotal ; outTx++){
+			if( this->isBTCValueFromStream(iss,' ') == false ) 			return STATUS_CORRUPT_FORMAT_BAD_BTCVALUE;
+			if( this->isHashFromStream(iss) == false ) 				    return STATUS_CORRUPT_FORMAT_BAD_HASH;
+		}
+		if( this->isEofFromStream(iss) == false ) 						return STATUS_CORRUPT_FORMAT;
+	}
+	return STATUS_OK;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isEmpty(std::istream  * iss)
+{
+	// PRECONDICION: ESTA FUNCION SOLO DEBE USARSE ANTES DE HACER
+	// EL TRABAJO DEL ARCHIVO PUESTO QUE AL TERMINAR DEJA APUNTANDO
+	// AL PRINCIPIO
+
+	bool empty;
+	//Voy al final de File
+	iss->seekg(0, ios::end);
+	empty = (iss->tellg() == 0)? true: false;
+	//Vuelvo al principio del File
+	iss->clear();
+	iss->seekg(0, iss->beg);
+	return empty;
+
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isTxIndexFromStream(std::istream *iss,char delim , int * pValue)
+{
+	int IndexValue;
+	std::string line;
+	std::stringstream ss;
+
+	std::getline(*iss, line,delim);
+
+	bool state = this->isPositiveIntNumberFromString(line);
+	//Debug
+	//std::cout << line << std::endl;
+	ss.str(line);
+	ss >> IndexValue;
+	if(pValue != NULL) *pValue = IndexValue;
+	return state;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isHashFromStream(std::istream *iss,char delim, std::string * pString)
+{
+	std::string line;
+	std::stringstream ss;
+	std::getline(*iss, line,delim);
+	if( line.back() == '\r'){  				//Para portabilidad Linux - Window
+		line.substr(0, line.size()-1);
+	}
+	bool state = this->isHashFromString(line);
+	//Debug
+	//std::cout << line << std::endl;
+	if(pString != NULL) *pString = line;
+	return state;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isBTCValueFromStream(std::istream *iss,char delim,float * pFloat)
+{
+	float floatValue;
+	std::string line;
+	std::stringstream ss;
+
+	std::getline(*iss, line,delim);
+	ss.str(line);
+	if ((ss >> floatValue).fail())	  return false;
+	if (floatValue < 0) 			  return false;
+	//Debug
+	//std::cout << line << std::endl;
+	if(pFloat != NULL) *pFloat = floatValue;
+	return true;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+bool BlockChainFileManager::isEofFromStream(std::istream *iss){
+	std::string line;
+	if (iss->eof()) return true;
+	try{
+		if (std::getline(*iss, line,'\r').fail() ) return true;
+	}catch(const std::ios_base::failure& ex) {
+		//std::cerr << "Caught: std::ios_base::failure" << std::endl;
+		iss->clear();
+		return true;
+	}
+	if (line.size() != 0 )
+		return false;
+	return true;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+status_t BlockChainFileManager::parse(std::istream * iss, raw_t * &pBuilderRawData){
+
+	//Creo el archivo raw_t en el entorno del filemanager
+	this->pRawData = new raw_t{0};
+	if ( ! this->isEmpty(iss)){
+		if(pRawData == NULL) return STATUS_BAD_ALLOC;
+		pRawData->inTx = this->getTxIndexFromStream(iss,'\n');
+
+		pRawData->IN_tableOfTxId = new std::string[pRawData->inTx];
+		pRawData->IN_tableOfIndex = new int[pRawData->inTx];
+		pRawData->IN_tableOfAddr = new std::string[pRawData->inTx];
+		if(		pRawData->IN_tableOfTxId == NULL  ||
+				pRawData->IN_tableOfIndex == NULL ||
+				pRawData->IN_tableOfAddr == NULL ) 	return STATUS_BAD_ALLOC;
+
+		for(int i = 0; i < pRawData->inTx; i++)
+		{
+			pRawData->IN_tableOfTxId[i]  = this->getHashFromStream(iss,' ');
+			pRawData->IN_tableOfIndex[i] = this->getTxIndexFromStream(iss,' ');
+			pRawData->IN_tableOfAddr[i]  = this->getHashFromStream(iss);
+		}
+
+		pRawData->outTx = this->getTxIndexFromStream(iss,'\n');
+		pRawData->OUT_tableOfValues = new float[pRawData->outTx];
+		pRawData->OUT_tableOfAddr = new std::string[pRawData->outTx];
+		if(		pRawData->OUT_tableOfValues == NULL  ||
+				pRawData->OUT_tableOfAddr   == NULL  ) 	return STATUS_BAD_ALLOC;
+
+		for(int i = 0; i < pRawData->outTx; i++)
+		{
+			pRawData->OUT_tableOfValues[i]  = this->getBTCValueFromStream(iss,' ');
+			pRawData->OUT_tableOfAddr[i] = this->getHashFromStream(iss);
+		}
+	}
+	pBuilderRawData = this->pRawData;
+
+	return STATUS_OK;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+int BlockChainFileManager::getTxIndexFromStream(std::istream *iss,char delim)
+{
+	int IndexValue;
+	std::string line;
+	std::stringstream ss;
+
+	std::getline(*iss, line,delim);
+	ss.str(line);
+	ss >> IndexValue;
+	return IndexValue;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+std::string BlockChainFileManager::getHashFromStream(std::istream *iss,char delim)
+{
+	std::string line;
+	std::stringstream ss;
+	std::getline(*iss, line,delim);
+	return line;
+}
+
+// Descripcion:
+// Precondicion:
+// PostCondicion:
+float BlockChainFileManager::getBTCValueFromStream(std::istream *iss,char delim)
+{
+	float floatValue;
+	std::string line;
+	std::stringstream ss;
+
+	std::getline(*iss, line,delim);
+	ss.str(line);
+	ss >> floatValue;
+	return floatValue;
 }

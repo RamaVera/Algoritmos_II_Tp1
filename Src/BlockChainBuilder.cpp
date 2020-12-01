@@ -5,12 +5,14 @@
  *      Author: Ramiro
  */
 
+#include <time.h> 
+
 #include "BlockChainBuilder.h"
 
 
 BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( 3 /* El valor por default establecido en el TP0 */), pRawData(NULL){}
 
-BlockChainBuilder::BlockChainBuilder(unsigned int d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
+BlockChainBuilder::BlockChainBuilder(size_t d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
 
 BlockChainBuilder::~BlockChainBuilder() {
 	if ( ! this->ListaBlocks.vacia() ){
@@ -59,12 +61,12 @@ BlockChainBuilder::~BlockChainBuilder() {
 //	}
 //}
 
-unsigned int BlockChainBuilder::Calculononce() {
-	static unsigned int contador = 0;
-	contador++;
-	return contador;
+//unsigned int BlockChainBuilder::Calculononce() {
+//	static unsigned int contador = 0;
+//	contador++;
+//	return contador;
 
-}
+//}
 
 bool BlockChainBuilder::CalculoBits( std::string hash, size_t bits ) {
 	int resultado;
@@ -96,28 +98,39 @@ bool BlockChainBuilder::Minando() {
 		*/
 		it = this->ListaBlocks.primero();
 		do  {
+			time_t timer1, timer2;
+			time(&timer1);  	/* get current time; same as: timer = time(NULL)  */
 			this->BlocklActual = it.dato();
 			do{		
 				resultado = "";
-				this->BlocklActual->setnonce( BlockChainBuilder::Calculononce());
+
 				resultado += this->BlocklActual->getpre_block();
 				resultado += '\n';
 				resultado += this->BlocklActual->gettxns_hash(); 
 				resultado += '\n';
 				resultado += std::to_string(this->BlocklActual->getbits());
 				resultado += '\n';
-				resultado += std::to_string(this->BlocklActual->getnonce());
+				resultado += this->BlocklActual->Calculononce();
+				resultado += '\n';
 				//std::cout << resultado << std::endl;//DEBUG
 				//if ( resultado.length() > 0  ) {
 				this->hash_resultado = sha256 ( sha256( resultado ) );
 				//std::cout << this->hash_resultado << std::endl; //DEBUG
 				//}
 			}while(! CalculoBits( this->hash_resultado, this->bits ) );
+			time(&timer2);
+			this->BlocklActual->setseconds( difftime( timer1, timer2 ) );
+
+
 			it.avanzar();
 		} while ( ! it.extremo() );
 		return true;
 	}
 	return false;
+}
+
+double BlockChainBuilder::tiempominado() {
+	return this->seconds;
 }
 
 const char* BlockChainBuilder::hex_char_to_bin( char c )
@@ -159,7 +172,7 @@ std::string BlockChainBuilder::hex_str_to_bin_str( const std::string & hex )
     return bin;
 }
 
-int BlockChainBuilder::dificultad( const std::string value, const size_t dif ) {
+int BlockChainBuilder::dificultad( const std::string & value, const size_t dif ) {
 	// Se corta el recorrido de la cadena una vez alcanzado el valor dif
 	size_t j = 0;
 
@@ -170,12 +183,12 @@ int BlockChainBuilder::dificultad( const std::string value, const size_t dif ) {
 		if ( value[ i ] == '0' ) j++;
 		else if ( value[ i ] == '1' ) break;
 		else return -1;
-		if ( j >= dif ) break;
+		if ( j >= dif ) break; 
 	}
 	return j;
 }
 
-int BlockChainBuilder::CheckDificultadOk( std::string cadenaHexa, const size_t dif ) {
+int BlockChainBuilder::CheckDificultadOk( const std::string & cadenaHexa, const size_t dif ) {
 	int d;
 	if ( cadenaHexa.empty() ) return -3;
 	if ( dif == 0 ) return -2;

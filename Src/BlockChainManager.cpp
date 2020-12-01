@@ -7,16 +7,22 @@
  
 #include "BlockChainManager.h"
 
-status_t BlockChainManager::state = STATUS_READING_COMMANDS;
+status_t BlockChainManager::state = STATUS_OK;
+status_t BlockChainManager::command = STATUS_READING_COMMANDS;
 
-void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
+// Descripcion: proccesBlockChain es un metodo que encapsula toda la logica interna de blockchain
+// en este metodo, dependiendo el comando de entrada, se instanciaran las clases BlockChainBuilder,
+// BlockChainBookkeeper y BlockChainFileManafer que realizaran la tarea seleccionada.
+// Precondicion: Toda logica relacionada a blockchain debe estar invocada desde esta zona
+// Postcondicion:
+void BlockChainManager::proccesBlockChain(){
+	BlockChainManager::proccesStatus(STATUS_READING_COMMANDS);
 	std::string command;
 	payload_t payload;
 	BlockChainFileManager fileManager;
 
-	while (BlockChainManager::state == STATUS_READING_COMMANDS  ){
-
-		BlockChainManager::proccesStatus( fileManager.translateCommands(iss,payload) );
+	while (BlockChainManager::command != STATUS_NO_MORE_COMMANDS ){
+		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
 		std::cout<< "Begin Parse Command ...";
 		switch(payload.command)
 		{
@@ -60,7 +66,7 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 
 					// Bookkeeper intenta completar el raw_t, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload) )
+					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload.raw) )
 
 					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
 					// BlockChainManager::proccesStatus( bookkeeper.saveInMempool(payload) );
@@ -78,7 +84,7 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 					// BlockChainBuilder builder(payload.bits);
 
 					// Builder le pide la mempool a bookkeeper y la guarda en su raw
-					// BlockChainManager::proccesStatus( builder.setRawData( bookkeeper.getMempool() ) )
+					// BlockChainManager::proccesStatus( builder.setTransaction( bookkeeper.getMempool() ) )
 
 					// Builder mina el bloque como lo hacia anteriormente
 					// BlockChainManager::proccesStatus( builder.createBlockChain() );
@@ -140,36 +146,23 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
 					// BlockChainBookkeeper bookkeeper;
-
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
-					// BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
+					file_t newFile;
+					newFile.fileID = payload.filename;
+					newFile.type = FileTypes::loadBlockChainFile;
+					newFile.mode = ios::in;
+					newFile.isStandard = false;
+					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-						// ifs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-						// try {
-						//	ifs.open(arg.c_str(), ios::in); // c_str(): Returns a pointer to an array that contains a null-terminated
-															// sequence of characters (i.e., a C-string) representing
-															// the current value of the string object.
-						//}
-						//catch (std::system_error& e) {
-						//	std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
 
 					// Filemanager valida que la estructura de la blockchain este correctamente
-					// BlockChainManager::proccesStatus( filemanager.validate( payload.filename ) )
-
-					// Aca se me ocurre el laburo de 2 maneras, pero no estoy seguro.
-					// 1)  Hacer que filemanager aprenda el formato de lista<Bloques> y trabaje con ella
-					// y le pase la lista de bloques a bookkeeper y el la agrege en la historia. En el Tp0
-					// solo usaba lista de bloques para convertir, pero nunca habia tenido que leer lista
-					// de bloques
-					// o
-					// 2)  Instanciar a builder que ya aprendio a usar lista de bloques y que filemanager
-					// lo cargue con setters de builder y que luego bookkeeper toma la lista de bloques de builder
+					BlockChainManager::proccesStatus( fileManager.validateBlockChain() );
 
 					// Bookkeeper guarda en la historia
 					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( X.getBlockChainPointer());
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
-					// BlockChainManager::proccesStatus( filemanager.close( payload.filename ) )
+					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
 				}
 				break;
 			case Commands::save:
@@ -180,94 +173,168 @@ void BlockChainManager::proccesBlockChain(std::istream *iss,std::ostream *oss){
 					// std::string filename = payload.filename;
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
-					// BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
+					file_t newFile;
+					newFile.fileID = payload.filename;
+					newFile.type = FileTypes::saveBlockChainFile;
+					newFile.mode = ios::out;
+					newFile.isStandard = false;
 
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
-					// BlockChainManager::proccesStatus( filemanager.open( payload.filename ) )
+					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-					//std::cout<< "Begin Converting Block to File ..." << std::endl;
-					//BlockChainManager::proccesStatus( fileManager.convert(fileManager.oss, bookkeeper.getHistoryBook() );
+					lista<Block*> BlockChainFantasma;
+					Block * BlocklActual1;
+					Block * BlocklActual2;
+					Block * BlocklActual3;
+					BlocklActual1 = new Block();
+					BlocklActual1->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
+					BlocklActual1->settxns_hash( "e9dc0f0fbcb9021dc39ec104dfa51e813a86c8205a77d3be6c8cd6140b941e0c" ) ;
+					BlocklActual1->setbits( 3  );
+					BlocklActual1->setnonce(1000 );
+					BlockChainFantasma.insertar( BlocklActual1 );
+					BlocklActual2 = new Block();
+					BlocklActual2->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" )  ;
+					BlocklActual2->settxns_hash( "cd372fb85148700fa88095e3492d3f9f5beb43e555e5ff26d95f5a6adc36f8e6" )  ;
+					BlocklActual2->setbits( 3  ) ;
+					BlocklActual2->setnonce(2000 );
+					BlockChainFantasma.insertar( BlocklActual2 );
+					BlocklActual3 = new Block();
+					BlocklActual3->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
+					BlocklActual3->settxns_hash( "155dc94b29dce95bb2f940cdd2d7e0bce66dca9370c3ed96d50a30b3d84f8c4c" ) ;
+					BlocklActual3->setbits( 3  ) ;
+					BlocklActual3->setnonce(3000 );
+					BlockChainFantasma.insertar( BlocklActual3 );
 
 
-}
+					std::cout<< "Begin Converting Block to File ..." << std::endl;
+					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::saveBlockChainFile, BlockChainFantasma) );
+
+					// Filemanager cierra el archivo pasado como argumento dentro del payload.
+					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
+
+				}
 				break;
 			default:
-				std::cout<< "Error Not Defined"<< std::endl;
+				BlockChainManager::command  = STATUS_NO_MORE_COMMANDS;
+				std::cout<< "Fail: Error Not Defined"<< std::endl;
 				break;
 		}
 	}
+	BlockChainManager::proccesStatus(fileManager.removeAllFiles());
+	cout << "Finishing Execution " << endl;
 }
 
+// Descripcion: proccesStatus es un metodo que analiza los estados de salida de las clases
+// BlockChainBuilder,BlockChainBookkeeper y BlockChainFileManafer que son las que realizan
+// las tareas. En base a dichos estados BlockChainManager decide el flujo del programa.
+// Precondicion:
+// Postcondicion:
 void BlockChainManager::proccesStatus(status_t status){
+	BlockChainFileManager fileManager;
 	state = status;
 	switch(status){
-	case STATUS_READING_COMMANDS:
-		std::cout << "Reading.." << std::endl;
-		break;
-	case STATUS_ERROR_COMMAND_NOT_FOUND:
-		std::cout << "FAIL" << std::endl;
-		std::cerr << "Error Comando no conocido" << std::endl;
-		std::abort();
-		break;
-	case STATUS_ERROR_COMMAND_PAYLOAD:
-		std::cout << "FAIL" << std::endl;
-		std::cerr << "Error Comando con argumentos invalidos" << std::endl;
-		std::abort();
-		break;
+	// -------- Terminaciones Correctas-----//
 	case STATUS_OK:
 		//std::cout << "Done" << std::endl;
 		break;
+	case STATUS_READING_COMMANDS:
+		command = STATUS_READING_COMMANDS;
+		//std::cout << "Reading.." << std::endl;
+		break;
+	case STATUS_NO_MORE_COMMANDS:
+		command = STATUS_NO_MORE_COMMANDS;
+		//std::cout << "Reading.." << std::endl;
+		break;
+	case STATUS_OPEN_FILE_SUCCESSFULY:
+		break;
+	case STATUS_CLOSE_FILE_SUCCESSFULY:
+		break;
 	case STATUS_FINISH_CONVERT_SUCCESSFULY:
+		fileManager << FileTypes::userCommandResponseFiles << "OK\n";
+		break;
+	//-------- Errores ------------------//
+	case STATUS_ERROR_COMMAND_NOT_FOUND:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		std::cerr << "Error Comando no conocido" << std::endl;
+		//std::abort();
+		break;
+	case STATUS_ERROR_COMMAND_PAYLOAD:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		std::cerr << "Error Comando con argumentos invalidos" << std::endl;
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT:
-		std::cout << "Error de Formato: Formato Incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Formato Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Formato Incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
+		break;
+	case STATUS_CORRUPT_FORMAT_BAD_BITS:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
+		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
+		//std::abort();
+		break;
+	case STATUS_CORRUPT_FORMAT_BAD_NONCE:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
+		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_HASH:
-		std::cout << "Error de Formato: Hash incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Hash incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Hash incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXINDEX:
-		std::cout << "Error de Formato: Indice de Tx incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Indice de Tx incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice de Tx incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXIN:
-		std::cout << "Error de Formato: Indice Tx In Incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Indice Tx In Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice Tx In Incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_TXOUT:
-		std::cout << "Error de Formato: Indice Tx Out Incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Indice Tx Out Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Indice Tx Out Incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	case STATUS_CORRUPT_FORMAT_BAD_BTCVALUE:
-		std::cout << "Error de Formato: Valor de Bitcoin Incorrecto" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Formato: Valor de Bitcoin Incorrecto" << std::endl;
 		std::cerr << "Error de Formato: Valor de Bitcoin Incorrecto" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	case STATUS_BAD_ALLOC:
-		std::cout << "Error de sistema: Memoria insuficiente" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de sistema: Memoria insuficiente" << std::endl;
 		std::cerr << "Error de sistema: Memoria insuficiente" << std::endl;
 		std::abort();
 		break;
 	case STATUS_BAD_READ_INPUT_FILE:
-		std::cout << "Error de Lectura: Archivo de entrada dañado" << std::endl;
-		std::cerr << "Error de Lectura: Archivo de entrada dañado" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Lectura: Archivo de entrada daï¿½ado" << std::endl;
+		std::cerr << "Error de Lectura: Archivo de entrada daï¿½ado" << std::endl;
 		std::abort();
 		break;
 	case STATUS_BAD_READ_OUTPUT_FILE:
-		std::cout << "Error de Lectura: Archivo de salida dañado" << std::endl;
-		std::cerr << "Error de Lectura: Archivo de salida dañado" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Lectura: Archivo de salida daï¿½ado" << std::endl;
+		std::cerr << "Error de Lectura: Archivo de salida daï¿½ado" << std::endl;
 		std::abort();
 		break;
 		case STATUS_NO_BLOCKS_TO_CONVERT:
-		std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
 		std::cerr << "Error de Conversion: No hay nada que convertir" << std::endl;
-		std::abort();
+		//std::abort();
 		break;
 	default:
 		std::cout << std::endl;
@@ -276,9 +343,65 @@ void BlockChainManager::proccesStatus(status_t status){
 }
 
 
+lista<file_t *> BlockChainManager::userFiles;
+
+// Descripcion: setUserFilename es un metodo utilizado en cmdline en la version 2.1.1
+// con el objetivo de cargar el archivo del usuario en un archivo file_t y darselo al
+// filemanager. En este metodo solo se cargaran los campos de filename, mode y type.
+// - filename: hace referencia al nombre del archivo. En caso de no ser un archivo real, se
+// denominara como Standard Input o Standard Output.
+// - mode: hace referencia a si es un archivo de entrada ios::in o de salida ios::out
+// - type: hace referencia al tipo de archivo que se pasarï¿½. En este metodo solo existiran
+// los tipos FileTypes::userCommandInputFiles y  FileTypes::userCommandResponseFiles.
+// Precondicion: Se espera que los argumentos de este setter esten correctos
+// Postcondicion: Se da un file_t a fileManager.
+void BlockChainManager::setUserFilename(ios_base::openmode mode, std::string filename, bool isStandard){
+	BlockChainFileManager fileManager;
+	//---Si es un archivo de entrada---//
+	if( mode == ios::in){
+		if(isStandard){
+			filename += " Input";
+			cout << "La direccion del archivo Origen es : Cin (Entrada Standard)" << endl;
+		}
+		else{
+			cout<<	"La direccion del archivo Origen es : "<< filename << endl;
+		}
+		file_t usrFile;
+		usrFile.fileID = filename;
+		usrFile.mode = mode;
+		usrFile.type = FileTypes::userCommandInputFiles;
+		usrFile.isStandard = isStandard;
+		BlockChainManager::proccesStatus( fileManager.addFile(usrFile) );
+	}else //---Si es un archivo de salida---//
+		if( mode == ios::out){
+		if(isStandard){
+			filename += " Output";
+			cout<< "La direccion del archivo Destino es: Cout (Salida Standard)" << endl;
+		}
+		else{
+			cout<< "La direccion del archivo Destino es : "<< filename <<endl;;
+		}
+		file_t usrFile;
+		usrFile.fileID = filename;
+		usrFile.mode = mode;
+		usrFile.type = FileTypes::userCommandResponseFiles;
+		usrFile.isStandard = isStandard;
+		BlockChainManager::proccesStatus( fileManager.addFile(usrFile) );
+	}
+}
+
+//-----------------------------------------------------------------------------------//
+// OBSOLETO PARA LA VERSION 2.1.1 (TP1)
+
 #define DIFFICULTY_DEFAULT_VALUE 3
 unsigned int BlockChainManager::userDefinedDifficulty = DIFFICULTY_DEFAULT_VALUE;
 
+
+// Descripcion: Metodo que se utilizo en la version 1.1.1 (Tp0) para cargar el valor de
+// dificultad (bits) desde la clase cmdline. En la version 2.1.1 (Tp1) ya no se vuelve a usar
+// Precondicion: Debe llegar un int para verificar el signo
+// Postcondicion: Debe cargarse un unsined_int en la variable estatica userDefinedDifficulty
+// con el valor de entrada
 void BlockChainManager::setUserDefinedDifficulty(int d){
 	if( d < 0 ){
 		std::cout << "Error de Formato: Dificultad debe ser mayor a cero " << std::endl;
@@ -288,7 +411,13 @@ void BlockChainManager::setUserDefinedDifficulty(int d){
 	userDefinedDifficulty = (unsigned int) d;
 }
 
-
+// Descripcion: Metodo que se utilizo en la version 1.1.1 (Tp0) devolver el valor de
+// userDefinedDifficulty. En la version 2.1.1 (Tp1) ya no se vuelve a usar
+// Precondicion: Debe haberse cargado userDefinedDifficulty previamente con el metodo setter
+// Postcondicion: Devuelve el valor de userDefinedDifficulty
 unsigned int BlockChainManager::getUserDefinedDifficulty( void ){
 	return userDefinedDifficulty;
 }
+
+//-----------------------------------------------------------------------------------//
+

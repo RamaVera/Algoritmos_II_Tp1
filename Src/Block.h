@@ -5,6 +5,8 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
+#include "sha256.h"
 #include "lista.h"
 #include "TiposHash.h"
 #include "Transaction.h"
@@ -23,16 +25,22 @@ class Block {
 		// Atributos Seccion Header
 		std::string pre_block;
 		std::string txns_hash;	// <- retiene el hash256(hash256(cadena_prehash))
-		unsigned int bits;	/* La dificultad de bits */
-		unsigned int nonce;
+		size_t bits;			// La dificultad de bits
+		size_t nonce;
+		std::string hash_Merkle;
 		StatusBlock eBlock;
 		// Atributos Seccion Body;
-		unsigned int txn_count;
+		size_t txn_count;
 		lista <Transaction *> ListaTran;
 		Transaction * CurTran;
 		std::string cadena_prehash;
+		// Para medir tiempos de minado x Block.
+		double seconds;
 		// Métodos privados
 		std::string RecalculoHash( void );
+		std::string ArbolMerkle( void );
+
+		friend class Extracto; 
 
 	public:
     // Métodos
@@ -44,19 +52,28 @@ class Block {
         // Destructor
         ~Block();
 		// Getters
-        unsigned int gettxn_count();
+		size_t gettxn_count();
 		std::string getpre_block();
 		std::string gettxns_hash();
 		unsigned int getbits();
-		unsigned int getnonce();
+		size_t getnonce();
+		std::string getStrNonce();
 		std::string getcadenaprehash();
+		std::string gethash_Merkle();
+		const lista <Transaction *> getListaTran();
+		Transaction * getTran( size_t Index );
 		// Setters
 		bool setpre_block( std::string valor );
 		bool settxns_hash( std::string valor );		// Debo dejar el método de asignación. El cálculo Hash es externo al objeto block, no está encapsulado.
-		bool setbits( unsigned int valor );
-		bool setnonce( int valor );			// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
-		bool settransaction( const raw_t & raw ) ;  // TODO
+		bool setbits( size_t valor );
+		bool setnonce( size_t valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
+		bool setseconds( double segundos );
+		bool settransaction( const raw_t & raw );
 		StatusBlock EstatusBlock();
+		// Métodos públicos
+		double tiempominado();
+		std::string Calculononce();
+
 };
 
 #endif /* BLOCK_H_ */

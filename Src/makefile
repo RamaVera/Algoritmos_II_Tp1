@@ -1,5 +1,5 @@
 
-OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o # Los archivos compilados individuales
+OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o BlockChainHistoryBook.o # Los archivos compilados individuales
 PROGR = miner.exe # Nombre del archivo ejecutable
 CPPFLAGS = -g -Wall -pedantic -Werror # -g opcion de g++ para debugear
 
@@ -25,6 +25,8 @@ BlockChainBuilder.o : BlockChainBuilder.cpp BlockChainBuilder.h lista.h sha256.h
 	$(CC) $(CPPFLAGS) -c BlockChainBuilder.cpp
 BlockChainBookkeeper.o : BlockChainBookkeeper.cpp BlockChainBookkeeper.h BlockChainDataTypes.h BlockChainStatus.h
 	$(CC) $(CPPFLAGS) -c BlockChainBookkeeper.cpp
+BlockChainHistoryBook.o : BlockChainHistoryBook.cpp BlockChainHistoryBook.h Block.h lista.h
+	$(CC) $(CPPFLAGS) -c BlockChainHistoryBook.cpp
 Block.o : Block.cpp Block.h Transaction.h lista.h TiposHash.h BlockChainDataTypes.h
 	$(CC) $(CPPFLAGS) -c Block.cpp
 Transaction.o : Transaction.cpp Transaction.h lista.h TransactionOutput.h TransactionInput.h  BlockChainDataTypes.h
@@ -42,4 +44,4 @@ clean:
 all: $(PROGR)
 	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
 run : $(PROGR)
-	valgrind --leak-check=yes ./$(PROGR) -i input.txt -o -
+	valgrind -s --leak-check=yes ./$(PROGR) -i input.txt -o output.txt

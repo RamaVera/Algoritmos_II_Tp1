@@ -60,7 +60,7 @@ Block::~Block() {
 }
 
 // Getters
-unsigned int Block::gettxn_count() {
+size_t Block::gettxn_count() {
 	return this->txn_count;
 }
 
@@ -76,12 +76,44 @@ unsigned int Block::getbits() {
 	return this->bits;
 }
 
-unsigned int Block::getnonce() {
+size_t Block::getnonce() {
 	return this->nonce;
+}
+
+std::string Block::getStrNonce() {
+	return std::to_string(this->nonce);
 }
 
 std::string Block::getcadenaprehash() {
 	return this->cadena_prehash;
+}
+
+double Block::tiempominado() {
+	return this->seconds;
+}
+
+Transaction * Block::getTran( size_t Index ) {
+	Transaction * T = NULL;
+	size_t i = 0;
+	// Checks
+	if ( Index <= 0 ) { return T; }
+	else if ( Index > this->txn_count ) { return T; }
+	if ( ! this->ListaTran.vacia() ) {
+		lista <Transaction *>::iterador it(ListaTran);
+		it = this->ListaTran.primero();
+		do  {
+			if ( Index == i++ ) {
+				T = it.dato();
+				break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return T;
+}
+
+const lista <Transaction *> Block::getListaTran() {
+	return this->ListaTran;
 }
 
 // Setters
@@ -119,7 +151,7 @@ bool Block::settxns_hash( std::string valor ) {
 	return true;
 }
 
-bool Block::setbits( unsigned int valor ) {
+bool Block::setbits( size_t valor ) {
 	if ( !valor ) {
 		this->bits = 0;
 		// Hay que anotar, en un status ?, el error o disparar un throw
@@ -130,15 +162,8 @@ bool Block::setbits( unsigned int valor ) {
 	return true;
 }
 
-bool Block::setnonce( int valor ) {
-	if ( valor < 0 ) {
-		this->nonce = 0;
-		// Hay que anotar, en un status ?, el error o disparar un throw
-	}
-	else {
-		/* No se valida nada, puede ser cualquier dato */
-		this->nonce = (unsigned int) valor;
-	}
+bool Block::setnonce( size_t valor ) {
+	this->nonce = valor;
 	return true;
 }
 
@@ -158,6 +183,10 @@ bool Block::settransaction( const raw_t & raw ) {
 		return false;
 	}
 }
+bool Block::setseconds( double segundos ) {
+	this->seconds = segundos;
+	return true;
+}
 
 std::string Block::RecalculoHash( void ) {
 	std::string cadena = "";
@@ -175,7 +204,64 @@ std::string Block::RecalculoHash( void ) {
 	if ( ! cadena.empty() ) {
 		this->cadena_prehash = cadena;
 		this->eBlock = StatusBlock::BlockCalculadoCadena_prehash;
+		this->hash_Merkle = ArbolMerkle();
 	}
 	else this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 	return cadena;
+}
+
+std::string Block::Calculononce() {
+	static size_t contador = 0;
+	this->nonce = contador++;
+	return std::to_string( this->nonce );
+}
+
+std::string Block::ArbolMerkle( void ) {
+	/*
+	   Dudas
+       Utilizar recursividad plantea un aumento de espacio con una misma complejidad log(n).
+	   Al utilizar iteraciones combinado con el uso de un vector inplace() elimina el aumento de espacio y posee la misma complejidad
+	   Con la última transaction si es impar se asume que la de al lado es el mismo y se hace un sha256.
+	*/
+	std::string cadena = "";
+	if ( ! this->ListaTran.vacia() ) {
+		// rellenado del vector.
+		// Esto se podria implementar para optimizar en la iteracion de RecalculoHash.
+		// A costa de extender el espacio de memoria consumido por strMerkle[] a lo largo de toda la instancia de Block.
+		lista <Transaction *>::iterador it(ListaTran);
+		size_t largo = this->ListaTran.tamano();  // Lo almaceno para no recalcularlo en cada iteración
+		vector < std::string > strMerkle( largo );
+		it = this->ListaTran.primero();
+		size_t i = 0, tam = largo;
+		while ( ! it.extremo() ) {
+			strMerkle[i++] = it.dato()->getConcatenatedTransactions();
+			it.avanzar();
+		};
+		// TODO. Analizar ventajas en este tramo de llevarlo a recursivo e inplace.
+		for ( size_t j = 0; ( j < tam ) && ( tam > 1 ); j++  ) {
+			for ( i = 0; i < largo; i += 2 ) {
+				if ( i == largo - 1) {
+					// Lucio me recordó que es hash doble !!
+					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i ] ) );
+				}
+				else {
+					strMerkle[ i ] = sha256 ( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i + 1 ] ) );
+				}
+			}
+			// ( tam % 2 ) ? tam <<= 1 : tam = ( tam + 1 ) << 1;   <- Opcion rápida con operadores de bits.
+			if ( tam % 2 ) {
+				tam /= 2;
+			}
+			else {
+				tam = ( tam + 1) / 2;
+			}
+			
+		}
+		cadena = strMerkle[ 1 ];
+	}
+	return cadena;
+}
+
+std::string Block::gethash_Merkle() {
+	return this->hash_Merkle;
 }

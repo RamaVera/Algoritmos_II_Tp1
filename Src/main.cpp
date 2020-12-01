@@ -16,10 +16,6 @@
 
 using namespace std;
 
-static istream* iss = 0;
-static ostream* oss = 0;
-static fstream ifs;
-static fstream ofs;
 
 /*=====================================================================================*/
 // 									PROTOTIPOS
@@ -57,11 +53,7 @@ int main(int argc, char * const argv[]){
 
 	//------Le paso los archivos al Manager ------//
 
-	BlockChainManager::proccesBlockChain(iss,oss);
-
-	//------Se cierran los archivos ------//
-	ifs.close();
-	ofs.close();
+	BlockChainManager::proccesBlockChain();
 
 	return 0;
 }
@@ -73,46 +65,14 @@ int main(int argc, char * const argv[]){
 /*====================================================================================*/
 
 //------------------ Callbacks de CMDLINE ------------------------------//
-
-
-
-
-
 static void opt_input(string const &arg)
 {
 	// Si el nombre del archivos es "-", usaremos la entrada
 	// est?dar. De lo contrario, abrimos un archivo en modo
 	// de lectura.
 	//
-	if (arg == "-") {
-		iss = &cin;		// Establezco la entrada estandar cin como flujo de entrada
-		cout<<"La direccion del archivo Origen es : Cin (Entrada Standar)" <<endl;
-
-	}
-	else {
-		ifs.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
-		try {
-			ifs.open(arg.c_str(), ios::in); // c_str(): Returns a pointer to an array that contains a null-terminated
-											// sequence of characters (i.e., a C-string) representing
-											// the current value of the string object.
-		}
-		catch (std::system_error& e) {
-			std::cerr << "Exception opening/reading/closing file error: " << e.code().message() << "\n";
-		}
-		iss = &ifs;
-		cout<<"La direccion del archivo Origen es : "<< arg.c_str() << endl;
-
-	}
-
-	// Verificamos que el stream este OK.
-	//
-	if ( !iss->good() ) {
-		cerr << "cannot open "
-		     << arg
-		     << "."
-		     << endl;
-		std::abort();
-	}
+	if (arg == "-")  BlockChainManager::setUserFilename(ios::in);
+	else 			 BlockChainManager::setUserFilename(ios::in,arg.c_str(),false);
 }
 
 static void opt_output(string const &arg)
@@ -123,15 +83,7 @@ static void opt_output(string const &arg)
 	// de escritura.
 	//
 	//outputFileName = arg.c_str();
-
-	if (arg == "-") {
-		oss = &cout;	// Establezco la salida estandar cout como flujo de salida
-		cout<< "La direccion del archivo Destino es: Cout (Salida Standar)" << endl;
-	} else {
-		ofs.open(arg.c_str(), ios::out);
-		oss = &ofs;
-		cout<< "La direccion del archivo Destino es : "<< arg.c_str() <<endl;
-	}
-
+	if (arg == "-")  BlockChainManager::setUserFilename(ios::out);
+	else 			 BlockChainManager::setUserFilename(ios::out,arg.c_str(),false);
 }
 
