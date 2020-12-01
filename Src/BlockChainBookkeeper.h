@@ -23,9 +23,9 @@ public:
 	//---Getters---//
 	const lista <Block *> & getListaBlocks();
 	// Para usar x línea de comandos block <id>
-	const Block * getBlock( const std::string txns_hash );
+	const Block * getBlock( const std::string txns_hash );							// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>
-	const TransactionInput * obtenerTransactionInput( const std::string tx_id );
+	const TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
 	//---Setters---//
 	//---Otros---//
 	bool AddBlock( Block * B );
