@@ -37,7 +37,7 @@ void BlockChainManager::proccesBlockChain(){
 					//--------------------------------------------------------------//
 
 					//BlockChainBookkeeper bookkeeper;
-					//BlockChainBuilder builder(payload.bits);
+					 BlockChainBuilder builder(payload.bits);
 
 					// Builder crea un bloque origen con los datos suministrados en payload
 					// BlockChainManager::proccesStatus( builder.createOriginBlock(payload) );
@@ -173,7 +173,7 @@ void BlockChainManager::proccesBlockChain(){
 					// std::string filename = payload.filename;
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
-					BlockChainBookkeeper bookkeeper;
+					//BlockChainBookkeeper bookkeeper;
 					file_t newFile;
 					newFile.fileID = payload.filename;
 					newFile.type = FileTypes::saveBlockChainFile;

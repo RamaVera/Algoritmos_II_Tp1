@@ -8,11 +8,8 @@
 #include "BlockChainBookkeeper.h"
 
 BlockChainBookkeeper::BlockChainBookkeeper() {
-	// TODO Auto-generated constructor stub
-
 }
 
 BlockChainBookkeeper::~BlockChainBookkeeper() {
-	// TODO Auto-generated destructor stub
 }
 

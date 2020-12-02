@@ -10,8 +10,12 @@
 
 #include "BlockChainStatus.h"
 #include "BlockChainDataTypes.h"
+#include "Block.h"
+// #include "lista.h"
 
 class BlockChainBookkeeper {
+
+private:
 public:
 	BlockChainBookkeeper();
 	~BlockChainBookkeeper();
