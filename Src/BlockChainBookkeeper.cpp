@@ -7,11 +7,13 @@
 
 #include "BlockChainBookkeeper.h"
 
+// Constructores
 BlockChainBookkeeper::BlockChainBookkeeper() {
 	// TODO Auto-generated constructor stub
 
 }
 
+// Destructor
 BlockChainBookkeeper::~BlockChainBookkeeper() {
 	// AlgoChain se autodestruye, antes debo liberar la memoria asignada en cada elemento * AlgoChain de la lista
 	// El compilador ejecuta antes los destructores de las clases hijas que liberan su memoria dinámica.
@@ -23,6 +25,11 @@ BlockChainBookkeeper::~BlockChainBookkeeper() {
 			it.avanzar();
 		}
 	}
+}
+
+//---Getters---//
+const lista <Block *> & BlockChainBookkeeper::getListaBlocks() {
+	return AlgoChain;
 }
 
 // Para usar x línea de comandos block <id>
@@ -118,3 +125,46 @@ const TransactionInput * BlockChainBookkeeper::obtenerTransactionInput( const st
 	}
 	return TI;
 }
+
+//---Otros---//
+bool BlockChainBookkeeper::AddBlock( Block * B ) {
+	std::string b_prev = "";
+
+	// Checks
+	if ( ! B ) {
+		return false;
+	}
+	// End Checks
+
+	if ( ! this->AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( this->AlgoChain );
+		it = this->AlgoChain.primero();
+		for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
+		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+			// Mal definido el Block Zero
+			return false;
+		}
+		do {
+			if ( ( it.dato()->gettxns_hash() == B->gettxns_hash() ) ) {
+				// Block existente
+				return false;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	this->AlgoChain.insertar( B );
+	return true;
+}
+
+bool BlockChainBookkeeper::AddListaBlocks( lista <Block *> & listado ) {
+	if ( ! listado.vacia() ) {
+		lista <Block *>::iterador it( listado );
+		it = listado.primero();
+		do {
+			if ( BlockChainBookkeeper::AddBlock( it.dato() ) ) return false;
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return true;
+}
+
