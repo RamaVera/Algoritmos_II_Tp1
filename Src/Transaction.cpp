@@ -22,7 +22,7 @@ Transaction::Transaction(){
 
 //Descripcion: Instancia el objeto Transaction a partir de un archivo raw_t
 //Precondicion:
-//Postcondicion: Dos punteros a memoria de tamaño definido creados y
+//Postcondicion: Dos punteros a memoria de tamaï¿½o definido creados y
 // precargados con los datos de raw_t
 Transaction::Transaction( const raw_t & Raw ){
 	//TODO preparar Transaction para una cadena de Raw
@@ -53,6 +53,31 @@ Transaction::Transaction( const raw_t & Raw ){
 		catch (std::bad_alloc& ba)
 		{
 			std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+		}
+	}
+}
+
+Transaction::Transaction(int n_tx_in,int n_tx_out){
+	this->n_tx_in = n_tx_in;
+	if(this->n_tx_in ){
+		for(int i = 0; i < this->n_tx_in ;i++ )
+		{
+			try {
+				TransactionInput * pTxInput = new TransactionInput;
+				this->ListaTranIn.insertar(pTxInput);
+			}
+			catch (std::bad_alloc& ba) { std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+		}
+	}
+	this->n_tx_out = n_tx_out;
+	if(this->n_tx_out){
+		for(int i = 0; i < this->n_tx_out ;i++ )
+		{
+			try {
+				TransactionOutput * pTxOutput = new TransactionOutput;
+				this->ListaTranOut.insertar(pTxOutput);
+			}
+			catch (std::bad_alloc& ba)	{std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
 		}
 	}
 }
@@ -123,7 +148,7 @@ TransactionOutput * Transaction::getTransactionOutput(int index){
 		return NULL;
 	else{
 		lista <TransactionOutput *>::iterador it(this->ListaTranOut);
-		int counter = 0;
+		int counter = 1;
 		while(counter != index){
 			it.avanzar();
 			counter++;
@@ -188,5 +213,38 @@ std::string Transaction::float_to_string_w_precision(float val, int p)
 	std::stringstream stream;
 	stream << std::fixed << std::setprecision(p) << val;
 	return stream.str();
+}
+
+Transaction & Transaction::operator=(Transaction &tr){
+	lista <TransactionInput *>::iterador itInput( tr.ListaTranIn);
+	lista <TransactionOutput*>::iterador itOutput( tr.ListaTranOut);
+	itInput = ListaTranIn.ultimo();
+	itOutput = ListaTranOut.ultimo();
+	this->n_tx_in = tr.n_tx_in;
+	while(!itInput.extremo() )
+	{
+		try {
+			TransactionInput * pTxInput = new TransactionInput;
+			pTxInput->setTxId(itInput.dato()->getTxId() );
+			pTxInput->setIdx(itInput.dato()->getIdx()   );
+			pTxInput->setAddr(itInput.dato()->getAddr() );
+			this->ListaTranIn.insertar(pTxInput);
+		}
+		catch (std::bad_alloc& ba)	{std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+		itInput.retroceder();
+	}
+	this->n_tx_out = tr.n_tx_out;
+	while(!itOutput.extremo())
+	{
+		try {
+			TransactionOutput * pTxOutput = new TransactionOutput;
+			pTxOutput->setValue(itOutput.dato()->getValue());
+			pTxOutput->setAddr(itOutput.dato()->getAddr());
+			this->ListaTranOut.insertar(pTxOutput);
+		}
+		catch (std::bad_alloc& ba)	{std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+		itOutput.retroceder();
+	}
+	return *this;
 }
 

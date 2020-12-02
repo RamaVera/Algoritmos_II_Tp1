@@ -37,12 +37,13 @@ private:	// Redundante pero más legible
 public:
 	BlockChainBuilder();
 	BlockChainBuilder(size_t d);
-	virtual ~BlockChainBuilder();
+	~BlockChainBuilder();
 		// Getters
 	// size_t getbits();
 	std::string getObtainedHash(){return hash_resultado;};
 	raw_t *& getRawPointer(){return pRawData;}
 	lista <Block *> getBlockChainPointer(){return ListaBlocks;};
+	Block * getBlocklActual(){return BlocklActual;}
 	double tiempominado();
 	// Setters
 	bool setbits( size_t valor );
@@ -50,7 +51,9 @@ public:
 	size_t cantidadBlocks(); // VS me canta que no se usa
 	static int CheckDificultadOk( const std::string & cadenaHexa, const size_t dif );  // Error -> < 0, No -> 0, 0k -> 1
 	static std::string Calculononce();
-	status_t createBlockChain(void);
+	//status_t createBlockChain(void);
+	status_t createOriginBlock(Transaction &tr);
+	status_t createBlock(lista<Transaction*> & tr,std::string previousHashBlock);
 	// removidas?
 	//static bool CheckHash( const std::string valor, TiposHash Tipo = TiposHash::clavehash256 );
 	//static size_t CheckHexa( const std::string value );

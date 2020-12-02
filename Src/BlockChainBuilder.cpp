@@ -10,7 +10,7 @@
 #include "BlockChainBuilder.h"
 
 
-BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( 3 /* El valor por default establecido en el TP0 */), pRawData(NULL){}
+BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( ), pRawData(NULL){}
 
 BlockChainBuilder::BlockChainBuilder(size_t d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
 
@@ -54,7 +54,7 @@ BlockChainBuilder::~BlockChainBuilder() {
 //	else {
 //		int i = CheckHexa( valor );
 //		if ( i > 0 ) {
-//			// Anotar la posición y valor del dígito erróneo
+//			// Anotar la posiciï¿½n y valor del dï¿½gito errï¿½neo
 //			return false;
 //		}
 //		else return true;
@@ -79,7 +79,7 @@ bool BlockChainBuilder::CalculoBits( std::string hash, size_t bits ) {
 		}
 		else {
 			// Incluye cadena hash vacia y bits == 0
-			// Lo bueno de los booleanos es que siempre estas como máximo a un bit de acertar.
+			// Lo bueno de los booleanos es que siempre estas como mï¿½ximo a un bit de acertar.
 			return false;
 		}
 	}
@@ -119,7 +119,7 @@ bool BlockChainBuilder::Minando() {
 				//}
 			}while(! CalculoBits( this->hash_resultado, this->bits ) );
 			time(&timer2);
-			this->BlocklActual->setseconds( difftime( timer1, timer2 ) );
+			this->BlocklActual->setseconds( difftime( timer2, timer1 ) );
 
 
 			it.avanzar();
@@ -198,12 +198,31 @@ int BlockChainBuilder::CheckDificultadOk( const std::string & cadenaHexa, const 
 }
 
 
-status_t BlockChainBuilder::createBlockChain( void ){
-	Block * newBlock = new Block(*pRawData);
-	newBlock->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" );
-	newBlock->settxns_hash(sha256(sha256(newBlock->getcadenaprehash())));
+//status_t BlockChainBuilder::createBlockChain( void ){
+//	Block * newBlock = new Block(*pRawData);
+//	newBlock->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" );
+//	newBlock->settxns_hash(sha256(sha256(newBlock->getcadenaprehash())));
+//	newBlock->setbits(this->bits);
+//	this->ListaBlocks.insertar(newBlock);
+//	this->Minando();
+//	return STATUS_OK;
+//}
+
+status_t BlockChainBuilder::createOriginBlock(Transaction& tr){
+	Block * newBlock = new Block(tr);
+	newBlock->setpre_block( "0000000000000000000000000000000000000000000000000000000000000000" );
+	newBlock->settxns_hash( newBlock->gethash_Merkle());
 	newBlock->setbits(this->bits);
-	this->ListaBlocks.insertar(newBlock);
+	ListaBlocks.insertar(newBlock);
+	this->Minando();
+	return STATUS_OK;
+}
+
+status_t BlockChainBuilder::createBlock(lista<Transaction*> & tr,std::string previousHashBlock){
+	Block * newBlock = new Block(tr);
+	newBlock->setpre_block( previousHashBlock);
+	newBlock->settxns_hash( newBlock->gethash_Merkle());
+	newBlock->setbits(this->bits);
 	this->Minando();
 	return STATUS_OK;
 }

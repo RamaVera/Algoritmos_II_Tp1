@@ -17,20 +17,44 @@ Block::Block()
 Block::Block( const raw_t & raw )
 	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos)
 {
-	/* Básicamente:
-			se instancia un objeto Transaction, se asume que se reciben datos consistentes.
-			Se le transfiere en crudo el raw_t, (por ejemplo en el constructor directamente).
-			La clase Transaction luego debería instanciar los TransactionInput y TransactionOutput correspondientes.
-			Y calcular al finalizar la carga de los objetos el string de resultado.
-			Al final se añade el objeto a ListaTran.
-		Dudas:
-			si en el txt se lee un Block que contiene varios Transaction, como los recibe Block ? 
-			      En una lista lista.h o en un arreglo dinámico vector.h raw_t?
-			En este caso se recibe solo un raw_t, igualmente lo cargo en una lista, para hacerlo más genérico.
-	*/
 	try {
 		this->CurTran = new Transaction( raw );  	// <- Ojo, nuevo constructor
 		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
+		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+		RecalculoHash();
+	}
+	catch (std::bad_alloc& ba)
+	{
+		this->eBlock = StatusBlock::BlockBadAlloc;
+		std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+	}
+}
+
+Block::Block( const  Transaction & tr)
+	: pre_block(""), txns_hash(""), bits(), nonce(0), eBlock(StatusBlock::BlockSinDatos)
+{
+	try {
+		this->CurTran = new Transaction( tr );
+		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
+		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+		RecalculoHash();
+	}
+	catch (std::bad_alloc& ba)
+	{
+		this->eBlock = StatusBlock::BlockBadAlloc;
+		std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+	}
+}
+
+Block::Block( const  lista<Transaction*> & trList)
+	: pre_block(""), txns_hash(""), bits(), nonce(0), eBlock(StatusBlock::BlockSinDatos)
+{
+	lista<Transaction*> ::iterador it(trList);
+	try {
+		this->CurTran = it.dato();
+		this->ListaTran = trList;	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
 		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
 		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 		RecalculoHash();
@@ -257,7 +281,7 @@ std::string Block::ArbolMerkle( void ) {
 			}
 			
 		}
-		cadena = strMerkle[ 1 ];
+		cadena = strMerkle[ 0 ];
 	}
 	return cadena;
 }

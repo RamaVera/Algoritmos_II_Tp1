@@ -40,6 +40,7 @@ public:
 	lista <TransactionOutput *> getTransactionOutput();
 	//---Setters---//
 	//---Otros---//
+	Transaction & operator=(Transaction &tr);
 	std::string getConcatenatedTransactions();
 };
 

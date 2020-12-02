@@ -36,15 +36,17 @@ void BlockChainManager::proccesBlockChain(){
 					// unsigned int bits = payload.bits;
 					//--------------------------------------------------------------//
 
-					//BlockChainBookkeeper bookkeeper;
-					 BlockChainBuilder builder(payload.bits);
+					BlockChainBookkeeper bookkeeper;
+					BlockChainBuilder builder(payload.bits);
+
+					BlockChainManager::proccesStatus( bookkeeper.createOriginTransaction(payload) );
 
 					// Builder crea un bloque origen con los datos suministrados en payload
-					// BlockChainManager::proccesStatus( builder.createOriginBlock(payload) );
-					// std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+					BlockChainManager::proccesStatus( builder.createOriginBlock( *(bookkeeper.getActualTransaction()) ) );
+					std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
-					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook(builder.getBlockChainPointer());
+					BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( builder.getBlocklActual() ) );
 
 				}
 				break;

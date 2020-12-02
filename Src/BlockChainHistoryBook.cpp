@@ -7,7 +7,7 @@
 
 #include "BlockChainHistoryBook.h"
 
-
+lista<Block*> BlockChainHistoryBook::AlgoChain;
 
 // Para usar x línea de comandos block <id>
 const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
@@ -25,9 +25,9 @@ const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
 	// End Checks
 
 	for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
-	if ( ! this->AlgoChain.vacia() ) {
-		lista <Block *>::iterador it( this->AlgoChain );
-		it = this->AlgoChain.primero();
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
 		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
 			// Mal definido el Block Zero
 			return B;
@@ -61,9 +61,9 @@ const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const s
 	// End Checks
 
 	for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
-	if ( ! this->AlgoChain.vacia() ) {
-		lista <Block *>::iterador it( this->AlgoChain );
-		it = this->AlgoChain.primero();
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
 		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
 			return TI;
 		}
@@ -107,12 +107,19 @@ const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const s
 void BlockChainHistoryBook::BorrarHistoria(void){
 	// AlgoChain se autodestruye, antes debo liberar la memoria asignada en cada elemento * AlgoChain de la lista
 	// El compilador ejecuta antes los destructores de las clases hijas que liberan su memoria dinámica.
-	if ( ! this->AlgoChain.vacia() ) {
-		lista  <Block *>::iterador it( this->AlgoChain );
-		it = this->AlgoChain.primero();
+	if ( ! AlgoChain.vacia() ) {
+		lista  <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
 		while ( ! it.extremo() ) {
 			delete it.dato();
 			it.avanzar();
 		}
 	}
 }
+
+
+bool BlockChainHistoryBook::AddBlock( Block * B ){
+	AlgoChain.insertar(B);
+	return true;
+}
+
