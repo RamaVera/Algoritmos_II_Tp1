@@ -284,18 +284,18 @@ std::string Block::ArbolMerkle( void ) {
 		it = this->ListaTran.primero();
 		size_t i = 0, tam = largo;
 		while ( ! it.extremo() ) {
-			strMerkle[i++] = it.dato()->getConcatenatedTransactions();
+			strMerkle[i++] =  sha256( sha256( it.dato()->getConcatenatedTransactions() ) );
 			it.avanzar();
-		};
+		}
 		// TODO. Analizar ventajas en este tramo de llevarlo a recursivo e inplace.
 		for ( size_t j = 0; ( j < tam ) && ( tam > 1 ); j++  ) {
 			for ( i = 0; i < largo; i += 2 ) {
 				if ( i == largo - 1) {
 					// Lucio me recordó que es hash doble !!
-					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i ] ) );
+					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] + strMerkle[ i ] ) );
 				}
 				else {
-					strMerkle[ i ] = sha256 ( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i + 1 ] ) );
+					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] + strMerkle[ i + 1 ] ) );
 				}
 			}
 			// ( tam % 2 ) ? tam <<= 1 : tam = ( tam + 1 ) << 1;   <- Opcion rápida con operadores de bits.
@@ -305,9 +305,8 @@ std::string Block::ArbolMerkle( void ) {
 			else {
 				tam = ( tam + 1) / 2;
 			}
-			
 		}
-		cadena = strMerkle[ 1 ];
+		cadena = strMerkle[ 0 ];
 	}
 	return cadena;
 }
