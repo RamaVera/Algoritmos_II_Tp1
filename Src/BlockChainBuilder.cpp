@@ -23,7 +23,10 @@ BlockChainBuilder::~BlockChainBuilder() {
 		*/
 		it = this->ListaBlocks.primero();
 		while ( ! it.extremo() ) {
-			delete it.dato();
+			if(it.dato() != NULL){
+				delete it.dato();
+				it.dato() = NULL;
+			}
 			it.avanzar();
 		}
 	}

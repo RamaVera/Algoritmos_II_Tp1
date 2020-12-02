@@ -43,7 +43,7 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Builder crea un bloque origen con los datos suministrados en payload
 					BlockChainManager::proccesStatus( builder.createOriginBlock( *(bookkeeper.getActualTransaction()) ) );
-					std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash();
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
 					BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( builder.getBlocklActual() ) );

@@ -12,8 +12,8 @@ BlockChainBookkeeper::BlockChainBookkeeper() {
 }
 
 BlockChainBookkeeper::~BlockChainBookkeeper() {
-	if(this->ActualTransaction !=NULL)
-		delete ActualTransaction;
+	//if(this->ActualTransaction !=NULL)
+		//delete ActualTransaction;
 }
 
 status_t BlockChainBookkeeper::createOriginTransaction(payload_t & payload){

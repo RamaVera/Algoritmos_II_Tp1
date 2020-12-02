@@ -91,7 +91,10 @@ Transaction::~Transaction(){
 		lista <TransactionInput *>::iterador it(ListaTranIn);
 		it = this->ListaTranIn.primero();
 		do{
-			delete it.dato();
+			if(it.dato() != NULL){
+				delete it.dato();
+				it.dato() = NULL;
+			}
 			it.avanzar();
 		}while ( ! it.extremo() );
 	}
@@ -99,7 +102,10 @@ Transaction::~Transaction(){
 		lista <TransactionOutput *>::iterador it(ListaTranOut);
 		it = this->ListaTranOut.primero();
 		do {
-			delete it.dato();
+			if(it.dato() != NULL){
+				delete it.dato();
+				it.dato() = NULL;
+			}
 			it.avanzar();
 		}while ( ! it.extremo() );
 	}
