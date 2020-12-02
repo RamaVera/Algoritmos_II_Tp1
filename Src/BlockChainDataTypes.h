@@ -9,6 +9,7 @@
 #define BLOCKCHAINDATATYPES_H_
 #include <string>
 #include <fstream>
+#include "Queue.h"
 //Interfaz entre FileManager Hacia Builder
 typedef struct{
 	int inTx;
@@ -38,7 +39,8 @@ enum class Commands{
 
 typedef struct{
 	Commands command;
-	raw_t * pRaw;
+	//raw_t * pRaw;
+	Queue<std::string> * ArgTranfer;
 	std::string filename;
 	std::string user;
 	std::string id;

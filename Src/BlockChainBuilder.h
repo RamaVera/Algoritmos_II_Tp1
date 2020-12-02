@@ -42,8 +42,8 @@ public:
 	// size_t getbits();
 	std::string getObtainedHash(){return hash_resultado;};
 	raw_t *& getRawPointer(){return pRawData;}
-	lista <Block *> getBlockChainPointer(){return ListaBlocks;};
-	Block * getBlocklActual(){return BlocklActual;}
+	lista <Block *>& getBlockChainPointer(){return ListaBlocks;};
+	Block *& getBlocklActual(){return BlocklActual;}
 	double tiempominado();
 	// Setters
 	bool setbits( size_t valor );

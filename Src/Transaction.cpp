@@ -136,7 +136,7 @@ TransactionInput * Transaction::getTransactionInput(int index){
 		return NULL;
 	else{
 		lista <TransactionInput *>::iterador it(this->ListaTranIn);
-		int counter = 0;
+		int counter = 1;
 		while(counter != index){
 			it.avanzar();
 			counter++;
@@ -254,3 +254,18 @@ Transaction & Transaction::operator=(Transaction &tr){
 	return *this;
 }
 
+void Transaction::addTransactionInput(void){
+	this->n_tx_in++;
+	try {
+		TransactionInput * pTxInput = new TransactionInput;
+		this->ListaTranIn.insertar(pTxInput);
+	} catch (std::bad_alloc& ba) { std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+}
+void Transaction::addTransactionOutput(void){
+	this->n_tx_out++;
+	try {
+		TransactionOutput * pTxOutput = new TransactionOutput;
+		this->ListaTranOut.insertar(pTxOutput);
+	} catch (std::bad_alloc& ba) { std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+
+}

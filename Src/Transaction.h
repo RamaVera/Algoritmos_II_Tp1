@@ -41,6 +41,8 @@ public:
 	//---Setters---//
 	//---Otros---//
 	Transaction & operator=(Transaction &tr);
+	void addTransactionInput();
+	void addTransactionOutput();
 	std::string getConcatenatedTransactions();
 };
 

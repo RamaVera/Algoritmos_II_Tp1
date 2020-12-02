@@ -171,14 +171,15 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 			{
 				//std::cout<< "transfer" << std::endl;
 				std::string src,dest,value;
-				size_t inTx = 1 ;
-				size_t outTx = 0;
-				Queue<string> argQueue;
+				//size_t inTx = 1 ;
+				//size_t outTx = 0;
+				Queue<string> * argQueue = new Queue<string>;
+				this->argBuffer = argQueue;
 
 				bool MoreParameters;
 
 				src = getSubString(line, ' ', subStringNum++, &state);	if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
-				argQueue.enqueue(src);
+				argQueue->enqueue(src);
 				// Esta pasada valida, aucumula los datos y cuenta la cantidad de destinos
 				// Para luego pedir memoria dinamica con datos veraces.
 				do{
@@ -188,57 +189,56 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 					if( !state ) 									return STATUS_ERROR_COMMAND_PAYLOAD;
 					if (! isPositiveFloatNumberFromString(value))  	return STATUS_ERROR_COMMAND_PAYLOAD;
 
-					argQueue.enqueue(dest);
-					argQueue.enqueue(value);
-					outTx ++;
+					argQueue->enqueue(dest);
+					argQueue->enqueue(value);
 				}while( MoreParameters );
 
 				// Comienzo a rellenar el payload
 
 				//Creo el archivo raw_t en el entorno del filemanager
-				this->pRawData = new raw_t{0};
-				if(pRawData == NULL) return STATUS_BAD_ALLOC;
-				pRawData->inTx = inTx;
-
-				pRawData->IN_tableOfTxId = new std::string[pRawData->inTx];
-				pRawData->IN_tableOfIndex = new int[pRawData->inTx];
-				pRawData->IN_tableOfAddr = new std::string[pRawData->inTx];
-
-				if(		pRawData->IN_tableOfTxId == NULL  ||
-						pRawData->IN_tableOfIndex == NULL ||
-						pRawData->IN_tableOfAddr == NULL ) 	return STATUS_BAD_ALLOC;
-
-				for(int i = 0; i < pRawData->inTx; i++)
-				{
-					// El outpoint en esta instancia no puede parsearse puesto que como comando
-					// no se tiene esa informacion. Tampoco se tiene un hash de la direccion por
-					// se envia en el addr el string del nombre.
-					pRawData->IN_tableOfTxId[i]  = "";
-					pRawData->IN_tableOfIndex[i] = -1;
-					pRawData->IN_tableOfAddr[i]  = argQueue.dequeue();
-				}
-
-				pRawData->outTx = outTx;
-				pRawData->OUT_tableOfValues = new float[pRawData->outTx];
-				pRawData->OUT_tableOfAddr = new std::string[pRawData->outTx];
-
-				if(		pRawData->OUT_tableOfValues == NULL  ||
-						pRawData->OUT_tableOfAddr   == NULL  ) 	return STATUS_BAD_ALLOC;
-
-				for(int i = 0; i < pRawData->outTx; i++)
-				{
-
-					pRawData->OUT_tableOfAddr[i] = argQueue.dequeue();
-					pRawData->OUT_tableOfValues[i] = std::stof( argQueue.dequeue() );
-				}
-
-				// Como el Raw data no esta completamente relleno puesto
-				// que no se tiene toda la data necesaria para el minado
-				// se levanta el completeFlag en falso
-				pRawData->completeFlag = false;
-
+//				this->pRawData = new raw_t{0};
+//				if(pRawData == NULL) return STATUS_BAD_ALLOC;
+//				pRawData->inTx = inTx;
+//
+//				pRawData->IN_tableOfTxId = new std::string[pRawData->inTx];
+//				pRawData->IN_tableOfIndex = new int[pRawData->inTx];
+//				pRawData->IN_tableOfAddr = new std::string[pRawData->inTx];
+//
+//				if(		pRawData->IN_tableOfTxId == NULL  ||
+//						pRawData->IN_tableOfIndex == NULL ||
+//						pRawData->IN_tableOfAddr == NULL ) 	return STATUS_BAD_ALLOC;
+//
+//				for(int i = 0; i < pRawData->inTx; i++)
+//				{
+//					// El outpoint en esta instancia no puede parsearse puesto que como comando
+//					// no se tiene esa informacion. Tampoco se tiene un hash de la direccion por
+//					// se envia en el addr el string del nombre.
+//					pRawData->IN_tableOfTxId[i]  = "";
+//					pRawData->IN_tableOfIndex[i] = -1;
+//					pRawData->IN_tableOfAddr[i]  = argQueue.dequeue();
+//				}
+//
+//				pRawData->outTx = outTx;
+//				pRawData->OUT_tableOfValues = new float[pRawData->outTx];
+//				pRawData->OUT_tableOfAddr = new std::string[pRawData->outTx];
+//
+//				if(		pRawData->OUT_tableOfValues == NULL  ||
+//						pRawData->OUT_tableOfAddr   == NULL  ) 	return STATUS_BAD_ALLOC;
+//
+//				for(int i = 0; i < pRawData->outTx; i++)
+//				{
+//
+//					pRawData->OUT_tableOfAddr[i] = argQueue.dequeue();
+//					pRawData->OUT_tableOfValues[i] = std::stof( argQueue.dequeue() );
+//				}
+//
+//				// Como el Raw data no esta completamente relleno puesto
+//				// que no se tiene toda la data necesaria para el minado
+//				// se levanta el completeFlag en falso
+//				pRawData->completeFlag = false;
+				payload.ArgTranfer = argQueue;
 				payload.command = commandType;
-				payload.pRaw = pRawData;
+				//payload.pRaw = pRawData;
 			}
 		break;
 		case Commands::mine:
@@ -401,7 +401,8 @@ unsigned int BlockChainFileManager::getNumberOfValidFunctions()
 // PostCondicion: Todos los campos de Payload_t inicializados a valores correctos.
 void BlockChainFileManager::safeValuePayload(payload_t & payload){
 	payload.command = Commands::commandNotDefined;
-	payload.pRaw = NULL;
+	payload.ArgTranfer = NULL;
+	//payload.pRaw = NULL;
 	payload.filename = "";
 	payload.id = "";
 	payload.user = "";
@@ -575,7 +576,7 @@ status_t BlockChainFileManager::convert(FileTypes type, const lista <Block *> & 
 // PostCondicion:
 status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *> & BlockChain){
 	lista <Block *> ::iterador it(BlockChain);
-	it = BlockChain.ultimo();
+	it = BlockChain.primero();
 
 	if(!oss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
 	if( BlockChain.vacia() )				return STATUS_NO_BLOCKS_TO_CONVERT;
@@ -586,7 +587,7 @@ status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *
 		*oss << it.dato()->getnonce()	  << '\n';
 		*oss << it.dato()->gettxn_count() << '\n';
 		*oss << it.dato()->getcadenaprehash();
-		it.retroceder();
+		it.avanzar();
 	}
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
@@ -674,6 +675,100 @@ status_t BlockChainFileManager::validateBlockChain(void){
 	}
 	return STATUS_OK;
 }
+
+status_t BlockChainFileManager::loadBlockChain(void){
+	std::istream * iss;
+	if(! this->getIssfromList(FileTypes::loadBlockChainFile, &iss)) return STATUS_BAD_READ_INPUT_FILE;
+	iss->clear();
+	iss->seekg(0, iss->beg);
+
+	std::string line,aux;
+	unsigned int blockLineCounter = 0, trasnferCounter = 0;
+	unsigned int inTx,outTx = 0;
+	bool isCompleteBlock = false;
+	bool isEof = false;
+	bool finishLoading = false;
+
+	while (!finishLoading){
+		Block * newBlock = new Block;
+		Transaction * newTrans = new Transaction;
+
+		while( std::getline(*iss, line)){
+			// Verifico si llegue al fin de archivo
+			if ((*iss).eof()) {
+				isEof = true;
+			}
+			//Compatibilidad de archivos de Windows
+			if(line.back() == '\r')
+				line.pop_back();
+
+			blockLineCounter++;
+
+			switch(blockLineCounter){
+			case BLOCK_1_LINE_PREVIOUS_HASH:
+				isCompleteBlock = false;
+				newBlock->setpre_block(line);
+				break;
+			case BLOCK_2_LINE_BLOCK_HASH:
+				newBlock->settxns_hash(line);
+				break;
+			case BLOCK_3_LINE_BITS:
+				newBlock->setbits(std::stoi(line));
+				break;
+			case BLOCK_4_LINE_NONCE:
+				newBlock->setnonce(std::stoi(line));
+				break;
+			case BLOCK_TRANSAC_TX_INPUT_INDEX:
+				inTx = getPositiveNumberFromString(line);
+				for(unsigned int i = 0; i < inTx ;i++){
+					newTrans->addTransactionInput();
+				}
+				break;
+			case BLOCK_TRANSAC_INPUTS:
+				trasnferCounter ++;
+				newTrans->getTransactionInput(trasnferCounter)->setTxId(this->getSubString(line,' ', 1));
+				newTrans->getTransactionInput(trasnferCounter)->setIdx(std::stoi(this->getSubString(line,' ', 2)));
+				newTrans->getTransactionInput(trasnferCounter)->setAddr(this->getSubString(line,' ', 3));
+				if (trasnferCounter != inTx) blockLineCounter--;
+				else trasnferCounter = 0;
+				break;
+			case BLOCK_TRANSAC_TX_OUTPUT_INDEX:
+				outTx = getPositiveNumberFromString(line);
+				for(unsigned int i = 0; i < outTx ;i++){
+					newTrans->addTransactionOutput();
+				}
+				break;
+			case BLOCK_TRANSAC_OUTPUTS:
+				trasnferCounter ++;
+				newTrans->getTransactionOutput(trasnferCounter)->setValue(std::stof(this->getSubString(line,' ', 1)));
+				newTrans->getTransactionOutput(trasnferCounter)->setAddr(this->getSubString(line,' ', 2));
+				if (trasnferCounter != outTx) blockLineCounter--;
+				else{
+					trasnferCounter = 0;
+					blockLineCounter = 0;
+					isCompleteBlock = true;
+					newBlock->settransaction(newTrans);
+					this->userBlockChain.insertar(newBlock);
+				}
+				break;
+			}
+			// Si se leyo un bloque completo y es el fin de archivo
+			if (isEof){
+				if (isCompleteBlock){
+					finishLoading = true;
+					break;
+				}
+				else
+					return STATUS_BAD_READ_INPUT_FILE;
+			}
+
+
+		}
+
+	}
+	return STATUS_OK;
+}
+
 
 std::string BlockChainFileManager::getSubString(std::string line,size_t delim,unsigned int substringNum,bool *pState){
 	//Encuentro el primer delimitador de comando
@@ -770,6 +865,8 @@ unsigned int BlockChainFileManager::getPositiveNumberFromString(std::string line
 	ss >> IndexValue;
 	return IndexValue;
 }
+
+
 //---------------------------------------------------------------------------------//
 // OBSOLETO PARA LA VERSION 2.1.1 (TP1)
 

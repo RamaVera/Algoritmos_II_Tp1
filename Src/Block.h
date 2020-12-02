@@ -48,6 +48,7 @@ class Block {
         Block();
 		Block( const raw_t & raw );
 		Block( const Transaction & tr);
+		Block(  Block & otherBlock);
 		Block( const lista<Transaction*> & tr);
 		//Block( const & std::string previo_block, size_t bits, const & raw_t );
 		// size_t bits sale de BlockChainManager::getUserDefinedDifficulty(void), pero referenciar a esta clase implica un encastramiento indeseado.
@@ -71,6 +72,7 @@ class Block {
 		bool setnonce( size_t valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
 		bool setseconds( double segundos );
 		bool settransaction( const raw_t & raw );
+		bool settransaction( Transaction * pTr);
 		StatusBlock EstatusBlock();
 		// Métodos públicos
 		double tiempominado();

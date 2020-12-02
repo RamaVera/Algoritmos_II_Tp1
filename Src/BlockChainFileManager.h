@@ -25,7 +25,10 @@ class BlockChainFileManager {
 private:
 
 	raw_t * pRawData;
+	Queue<std::string> * argBuffer;
+	lista<Block *> userBlockChain;
 	static lista<file_t *> fileList;
+
 	//-----Metodos sobre Streams ------- //
 	bool isEmpty(std::istream  * iss);
 	bool isTxIndexFromStream(std::istream *iss,char delim = '\n', int * pValue = NULL);
@@ -61,8 +64,12 @@ private:
 public:
 	BlockChainFileManager();
 	~BlockChainFileManager();
+
+	lista <Block *> & getBlockChainPointer(){return userBlockChain;}
+
 	status_t validate(std::istream * iss);
 	status_t validateBlockChain( void );
+	status_t loadBlockChain(void);
 	status_t parse(std::istream * iss,raw_t * &pRawData);
 	status_t convert(std::ostream * oss,const lista <Block *> & BlockChain);
 	status_t convert(FileTypes type, const lista <Block *> & BlockChain);

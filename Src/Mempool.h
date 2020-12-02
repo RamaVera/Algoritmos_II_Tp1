@@ -14,6 +14,7 @@ using namespace std;
 
 class Mempool{
 	private:
+		friend class BlockChainBookkeeper;
 		int n_txns;                  		// CANTIDAD DE TRANSACCIONES EN LA MEMPOOL
 		MempoolUnit * first_node;     		// PUNTERO AL PRIMER ELEMENTO DE LA MEMPOOL
 		MempoolUnit * last_node;		 	// PUNTERO AL ULTIMO ELEMENTO DE LA MEMPOOL

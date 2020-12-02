@@ -17,7 +17,7 @@ private:
 	friend class BlockChainBookkeeper;
 	static lista<Block*> AlgoChain;
 	//---Getters---//
-	static const lista <Block *> & getListaBlocks();
+	static const lista <Block *> & getListaBlocks(){return AlgoChain;};
 	// Para usar x línea de comandos block <id>
 	static const Block * getBlock( const std::string txns_hash );							// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>

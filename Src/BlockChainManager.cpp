@@ -56,22 +56,16 @@ void BlockChainManager::proccesBlockChain(){
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// raw_t * pRaw = payload.pRaw;
+					// Queue<std:string> * ArgTransfer = payload.ArgTransfer
 
-					// OBSERVACION IMPORTANTE:
-					// El raw_t que se tiene por comandos no esta completo puesto que no se sabe
-					// el valor del outpoint (no se da esos datos por comando).
-					// El Bookkeeper debe completar los datos del outpoint del history book de lo
-					// contrario devolver error puesto que no existe el usuario
-					//--------------------------------------------------------------//
-
-					//BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
 
 					// Bookkeeper intenta completar el raw_t, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					// BlockChainManager::proccesStatus( bookkeeper.checkInformation(payload.raw) )
+					//BlockChainManager::proccesStatus( bookkeeper.createTransaction(payload));
 
 					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
-					// BlockChainManager::proccesStatus( bookkeeper.saveInMempool(payload) );
+					//BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
 
 				}
 			break;
@@ -147,7 +141,8 @@ void BlockChainManager::proccesBlockChain(){
 					// std::string filename = payload.filename;
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
-					// BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
+
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
 					file_t newFile;
 					newFile.fileID = payload.filename;
@@ -160,11 +155,15 @@ void BlockChainManager::proccesBlockChain(){
 					// Filemanager valida que la estructura de la blockchain este correctamente
 					BlockChainManager::proccesStatus( fileManager.validateBlockChain() );
 
+					// FileManager parsea los datos de la blockChain en la lista de bloques
+					BlockChainManager::proccesStatus( fileManager.loadBlockChain() );
 					// Bookkeeper guarda en la historia
-					// BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( X.getBlockChainPointer());
+					BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( fileManager.getBlockChainPointer() ));
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
+					fileManager<<FileTypes::userCommandResponseFiles<< "OK \n";
+
 				}
 				break;
 			case Commands::save:
@@ -175,7 +174,7 @@ void BlockChainManager::proccesBlockChain(){
 					// std::string filename = payload.filename;
 					//--------------------------------------------------------------//
 					// El filemanager ya esta intanciado antes.
-					//BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
 					file_t newFile;
 					newFile.fileID = payload.filename;
 					newFile.type = FileTypes::saveBlockChainFile;
@@ -185,36 +184,13 @@ void BlockChainManager::proccesBlockChain(){
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-					lista<Block*> BlockChainFantasma;
-					Block * BlocklActual1;
-					Block * BlocklActual2;
-					Block * BlocklActual3;
-					BlocklActual1 = new Block();
-					BlocklActual1->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
-					BlocklActual1->settxns_hash( "e9dc0f0fbcb9021dc39ec104dfa51e813a86c8205a77d3be6c8cd6140b941e0c" ) ;
-					BlocklActual1->setbits( 3  );
-					BlocklActual1->setnonce(1000 );
-					BlockChainFantasma.insertar( BlocklActual1 );
-					BlocklActual2 = new Block();
-					BlocklActual2->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" )  ;
-					BlocklActual2->settxns_hash( "cd372fb85148700fa88095e3492d3f9f5beb43e555e5ff26d95f5a6adc36f8e6" )  ;
-					BlocklActual2->setbits( 3  ) ;
-					BlocklActual2->setnonce(2000 );
-					BlockChainFantasma.insertar( BlocklActual2 );
-					BlocklActual3 = new Block();
-					BlocklActual3->setpre_block( "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" ) ;
-					BlocklActual3->settxns_hash( "155dc94b29dce95bb2f940cdd2d7e0bce66dca9370c3ed96d50a30b3d84f8c4c" ) ;
-					BlocklActual3->setbits( 3  ) ;
-					BlocklActual3->setnonce(3000 );
-					BlockChainFantasma.insertar( BlocklActual3 );
-
-
 					std::cout<< "Begin Converting Block to File ..." << std::endl;
-					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::saveBlockChainFile, BlockChainFantasma) );
+					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::saveBlockChainFile,bookkeeper.getBlockChain()) );
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
 
+					fileManager<<FileTypes::userCommandResponseFiles<< "OK \n";
 				}
 				break;
 			default:
@@ -256,6 +232,11 @@ void BlockChainManager::proccesStatus(status_t status){
 		fileManager << FileTypes::userCommandResponseFiles << "OK\n";
 		break;
 	//-------- Errores ------------------//
+	case STATUS_ERROR_HASH_NOT_FOUND:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		std::cerr << "Error Comando no conocido" << std::endl;
+		//std::abort();
+		break;
 	case STATUS_ERROR_COMMAND_NOT_FOUND:
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		std::cerr << "Error Comando no conocido" << std::endl;

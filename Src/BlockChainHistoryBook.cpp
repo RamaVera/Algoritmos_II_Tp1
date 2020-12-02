@@ -119,7 +119,8 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 
 
 bool BlockChainHistoryBook::AddBlock( Block * B ){
-	AlgoChain.insertar(B);
+	Block * newBlock = new Block(*B);
+	AlgoChain.insertar(newBlock);
 	return true;
 }
 

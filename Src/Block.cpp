@@ -66,6 +66,24 @@ Block::Block( const  lista<Transaction*> & trList)
 	}
 }
 
+Block::Block(Block & otherBlock){
+	pre_block = otherBlock.getcadenaprehash();
+	txns_hash = otherBlock.gettxns_hash();
+	bits = otherBlock.getbits();
+	nonce = otherBlock.getnonce();
+	eBlock = otherBlock.eBlock;
+	txn_count = otherBlock.gettxn_count();
+	lista<Transaction *>::iterador itTran(otherBlock.getListaTran());
+	CurTran = itTran.dato();
+	while(! itTran.extremo())
+	{
+		Transaction * copyTran = new Transaction(*itTran.dato());
+		this->ListaTran.insertar(copyTran);
+		itTran.avanzar();
+	}
+
+}
+
 // Destructor
 Block::~Block() {
 	// ListaTran se autodestruye, antes debo liberar la memoria asignada en cada elemento * ListaTran de la lista
@@ -210,6 +228,24 @@ bool Block::settransaction( const raw_t & raw ) {
 		return false;
 	}
 }
+
+bool Block::settransaction(Transaction * pTr){
+	try {
+			this->CurTran = pTr;  	// <- Ojo, nuevo constructor
+			this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
+			this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+			this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+			RecalculoHash();
+			return true;
+		}
+		catch (std::bad_alloc& ba)
+		{
+			this->eBlock = StatusBlock::BlockBadAlloc;
+			std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+			return false;
+		}
+}
+
 bool Block::setseconds( double segundos ) {
 	this->seconds = segundos;
 	return true;

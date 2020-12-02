@@ -25,8 +25,14 @@ public:
 	BlockChainBookkeeper();
 	~BlockChainBookkeeper();
 
+	status_t createTransaction(payload_t payload);
 	status_t createOriginTransaction(payload_t & payload);
-	status_t saveInHistoryBook(Block * block);
+	status_t saveInHistoryBook(Block * &block);
+	status_t saveInHistoryBook(lista<Block*> &listaBlock);
+	status_t saveInMempool(Transaction * trans);
+
+
+	const lista<Block *> & getBlockChain(void);
 	Transaction * & getActualTransaction(void);
 };
 
