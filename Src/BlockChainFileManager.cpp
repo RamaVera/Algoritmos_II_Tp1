@@ -576,7 +576,7 @@ status_t BlockChainFileManager::convert(FileTypes type, const lista <Block *> & 
 // PostCondicion:
 status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *> & BlockChain){
 	lista <Block *> ::iterador it(BlockChain);
-	it = BlockChain.primero();
+	it = BlockChain.ultimo();
 
 	if(!oss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
 	if( BlockChain.vacia() )				return STATUS_NO_BLOCKS_TO_CONVERT;
@@ -587,7 +587,7 @@ status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *
 		*oss << it.dato()->getnonce()	  << '\n';
 		*oss << it.dato()->gettxn_count() << '\n';
 		*oss << it.dato()->getcadenaprehash();
-		it.avanzar();
+		it.retroceder();
 	}
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
@@ -760,6 +760,11 @@ status_t BlockChainFileManager::loadBlockChain(void){
 				}
 				else
 					return STATUS_BAD_READ_INPUT_FILE;
+			}else{
+				if (isCompleteBlock){
+				finishLoading = false;
+				break;
+				}
 			}
 
 

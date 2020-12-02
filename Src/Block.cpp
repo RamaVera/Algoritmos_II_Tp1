@@ -67,19 +67,20 @@ Block::Block( const  lista<Transaction*> & trList)
 }
 
 Block::Block(Block & otherBlock){
-	pre_block = otherBlock.getcadenaprehash();
+	pre_block = otherBlock.getpre_block();
 	txns_hash = otherBlock.gettxns_hash();
 	bits = otherBlock.getbits();
 	nonce = otherBlock.getnonce();
 	eBlock = otherBlock.eBlock;
 	txn_count = otherBlock.gettxn_count();
 	lista<Transaction *>::iterador itTran(otherBlock.getListaTran());
+	itTran = otherBlock.getListaTran().ultimo();
 	CurTran = itTran.dato();
 	while(! itTran.extremo())
 	{
 		Transaction * copyTran = new Transaction(*itTran.dato());
 		this->ListaTran.insertar(copyTran);
-		itTran.avanzar();
+		itTran.retroceder();
 	}
 
 }

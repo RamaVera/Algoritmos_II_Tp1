@@ -35,9 +35,10 @@ status_t BlockChainBookkeeper::saveInHistoryBook(Block* &block){
 
 status_t BlockChainBookkeeper::saveInHistoryBook(lista<Block*> &listaBlock){
 	lista<Block*>::iterador it(listaBlock);
+	it = listaBlock.ultimo();
 	while(!it.extremo()){
 		if (! BlockChainHistoryBook::AddBlock(it.dato() ) ) return STATUS_BAD_ALLOC;
-	it.avanzar();
+	it.retroceder();
 	}
 	return STATUS_OK;
 }
