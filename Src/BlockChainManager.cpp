@@ -17,9 +17,10 @@ status_t BlockChainManager::command = STATUS_READING_COMMANDS;
 // Postcondicion:
 void BlockChainManager::proccesBlockChain(){
 	BlockChainManager::proccesStatus(STATUS_READING_COMMANDS);
+	BlockChainFileManager fileManager;
 	std::string command;
 	payload_t payload;
-	BlockChainFileManager fileManager;
+	fileManager.safeValuePayload(payload);
 
 	while (BlockChainManager::command != STATUS_NO_MORE_COMMANDS ){
 		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
@@ -56,17 +57,17 @@ void BlockChainManager::proccesBlockChain(){
 					std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
-					// raw_t * pRaw = payload.pRaw;
 					// Queue<std:string> * ArgTransfer = payload.ArgTransfer
 
 					BlockChainBookkeeper bookkeeper;
 
-					// Bookkeeper intenta completar el raw_t, funciona como validacion puesto que
+					// Bookkeeper intenta armar una Transaccion, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					//BlockChainManager::proccesStatus( bookkeeper.createTransaction(payload));
+					BlockChainManager::proccesStatus( bookkeeper.createTransaction(payload));
+					fileManager << FileTypes::userCommandResponseFiles << bookkeeper.getTransactionHash()<<"\n";
 
 					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
-					//BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
+					BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
 
 				}
 			break;

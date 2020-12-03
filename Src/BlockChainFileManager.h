@@ -59,7 +59,6 @@ private:
 
 	bool isOnValidCommandTable(std::string command,Commands & commandType);
 	unsigned int getNumberOfValidFunctions( void );
-	void safeValuePayload(payload_t & payload);
 
 public:
 	BlockChainFileManager();
@@ -80,6 +79,8 @@ public:
 
 	BlockChainFileManager& operator<<(std::string message);
 	BlockChainFileManager& operator<<(FileTypes type);
+
+	void safeValuePayload(payload_t & payload);
 
 };
 

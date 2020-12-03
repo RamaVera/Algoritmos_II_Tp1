@@ -22,6 +22,7 @@ private:
 	static const Block * getBlock( const std::string txns_hash );							// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>
 	static const TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
+	static Transaction * getTransactionByTransactionOutputUser( const std::string user );
 	//---Setters---//
 	//---Otros---//
 	static void BorrarHistoria( void );

@@ -99,7 +99,7 @@ lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoCh
 			if ( ! trns.vacia() ) {
 				do {
 					Transaction * Trans = itTrans.dato();
-					lista <TransactionInput *> intputs = Trans->getListaTransactionInput();
+					lista <TransactionInput *> intputs = Trans->getTransactionInputList();
 					lista <TransactionInput *>::iterador itIn( intputs );
 					if ( ! intputs.vacia() ) {
 						// Si hay entradas a addr se cargan en lista->detalle como crédito
@@ -110,7 +110,7 @@ lista <movimientos_t *> Extracto::obtenerdetalle( const lista <Block *> & AlgoCh
 						}
 					}
 					// Se itera dentro de Outs
-					lista <TransactionOutput *> outputs = Trans->getTransactionOutput();
+					lista <TransactionOutput *> outputs = Trans->getTransactionOutputList();
 					lista <TransactionOutput *>::iterador itOut( outputs );
 					if ( ! outputs.vacia() ) {
 						// Si hay salidas desde addr se cargan en lista->detalle como débito
@@ -276,7 +276,7 @@ TransactionInput * obtenerTransactionInput( const lista <Block *> & AlgoChain, c
 				do {
 					// De las dos listas, itero las de TI
 					lista <TransactionInput *> tInput;
-					tInput = itTrans.dato()->getListaTransactionInput();
+					tInput = itTrans.dato()->getTransactionInputList();
 					lista <TransactionInput *>::iterador itTransInput( tInput );
 					itTransInput = tInput.primero();
 					if ( ! tInput.vacia() ) {

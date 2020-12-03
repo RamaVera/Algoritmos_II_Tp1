@@ -181,13 +181,14 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 				std::string src,dest,value;
 				//size_t inTx = 1 ;
 				//size_t outTx = 0;
-				Queue<string> * argQueue = new Queue<string>;
-				this->argBuffer = argQueue;
+
+				payload.ArgTranfer = new Queue<string>;
+				this->argBuffer = payload.ArgTranfer;
 
 				bool MoreParameters;
 
 				src = getSubString(line, ' ', subStringNum++, &state);	if( !state ) return STATUS_ERROR_COMMAND_PAYLOAD;
-				argQueue->enqueue(src);
+				payload.ArgTranfer->enqueue(src);
 				// Esta pasada valida, aucumula los datos y cuenta la cantidad de destinos
 				// Para luego pedir memoria dinamica con datos veraces.
 				do{
@@ -197,8 +198,8 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 					if( !state ) 									return STATUS_ERROR_COMMAND_PAYLOAD;
 					if (! isPositiveFloatNumberFromString(value))  	return STATUS_ERROR_COMMAND_PAYLOAD;
 
-					argQueue->enqueue(dest);
-					argQueue->enqueue(value);
+					payload.ArgTranfer->enqueue(dest);
+					payload.ArgTranfer->enqueue(value);
 				}while( MoreParameters );
 
 				// Comienzo a rellenar el payload
@@ -244,7 +245,6 @@ status_t BlockChainFileManager::translateCommands( payload_t & payload){
 //				// que no se tiene toda la data necesaria para el minado
 //				// se levanta el completeFlag en falso
 //				pRawData->completeFlag = false;
-				payload.ArgTranfer = argQueue;
 				payload.command = commandType;
 				//payload.pRaw = pRawData;
 			}
@@ -408,14 +408,23 @@ unsigned int BlockChainFileManager::getNumberOfValidFunctions()
 // Precondicion:
 // PostCondicion: Todos los campos de Payload_t inicializados a valores correctos.
 void BlockChainFileManager::safeValuePayload(payload_t & payload){
-	payload.command = Commands::commandNotDefined;
+	static bool firstTime = true;
+	if (!firstTime){
+		if(payload.ArgTranfer!= NULL){
+			delete payload.ArgTranfer;
+		}
+	}
+	else
+		firstTime = false;
 	payload.ArgTranfer = NULL;
+	payload.command = Commands::commandNotDefined;
 	//payload.pRaw = NULL;
 	payload.filename = "";
 	payload.id = "";
 	payload.user = "";
 	payload.value = 0;
 	payload.bits = 0;
+
 }
 
 // Descripcion: Este metodo recibe un tipo de dato file_t, abre el archivo asociado y lo agrega a la lista

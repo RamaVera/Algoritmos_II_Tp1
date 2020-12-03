@@ -10,7 +10,7 @@
 
 lista <Transaction *> Mempool::transList;
 
-void Mempool::addNewTransaction(Transaction * new_txn){
+void Mempool::addNewTransaction(Transaction * & new_txn){
 
 	Transaction * newTx = new Transaction(*new_txn);
 	transList.insertar( newTx );
@@ -19,12 +19,23 @@ void Mempool::addNewTransaction(Transaction * new_txn){
 
 lista <Transaction *> & Mempool::getTransactionsList(){
 	return transList;
+	//Se deberia borrar la mempool cuando se trae toda la lista...
 }
 
 size_t Mempool::getMempoolLength(){
 	return transList.tamano();
 }
 
+void Mempool::BorrarMempool(void){
+	if ( ! transList.vacia() ) {
+		lista  <Transaction *>::iterador it( transList );
+		it = transList.primero();
+		while ( ! transList.isEmpty()) {
+			delete it.dato();
+			transList.eliminar_nodo(it);
+		}
+	}
+}
 
 
 

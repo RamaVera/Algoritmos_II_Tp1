@@ -37,6 +37,7 @@ public:
 	status_t eraseAllBlockChainRegisters(void);
 
 	std::string getLastBlockHash(void);
+	std::string getTransactionHash(void);
 	const lista<Block *> & getBlockChain(void);
 	Transaction * & getActualTransaction(void);
 	lista<Transaction *> &  getMempool(void );

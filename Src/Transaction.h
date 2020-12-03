@@ -37,8 +37,8 @@ public:
 	int getNumTransactionOut();
 	TransactionInput * getTransactionInput(int index);
 	TransactionOutput * getTransactionOutput(int index);
-	lista <TransactionInput *> getListaTransactionInput();
-	lista <TransactionOutput *> getTransactionOutput();
+	lista <TransactionInput *> getTransactionInputList();
+	lista <TransactionOutput *> getTransactionOutputList();
 	//---Setters---//
 	//---Otros---//
 	Transaction & operator=(Transaction &tr);

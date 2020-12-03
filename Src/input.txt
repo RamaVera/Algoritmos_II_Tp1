@@ -1,3 +1,4 @@
 init ramiro 1000 5
+transfer ramiro alan 400
 mine 5
 save salida.txt
