@@ -10,34 +10,27 @@
 
 
 using namespace std;
-#include "MempoolUnit.h"
+//#include "MempoolUnit.h"
+#include "Transaction.h"
+#include "lista.h"
+// static lista <Transaction *> Mempool::Mempool;
+
 
 class Mempool{
+
 	private:
+
+		//friend class Transaction;
 		friend class BlockChainBookkeeper;
-		int n_txns;                  		// CANTIDAD DE TRANSACCIONES EN LA MEMPOOL
-		MempoolUnit * first_node;     		// PUNTERO AL PRIMER ELEMENTO DE LA MEMPOOL
-		MempoolUnit * last_node;		 	// PUNTERO AL ULTIMO ELEMENTO DE LA MEMPOOL
+		static lista <Transaction *> transList;
+		static void addNewTransaction(Transaction * new_txn);     // Usa metodos de LISTA para agregar un nuevo nodo con una transaccion
+		//static Transaction & get_transaction_n(int n);   		// DEVUELVE LA N-ESIMA TRANSACCION DE LA MEMPOOL (LA MEMPOOL SE ORGANIZA EN ORDEN DESCENDENTE)
+		static lista <Transaction *> & getTransactionsList();     // Devuelve un puntero a la lista de transacciones
+		static size_t getMempoolLength();
 
 	public:
-	// Metodos
-
-		//Constructores
-		Mempool();         			    	// INICIALIZACION DE LA MEMPOOL VACIA
-		/*Mempool( int pool_size );*/		// INICIALIZACION DE LA MEMPOOL CON
-		~Mempool();                     	// DESTRUCCION DE LA MEMPOOL
-
-		// Setters
-		void set_new_pool_unit( MempoolUnit * p_memp_unit );     // AGREGA UNA TRANSACCION A LA MEMPOOL
-
-		// Getters
-		// Mempool &get_mempool();       		// DEVUELVE LA MEMPOOL
-		int get_number_txns();					// DEVUELVE EL NUMERO DE TRANSACCIONES EN LA MEMPOOL
-
-		Transaction get_transaction_n(int n);   // DEVUELVE LA N-ESIMA TRANSACCION DE LA MEMPOOL (LA MEMPOOL SE ORGANIZA EN ORDEN DESCENDENTE) 
 
 };
-
 
 
 

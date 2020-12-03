@@ -6,41 +6,33 @@
  */
 
 #include "Mempool.h"
+#include "lista.h"
 
+lista <Transaction *> Mempool::transList;
 
-Mempool::Mempool(){
-	this->n_txns = 0;
-	this->first_node = new MempoolUnit();
-	this->last_node = NULL;
+void Mempool::addNewTransaction(Transaction * new_txn){
+
+	transList.insertar( new_txn );
+
 }
 
 
-/*Mempool::Mempool( int pool_size ){
-	this->n_txns = pool_size;
-	this->first_node = *(new MempoolUnit[pool_size]);
-	this->last_node = &( (*first_node)[pool_size] );
-};*/
+lista <Transaction *> & Mempool::getTransactionsList(){
 
+	return transList;
 
-Mempool::~Mempool(){
-	if (this->first_node != NULL){
-		try{
-		std::cout<<"1) antes de empezar a borrar la mempool" <<std::endl;
-		throw 0;
-		delete this->first_node;
+}
 
-		}
-		catch (...){
-		    cout << " Excepcion ocurrida tratando de borrar la mempool " <<std::endl;
-		}
-	}
-	std::cout<<"Se termino de borrar la mempool!" <<std::endl;
-	// delete this->last_node;
+size_t Mempool::getMempoolLength(){
+	return transList.tamano();
 }
 
 
 
 
+
+
+/*
 void Mempool::set_new_pool_unit( MempoolUnit * p_memp_unit){
 
 	if ( this->n_txns == 0  ){
@@ -87,5 +79,5 @@ Transaction Mempool::get_transaction_n(int n){
 	return (*n_node).get_txn();
 
 }
-
+*/
 
