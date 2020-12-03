@@ -328,7 +328,7 @@ bool Cuentas::addcuenta( const std::string addr, const float monto ) {
 	return this->addcuenta( addr, "", monto );
 }
 
-bool Cuentas::addaddr( std::string addr ) {
+bool Cuentas::addaddr( const std::string addr, const float monto ) {
 	cuentas_t * C = NULL;
 
 	// Checks
@@ -353,7 +353,7 @@ bool Cuentas::addaddr( std::string addr ) {
 	try {
 		C = new cuentas_t;
 		C->addr = addr;
-		C->saldo = 0;
+		C->saldo = monto;
 		C->alias = "";
 		C->numerocuenta = Cuentas::NuevoNumero();
 		this->listadocuentas.insertar( C );
@@ -362,6 +362,48 @@ bool Cuentas::addaddr( std::string addr ) {
 	catch (std::bad_alloc& ba)
 	{
 		std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+	}
+
+	return true;
+}
+
+
+bool Cuentas::addmonto( const std::string addr, const float monto ) {
+	cuentas_t * C = NULL;
+
+	// Checks
+	if ( addr.empty() ) { 
+		return false;
+	}
+	else if ( ! Block::CheckHash( addr, TiposHash::clavehash256 ) ) { 
+		return false;
+	}
+
+	// Verificar si esta duplicada
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		do {
+			if ( it.dato()->addr == addr ) {
+				it.dato()->saldo += monto;
+				return true;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+		try {
+			C = new cuentas_t;
+			C->addr = addr;
+			C->saldo = monto;	// saldo inicial
+			C->alias = "";
+			C->numerocuenta = Cuentas::NuevoNumero();
+			this->listadocuentas.insertar( C );
+			cantidad++;
+		}
+		catch (std::bad_alloc& ba)
+		{
+			std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+		}
+
 	}
 
 	return true;
@@ -530,12 +572,11 @@ bool Cuentas::updatedatos( Block * & B ) {
 			ListaTI = it.dato()->getListaTransactionInput();
 			lista <TransactionInput *>::iterador itTI( ListaTI );
 			do {
-				this->addaddr( itTI.dato()->getAddr() );
 				// Para buscar los montos de los Inputs hay que ir a la AlgoChain a 
 				// con TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 				// y sacar las addr y los montos con:
 				//  static const lista <TransactionOutPut *> TransactionOutPut * obtenerOutput( std::string tx_id, const std::string tx_id );
-				itTI.avanzar();
+				itTI.avanzar();				this->addaddr( itTI.dato()->getAddr(), 0 );
 			} while ( ! itTI.extremo() );
 
 			ListaTO = it.dato()->getTransactionOutput();
@@ -543,6 +584,9 @@ bool Cuentas::updatedatos( Block * & B ) {
 			do {
 				// Aca es más facil porque son creditos, cuentas
 				//this->addcuenta( itTO.dato()->getAddr(), itTO.dato()->getValue );
+				if ( this->addmonto( itTO.dato()->getAddr(), itTO.dato()->getValue() ) ) {
+					// Agregado Ok
+				}
 				itTO.avanzar();
 			} while ( ! itTO.extremo() );
 

@@ -120,9 +120,29 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 	}
 }
 
-bool BlockChainHistoryBook::AddBlock( Block *& B ){
-	Block * newBlock = new Block(*B);
+bool BlockChainHistoryBook::AddBlock( Block * & B ){
+	Block * newBlock = new Block( *B );
 	AlgoChain.insertar( newBlock );
 	// Aca debo en Cuentas actualizar datos
+	BlockChainHistoryBook::ListadoCuentas.updatedatos( B );
+
 	return true;
 }
+
+bool BlockChainHistoryBook::AddListaBlocks( lista <Block *> & lista ) {
+	if ( AlgoChain.vacia() ) {
+		AlgoChain = lista;
+	}
+	else if ( !lista.vacia() ) {
+			// TODO
+	}
+	// BlockChainHistoryBook::ListadoCuentas.updatedatos( lista );
+	return true;
+}
+
+/*
+lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutput( const std::string tx_id, const std::string tx_id ) {
+	lista <TransactionOutPut *> ListaTO = nullptr;
+	return ListaTO;
+}
+*/

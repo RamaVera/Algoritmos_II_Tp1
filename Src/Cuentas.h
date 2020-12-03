@@ -67,7 +67,7 @@ public:
 	std::string getalias( const std::string addr );
 	size_t getnumerocuenta( const std::string addr );
 	size_t getnumerocuenta( const std::string addr, const std::string alias );
-	// const cuentas_t * getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain );
+	// const cuentas_t * getdetallecuenta( const std::string addr, li1sta <Block *> & AlgoChain );
 	size_t getcantidad();
 
 	//---Setters---//
@@ -77,6 +77,9 @@ public:
 
 	//---Otros---//
 	size_t iscuenta( const std::string addr );
+	bool addaddr( const std::string addr, const float monto );
+	bool addmonto( const std::string addr, const float monto );
+	bool addalias( const std::string addr, const std::string alias );
 	bool addcuenta( std::string addr, const std::string alias = "", const float monto = 0 );
 	bool addcuenta( std::string addr, const std::string alias = "" );
 	bool addcuenta( std::string addr, const float monto );
@@ -86,9 +89,9 @@ public:
 	bool extraccionpendiente( const std::string addr, const float monto );
 	void listadototal( const float saldominimo = 0 );
 	void vaciarcuentas( void );
-	bool updatedatos( const Block * B );
-	bool updatedatos( lista <Block *> & lista );
-	bool updatedatos( Transaction & T );
+	bool updatedatos( Block *  & B );
+	bool updatedatosdatos( lista <Block *> & lista );
+	bool updatedatosdatos( Transaction * & T );
 
 	// Persistencia del Objeto //
 	bool openlista( const std::string file );
