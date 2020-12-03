@@ -12,15 +12,13 @@ lista <Transaction *> Mempool::transList;
 
 void Mempool::addNewTransaction(Transaction * new_txn){
 
-	transList.insertar( new_txn );
-
+	Transaction * newTx = new Transaction(*new_txn);
+	transList.insertar( newTx );
 }
 
 
 lista <Transaction *> & Mempool::getTransactionsList(){
-
 	return transList;
-
 }
 
 size_t Mempool::getMempoolLength(){

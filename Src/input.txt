@@ -1,3 +1,3 @@
 init ramiro 1000 5
-load blockchain.txt
+mine 5
 save salida.txt

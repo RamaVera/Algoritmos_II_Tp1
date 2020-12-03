@@ -8,11 +8,13 @@
 #ifndef BLOCKCHAINBOOKKEEPER_H_
 #define BLOCKCHAINBOOKKEEPER_H_
 
-#include "BlockChainStatus.h"
-#include "BlockChainDataTypes.h"
 #include "BlockChainHistoryBook.h"
-#include "Block.h"
+#include "BlockChainDataTypes.h"
+#include "BlockChainStatus.h"
+#include "Mempool.h"
 #include "Transaction.h"
+#include "Block.h"
+
 #include "sha256.h"
 
 // #include "lista.h"
@@ -21,6 +23,7 @@ class BlockChainBookkeeper {
 
 private:
 	Transaction * ActualTransaction;
+	lista<Transaction *> MempoolTransactions;
 public:
 	BlockChainBookkeeper();
 	~BlockChainBookkeeper();
@@ -33,8 +36,10 @@ public:
 	status_t saveInMempool(Transaction * trans);
 	status_t eraseAllBlockChainRegisters(void);
 
+	std::string getLastBlockHash(void);
 	const lista<Block *> & getBlockChain(void);
 	Transaction * & getActualTransaction(void);
+	lista<Transaction *> &  getMempool(void );
 };
 
 #endif /* BLOCKCHAINBOOKKEEPER_H_ */

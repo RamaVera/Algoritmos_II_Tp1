@@ -35,6 +35,7 @@ status_t BlockChainBookkeeper::saveOriginBlockInHistoryBook(Block *& block){
 }
 
 status_t BlockChainBookkeeper::saveBlockInHistoryBook(Block* &block){
+	//@TODO falta actualiza lista de usuarios
 	if (BlockChainHistoryBook::AddBlock(block) ) return STATUS_OK;
 	else return STATUS_BAD_ALLOC;
 }
@@ -74,6 +75,16 @@ status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 	return STATUS_OK;
 }
 
+lista<Transaction *> & BlockChainBookkeeper::getMempool(){
+	if (Mempool::getMempoolLength()){
+		this->MempoolTransactions = Mempool::getTransactionsList();
+	}else{
+		this->ActualTransaction = new Transaction(0,0);
+		this->MempoolTransactions.insertar(this->ActualTransaction );
+	}
+	return this->MempoolTransactions;
+}
+
 
 status_t BlockChainBookkeeper::saveInMempool(Transaction * trans){
 
@@ -90,6 +101,12 @@ status_t BlockChainBookkeeper::eraseAllBlockChainRegisters(void){
 	BlockChainHistoryBook::BorrarHistoria();
 	//Mempool::borrarMempool();
 	return STATUS_OK;
+}
+
+std::string BlockChainBookkeeper::getLastBlockHash(void){
+	lista<Block *>::iterador AlgoChain( BlockChainHistoryBook::AlgoChain);
+	AlgoChain = BlockChainHistoryBook::AlgoChain.ultimo();
+	return AlgoChain.dato()->getBlockHash();
 }
 
 

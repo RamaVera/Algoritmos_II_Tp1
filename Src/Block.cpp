@@ -53,9 +53,14 @@ Block::Block( const  lista<Transaction*> & trList)
 {
 	lista<Transaction*> ::iterador it(trList);
 	try {
-		this->CurTran = it.dato();
-		this->ListaTran = trList;	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
-		this->txn_count = trList.tamano();						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		while(!it.extremo()){
+			Transaction actualTran;
+			actualTran = *(it.dato());
+			Transaction * copyTrans = new Transaction(actualTran);
+			this->ListaTran.insertar(copyTrans) ;
+			it.avanzar();
+		}
+		this->txn_count = trList.tamano();
 		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 		RecalculoHash();
 	}
@@ -335,3 +340,19 @@ std::string Block::ArbolMerkle( void ) {
 std::string Block::gethash_Merkle() {
 	return this->hash_Merkle;
 }
+std::string Block::getBlockHash(){
+	//El campo prev block del header de un bloque b indica el hash del bloque antecesor b 0 en la
+	//Algochain. De este modo, prev block = SHA256 ( SHA256 ( b 0 )) . Dicho hash lo calcularemos
+	//sobre una concatenación secuencial de todos los campos de b 0 respetando exactamente el
+	//formato de bloque que describiremos en la Sección
+	std::string blockConcantenation;
+	blockConcantenation += this->pre_block					+ '\n';
+	blockConcantenation += this->txns_hash 			 		+ '\n';
+	blockConcantenation += std::to_string(this->bits) 		+ '\n';
+	blockConcantenation += std::to_string(this->nonce)		+ '\n';
+	blockConcantenation += std::to_string(this->txn_count)	+ '\n';
+	blockConcantenation += this->cadena_prehash; //El '\n' viene incluido
+	return sha256(sha256(blockConcantenation));
+}
+
+

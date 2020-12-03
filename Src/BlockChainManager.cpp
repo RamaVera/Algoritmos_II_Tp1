@@ -12,7 +12,7 @@ status_t BlockChainManager::command = STATUS_READING_COMMANDS;
 
 // Descripcion: proccesBlockChain es un metodo que encapsula toda la logica interna de blockchain
 // en este metodo, dependiendo el comando de entrada, se instanciaran las clases BlockChainBuilder,
-// BlockChainBookkeeper y BlockChainFileManafer que realizaran la tarea seleccionada.
+// BlockChainBookkeeper y BlockChainFileManager que realizaran la tarea seleccionada.
 // Precondicion: Toda logica relacionada a blockchain debe estar invocada desde esta zona
 // Postcondicion:
 void BlockChainManager::proccesBlockChain(){
@@ -39,11 +39,12 @@ void BlockChainManager::proccesBlockChain(){
 					BlockChainBookkeeper bookkeeper;
 					BlockChainBuilder builder(payload.bits);
 
+					// A partir del payload bookkeeper crea una transaccion
 					BlockChainManager::proccesStatus( bookkeeper.createOriginTransaction(payload) );
 
-					// Builder crea un bloque origen con los datos suministrados en payload
+					// Builder crea un bloque origen con los datos suministrados por bookkeeper
 					BlockChainManager::proccesStatus( builder.createOriginBlock( *(bookkeeper.getActualTransaction()) ) );
-					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash();
+					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash()<<"\n";
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
 					BlockChainManager::proccesStatus( bookkeeper.saveOriginBlockInHistoryBook( builder.getBlocklActual() ) );
@@ -76,18 +77,18 @@ void BlockChainManager::proccesBlockChain(){
 					// Datos del payload que sirven en este caso.
 					// unsigned int bits = payload.bits;
 					//--------------------------------------------------------------//
-					// BlockChainBookkeeper bookkeeper;
-					// BlockChainBuilder builder(payload.bits);
+					BlockChainBookkeeper bookkeeper;
+					BlockChainBuilder builder(payload.bits);
 
-					// Builder le pide la mempool a bookkeeper y la guarda en su raw
-					// BlockChainManager::proccesStatus( builder.setTransaction( bookkeeper.getMempool() ) )
+					// Bookkeeper indaga en la historia buscando el hash del ultimo bloque
+					std::string prevoiusBlockHash = bookkeeper.getLastBlockHash();
 
-					// Builder mina el bloque como lo hacia anteriormente
-					// BlockChainManager::proccesStatus( builder.createBlockChain() );
-					// std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
+					// Builder mina a partir de la mempool y del hash del bloque anterior
+					BlockChainManager::proccesStatus( builder.createBlock( bookkeeper.getMempool(),prevoiusBlockHash) );
+					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash() <<"\n";
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
-					//BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlockChainPointer());
+					BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlocklActual() ));
 				}
 				break;
 			case Commands::block:

@@ -10,9 +10,23 @@
 #include "BlockChainBuilder.h"
 
 
-BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( ), pRawData(NULL){}
+BlockChainBuilder::BlockChainBuilder() :
+										BlocklActual(),
+										ListaBlocks(),
+										hash_resultado( "" ),
+										bits( ),
+										pRawData(NULL),
+										seconds()
+{}
 
-BlockChainBuilder::BlockChainBuilder(size_t d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
+BlockChainBuilder::BlockChainBuilder(size_t d) :
+										BlocklActual(),
+										ListaBlocks(),
+										hash_resultado( "" ),
+										bits( d ),
+										pRawData(NULL),
+										seconds()
+{}
 
 BlockChainBuilder::~BlockChainBuilder() {
 	if ( ! this->ListaBlocks.isEmpty() ){
@@ -221,11 +235,12 @@ status_t BlockChainBuilder::createOriginBlock(Transaction& tr){
 	return STATUS_OK;
 }
 
-status_t BlockChainBuilder::createBlock(lista<Transaction*> & tr,std::string previousHashBlock){
-	Block * newBlock = new Block(tr);
+status_t BlockChainBuilder::createBlock(lista<Transaction*> & mempoolList,std::string previousHashBlock){
+	Block * newBlock = new Block(mempoolList);
 	newBlock->setpre_block( previousHashBlock);
 	newBlock->settxns_hash( newBlock->gethash_Merkle());
 	newBlock->setbits(this->bits);
+	ListaBlocks.insertar(newBlock);
 	this->Minando();
 	return STATUS_OK;
 }

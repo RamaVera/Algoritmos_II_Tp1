@@ -1,5 +1,5 @@
 
-OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o BlockChainHistoryBook.o MempoolUnit.o Mempool.o # Los archivos compilados individuales
+OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o BlockChainHistoryBook.o Mempool.o # Los archivos compilados individuales
 PROGR = miner.exe # Nombre del archivo ejecutable
 CPPFLAGS = -g -Wall -pedantic -Werror # -g opcion de g++ para debugear
 
@@ -17,10 +17,8 @@ sha246.o : sha246.cpp sha246.h
 	$(CC) $(CPPFLAGS) -c sha246.cpp
 queue.o : Queue.cpp Queue.h
 	$(CC) $(CPPFLAGS) -c Queue.cpp
-Mempool.o : Mempool.cpp Mempool.h MempoolUnit.h
-	$(CC) $(CPPFLAGS) -c Mempool.cpp
-MempoolUnit.o : MempoolUnit.cpp MempoolUnit.h Transaction.h
-	$(CC) $(CPPFLAGS) -c MempoolUnit.cpp	
+Mempool.o : Mempool.cpp Mempool.h lista.h
+	$(CC) $(CPPFLAGS) -c Mempool.cpp	
 BlockChainManager.o : BlockChainManager.cpp BlockChainManager.h BlockChainFileManager.h BlockChainBuilder.h BlockChainBookkeeper.h BlockChainStatus.h 
 	$(CC) $(CPPFLAGS) -c BlockChainManager.cpp
 BlockChainFileManager.o : BlockChainFileManager.cpp BlockChainFileManager.h BlockChainBuilder.h BlockChainDataTypes.h BlockChainStatus.h Queue.h

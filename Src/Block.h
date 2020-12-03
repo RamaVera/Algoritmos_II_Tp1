@@ -63,6 +63,7 @@ class Block {
 		size_t gettxn_count();
 		std::string getcadenaprehash();
 		std::string gethash_Merkle();
+		std::string getBlockHash();
 		const lista <Transaction *>& getListaTran();
 		Transaction * getTran( size_t Index );
 		// Setters
