@@ -562,15 +562,29 @@ void Cuentas::vaciarcuentas( void ) {
 }
 
 bool Cuentas::updatedatos( Block * & B ) {
+	std::string b_prev = "";
+
 	if ( B == nullptr ) return false;
+	
 	if ( ! B->getListaTran().vacia() ) {
 		lista <Transaction *>::iterador it( B->getListaTran() );
-		it = B->getListaTran().primero();
-		lista <TransactionInput *> ListaTI;
 		lista <TransactionOutput *> ListaTO;
+		for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
+		it = B->getListaTran().primero();
+		if ( B->getpre_block() == b_prev )  {
+			ListaTO = it.dato()->getTransactionOutput();
+			lista <TransactionOutput *>::iterador itTO( ListaTO );
+			itTO = ListaTO.primero();
+			if ( this->addmonto( itTO.dato()->getAddr(), itTO.dato()->getValue() ) ) {
+				// Agregado Ok
+				return true;
+			}
+		}
 		do {
+			lista <TransactionInput *> ListaTI;
 			ListaTI = it.dato()->getListaTransactionInput();
 			lista <TransactionInput *>::iterador itTI( ListaTI );
+			itTI = ListaTI.primero();
 			do {
 				// Para buscar los montos de los Inputs hay que ir a la AlgoChain a 
 				// con TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
@@ -582,6 +596,7 @@ bool Cuentas::updatedatos( Block * & B ) {
 
 			ListaTO = it.dato()->getTransactionOutput();
 			lista <TransactionOutput *>::iterador itTO( ListaTO );
+			itTO = ListaTO.primero();
 			do {
 				// Aca es más facil porque son creditos, cuentas
 				//this->addcuenta( itTO.dato()->getAddr(), itTO.dato()->getValue );
