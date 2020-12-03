@@ -576,7 +576,8 @@ bool Cuentas::updatedatos( Block * & B ) {
 				// con TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 				// y sacar las addr y los montos con:
 				//  static const lista <TransactionOutPut *> TransactionOutPut * obtenerOutput( std::string tx_id, const std::string tx_id );
-				itTI.avanzar();				this->addaddr( itTI.dato()->getAddr(), 0 );
+				this->addaddr( itTI.dato()->getAddr(), 0 );
+				itTI.avanzar();				
 			} while ( ! itTI.extremo() );
 
 			ListaTO = it.dato()->getTransactionOutput();
