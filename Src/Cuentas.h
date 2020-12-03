@@ -9,11 +9,46 @@
 #include<iostream>
 #include<fstream>
 
-#include "Extracto.h"
-#include "TiposHash.h"
+#include "Block.h"
+#include "Transaction.h"
+#include "TransactionInput.h"
+#include "TransactionOutput.h"
+#include "BlockChainBuilder.h"
 
-#include "sha256.h"
+
+// #include "TiposHash.h"
+
+// #include "sha256.h"
 #include "lista.h"
+
+typedef struct {
+	std::string txns_hash;						// Id del BlockChain
+	std::string tx_id;							// Id del TransactionInput
+	int	idx;									// Ubicación en la lista de inputs
+	std::string addr;							// Id Cuenta Origen o Destino
+	float value;								// monto, débito < 0, crédito > 0
+} movimientos_t;
+
+typedef struct {
+	std::string addr;							// Id Cuenta, formato SHA256
+	std::string alias;							// Id Cuenta Alias
+	size_t numerocuenta;						// Id Número Cuenta, autonumérico?
+	float saldo;								// Saldo
+	float pendiente;							// Pendiente en MemPool -> + o -, si es - abs(pendiente) <= saldo
+	lista <movimientos_t *> detalle;			// Extracto de la cuenta
+} cuentas_t;
+
+typedef struct {
+	std::string txns_hash;						// Id del BlockChain Actual
+	TransactionInput * TransIn;					// Transaction Input a buscar el OutPut
+} TransactionInput_t;
+
+typedef struct {
+	std::string txns_hash;						// Id del BlockChain del OutPut
+	std::string addr;							// Id Cuenta Origen
+	int to_index;						    	// ID del Transaction OutPut en el BlockChain
+	TransactionOutput * TO;						// Transaction OutPut
+} TransactionOutPut_t;
 
 class Cuentas {
 private:
@@ -32,7 +67,7 @@ public:
 	std::string getalias( const std::string addr );
 	size_t getnumerocuenta( const std::string addr );
 	size_t getnumerocuenta( const std::string addr, const std::string alias );
-	const cuentas_t * getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain );
+	// const cuentas_t * getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain );
 	size_t getcantidad();
 
 	//---Setters---//
@@ -50,6 +85,10 @@ public:
 	bool depositopendiente( const std::string addr, const float monto );
 	bool extraccionpendiente( const std::string addr, const float monto );
 	void listadototal( const float saldominimo = 0 );
+	void vaciarcuentas( void );
+	bool updatedatos( const Block * B );
+	bool updatedatos( lista <Block *> & lista );
+	bool updatedatos( Transaction & T );
 
 	// Persistencia del Objeto //
 	bool openlista( const std::string file );

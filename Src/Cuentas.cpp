@@ -124,6 +124,7 @@ float Cuentas::getpendiente( const std::string addr ) {
 	return pendiente;
 }
 
+/*
 const cuentas_t * Cuentas::getdetallecuenta( const std::string addr, lista <Block *> & AlgoChain ) {
 	cuentas_t * C = NULL;
 	if ( addr.empty() ) { 
@@ -154,6 +155,7 @@ const cuentas_t * Cuentas::getdetallecuenta( const std::string addr, lista <Bloc
 	}
 	return C;
 }
+*/
 
 size_t Cuentas::getnumerocuenta( const std::string addr ) {
 
@@ -465,4 +467,17 @@ bool Cuentas::savelista( const std::string file ) {
 	archivoClientes.close();
 
 	return true;
+}
+
+void Cuentas::vaciarcuentas( void ) {
+	// lista->listadocuentas se elimina en el ámbito del destructor de lista.h
+	// Sólo hay que liberar los punteros dentro de cada dato.
+	if ( ! this->listadocuentas.vacia() ) {
+		lista <cuentas_t *>::iterador it( listadocuentas );
+		it = this->listadocuentas.primero();
+		while ( ! listadocuentas.isEmpty()) {
+			delete it.dato();
+			listadocuentas.eliminar_nodo(it);
+		}
+	}
 }
