@@ -11,6 +11,8 @@
 #include <string>
 #include "lista.h"
 #include "Block.h"
+#include "TransactionOutput.h"
+#include "TransactionInput.h"
 #include "Cuentas.h"
 
 class BlockChainHistoryBook {
@@ -24,6 +26,7 @@ private:
 	static const Block * getBlock( const std::string txns_hash );						// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>
 	static const TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
+	// lista <TransactionOutput *> obtenerOutput( const std::string tx_id, const std::string tx_id );
 	//---Setters---//
 	//---Otros---//
 	static void BorrarHistoria( void );
