@@ -51,7 +51,7 @@ const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
 // Para usar x línea de comandos txn <id>
 const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const std::string tx_id ) {
 	std::string b_prev = "";
-	TransactionInput * TI = nullptr ;
+	TransactionInput * TI = nullptr;
 
 	// Checks
 	if ( tx_id.empty()  ) {
@@ -66,9 +66,6 @@ const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const s
 	if ( ! AlgoChain.vacia() ) {
 		lista <Block *>::iterador it( AlgoChain );
 		it = AlgoChain.primero();
-		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
-			return TI;
-		}
 		do {
 			if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
 				return TI;
@@ -98,6 +95,7 @@ const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const s
 							itTransInput.avanzar();
 						}  while ( ! itTransInput.extremo() );
 					}
+					itTrans.avanzar();
 				} while ( ! itTrans.extremo() );
 			}
 			it.avanzar();
@@ -130,6 +128,7 @@ bool BlockChainHistoryBook::AddBlock( Block * & B ){
 }
 
 bool BlockChainHistoryBook::AddListaBlocks( lista <Block *> & lista ) {
+
 	if ( AlgoChain.vacia() ) {
 		AlgoChain = lista;
 	}
@@ -140,9 +139,38 @@ bool BlockChainHistoryBook::AddListaBlocks( lista <Block *> & lista ) {
 	return true;
 }
 
-/*
-lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutput( const std::string tx_id, const std::string tx_id ) {
-	lista <TransactionOutPut *> ListaTO = nullptr;
-	return ListaTO;
+lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::string tx_id, const int idx ) {
+	std::string b_prev = "";
+	lista <TransactionOutput *> ListaTranOut;
+
+	// Checks
+	if ( tx_id.empty() ) {
+		return ListaTranOut;
+	}
+	else if ( ! Block::CheckHash( tx_id, TiposHash::clavehash256 ) ) {
+		return ListaTranOut;
+	}
+	if ( idx < 0 ) {
+		return ListaTranOut;
+	}
+	// End Checks
+
+	if ( !AlgoChain.vacia() ) {
+		for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+		do {
+			lista <Transaction *> itTrans = it.dato()->getListaTran();
+			lista <Transaction *>::iterador itLT( itTrans );
+			itLT = itTrans.primero();
+			do {
+				lista <TransactionInput *> LTI = itLT.dato()->getListaTransactionInput();
+				lista <TransactionInput *>::iterador itLTI( LTI );
+				
+				itLT.avanzar();
+			} while ( ! itLT.extremo() );
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return ListaTranOut;
 }
-*/
