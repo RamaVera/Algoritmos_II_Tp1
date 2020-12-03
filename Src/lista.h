@@ -94,6 +94,7 @@ public:
 	void insertar(const T &);
 	void insertar_antes(const T &, iterador const &);
 	void insertar_despues(const T &, iterador const &);
+	void eliminar_nodo(iterador &);
 	void borrar(const T &);
 	void borrartodo();
 	lista const &operator=(lista const &);
@@ -383,6 +384,29 @@ void lista<T>::insertar_antes(const T &t, iterador const &it)
 
 	tam_++;
 }
+
+template<typename T>
+void lista<T>::eliminar_nodo(iterador &it){
+	nodo *iter = it.actual_;
+	nodo *ant = iter->ant_;
+	nodo *sig =iter->sig_;
+	if (ant == 0)
+		pri_ = sig;
+	else
+		ant->sig_ = sig;
+	if (sig == 0)
+		ult_ = ant;
+	else
+		sig->ant_ = ant;
+
+	it.actual_ = iter->sig_;
+	delete iter;
+	iter = NULL;
+
+	tam_--;
+}
+
+
 
 template<typename T>
 void lista<T>::borrar(const T &t)

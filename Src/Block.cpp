@@ -55,7 +55,7 @@ Block::Block( const  lista<Transaction*> & trList)
 	try {
 		this->CurTran = it.dato();
 		this->ListaTran = trList;	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
-		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->txn_count = trList.tamano();						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
 		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 		RecalculoHash();
 	}
@@ -73,6 +73,7 @@ Block::Block(Block & otherBlock){
 	nonce = otherBlock.getnonce();
 	eBlock = otherBlock.eBlock;
 	txn_count = otherBlock.gettxn_count();
+	cadena_prehash = otherBlock.getcadenaprehash();
 	lista<Transaction *>::iterador itTran(otherBlock.getListaTran());
 	itTran = otherBlock.getListaTran().ultimo();
 	CurTran = itTran.dato();
@@ -80,7 +81,7 @@ Block::Block(Block & otherBlock){
 	{
 		Transaction * copyTran = new Transaction(*itTran.dato());
 		this->ListaTran.insertar(copyTran);
-		itTran.retroceder();
+		itTran.avanzar();
 	}
 
 }
@@ -158,7 +159,7 @@ Transaction * Block::getTran( size_t Index ) {
 	return T;
 }
 
-const lista <Transaction *> Block::getListaTran() {
+const lista <Transaction *>& Block::getListaTran() {
 	return this->ListaTran;
 }
 
@@ -213,11 +214,16 @@ bool Block::setnonce( size_t valor ) {
 	return true;
 }
 
+bool Block::settxn_count(size_t valor){
+	this->txn_count = valor;
+	return true;
+}
+
 bool Block::settransaction( const raw_t & raw ) {
 	try {
 		this->CurTran = new Transaction( raw );  	// <- Ojo, nuevo constructor
 		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
-		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->txn_count ++;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
 		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 		RecalculoHash();
 		return true;
@@ -234,7 +240,7 @@ bool Block::settransaction(Transaction * pTr){
 	try {
 			this->CurTran = pTr;  	// <- Ojo, nuevo constructor
 			this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
-			this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+			this->txn_count ++;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
 			this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 			RecalculoHash();
 			return true;
@@ -298,7 +304,7 @@ std::string Block::ArbolMerkle( void ) {
 		it = this->ListaTran.primero();
 		size_t i = 0, tam = largo;
 		while ( ! it.extremo() ) {
-			strMerkle[i++] = it.dato()->getConcatenatedTransactions();
+			strMerkle[i++] =  sha256( sha256( it.dato()->getConcatenatedTransactions() ) );
 			it.avanzar();
 		};
 		// TODO. Analizar ventajas en este tramo de llevarlo a recursivo e inplace.
@@ -306,10 +312,10 @@ std::string Block::ArbolMerkle( void ) {
 			for ( i = 0; i < largo; i += 2 ) {
 				if ( i == largo - 1) {
 					// Lucio me recordó que es hash doble !!
-					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i ] ) );
+					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] + strMerkle[ i ] ) );
 				}
 				else {
-					strMerkle[ i ] = sha256 ( sha256( strMerkle[ i ] ) ) + sha256( sha256( strMerkle[ i + 1 ] ) );
+					strMerkle[ i ] = sha256( sha256( strMerkle[ i ] + strMerkle[ i + 1 ] ) );
 				}
 			}
 			// ( tam % 2 ) ? tam <<= 1 : tam = ( tam + 1 ) << 1;   <- Opcion rápida con operadores de bits.

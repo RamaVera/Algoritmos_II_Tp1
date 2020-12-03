@@ -110,15 +110,15 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 	if ( ! AlgoChain.vacia() ) {
 		lista  <Block *>::iterador it( AlgoChain );
 		it = AlgoChain.primero();
-		while ( ! it.extremo() ) {
+		while ( ! AlgoChain.isEmpty()) {
 			delete it.dato();
-			it.avanzar();
+			AlgoChain.eliminar_nodo(it);
 		}
 	}
 }
 
 
-bool BlockChainHistoryBook::AddBlock( Block * B ){
+bool BlockChainHistoryBook::AddBlock( Block *& B ){
 	Block * newBlock = new Block(*B);
 	AlgoChain.insertar(newBlock);
 	return true;

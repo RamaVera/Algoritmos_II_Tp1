@@ -55,15 +55,15 @@ class Block {
         // Destructor
         ~Block();
 		// Getters
-		size_t gettxn_count();
 		std::string getpre_block();
 		std::string gettxns_hash();
 		unsigned int getbits();
 		size_t getnonce();
 		std::string getStrNonce();
+		size_t gettxn_count();
 		std::string getcadenaprehash();
 		std::string gethash_Merkle();
-		const lista <Transaction *> getListaTran();
+		const lista <Transaction *>& getListaTran();
 		Transaction * getTran( size_t Index );
 		// Setters
 		bool setpre_block( std::string valor );
@@ -71,6 +71,7 @@ class Block {
 		bool setbits( size_t valor );
 		bool setnonce( size_t valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
 		bool setseconds( double segundos );
+		bool settxn_count(size_t valor);
 		bool settransaction( const raw_t & raw );
 		bool settransaction( Transaction * pTr);
 		StatusBlock EstatusBlock();

@@ -27,10 +27,11 @@ public:
 
 	status_t createTransaction(payload_t payload);
 	status_t createOriginTransaction(payload_t & payload);
-	status_t saveInHistoryBook(Block * &block);
-	status_t saveInHistoryBook(lista<Block*> &listaBlock);
+	status_t saveBlockInHistoryBook(Block * &block);
+	status_t saveOriginBlockInHistoryBook(Block* &block);
+	status_t saveUserBlockChainInHistoryBook(lista<Block*> &listaBlock);
 	status_t saveInMempool(Transaction * trans);
-
+	status_t eraseAllBlockChainRegisters(void);
 
 	const lista<Block *> & getBlockChain(void);
 	Transaction * & getActualTransaction(void);

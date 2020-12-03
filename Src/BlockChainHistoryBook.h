@@ -25,7 +25,7 @@ private:
 	//---Setters---//
 	//---Otros---//
 	static void BorrarHistoria( void );
-	static bool AddBlock( Block * B );
+	static bool AddBlock( Block *& B );
 	static bool AddListaBlocks( lista <Block *> & lista );
 public:
 };

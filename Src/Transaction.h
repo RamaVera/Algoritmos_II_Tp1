@@ -28,6 +28,7 @@ private:
 public:
 	//---Constructores---//
 	Transaction();
+	Transaction(const Transaction & otherTrans);
 	Transaction(int n_tx_in,int n_tx_out);
 	Transaction( const raw_t & raw);
 	~Transaction();

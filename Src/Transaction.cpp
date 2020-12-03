@@ -20,6 +20,38 @@ Transaction::Transaction(){
 	this->n_tx_out = 0;
 }
 
+
+Transaction::Transaction(const Transaction & otherTrans){
+		lista <TransactionInput *>::iterador itInput( otherTrans.ListaTranIn);
+		lista <TransactionOutput*>::iterador itOutput( otherTrans.ListaTranOut);
+		this->n_tx_in = otherTrans.n_tx_in;
+		while(!itInput.extremo() )
+		{
+			try {
+				TransactionInput * pTxInput = new TransactionInput;
+				pTxInput->setTxId(itInput.dato()->getTxId() );
+				pTxInput->setIdx(itInput.dato()->getIdx()   );
+				pTxInput->setAddr(itInput.dato()->getAddr() );
+				this->ListaTranIn.insertar(pTxInput);
+			}
+			catch (std::bad_alloc& ba)	{std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+			itInput.avanzar();
+		}
+		this->n_tx_out = otherTrans.n_tx_out;
+		while(!itOutput.extremo())
+		{
+			try {
+				TransactionOutput * pTxOutput = new TransactionOutput;
+				pTxOutput->setValue(itOutput.dato()->getValue());
+				pTxOutput->setAddr(itOutput.dato()->getAddr());
+				this->ListaTranOut.insertar(pTxOutput);
+			}
+			catch (std::bad_alloc& ba)	{std::cerr << "bad_alloc caught: " << ba.what() << '\n';}
+			itOutput.avanzar();
+		}
+}
+
+
 //Descripcion: Instancia el objeto Transaction a partir de un archivo raw_t
 //Precondicion:
 //Postcondicion: Dos punteros a memoria de tama�o definido creados y
@@ -132,8 +164,10 @@ int Transaction::getNumTransactionOut(){
 //Postcondicion:
 TransactionInput * Transaction::getTransactionInput(int index){
 	size_t index_ = (size_t)index;
-	if( index < 0 || index_ > this->ListaTranIn.tamano())
-		return NULL;
+	if( index < 0 || index_ > this->ListaTranIn.tamano()){
+		std::cerr<<"Fuera de Rango"<<std::endl;
+		std::abort();
+	}
 	else{
 		lista <TransactionInput *>::iterador it(this->ListaTranIn);
 		int counter = 1;
@@ -150,8 +184,10 @@ TransactionInput * Transaction::getTransactionInput(int index){
 //Postcondicion:
 TransactionOutput * Transaction::getTransactionOutput(int index){
 	size_t index_ = (size_t)index;
-	if( index < 0 || index_ > this->ListaTranOut.tamano())
-		return NULL;
+	if( index < 0 || index_ > this->ListaTranOut.tamano()){
+		std::cerr<<"Fuera de Rango"<<std::endl;
+		std::abort();
+	}
 	else{
 		lista <TransactionOutput *>::iterador it(this->ListaTranOut);
 		int counter = 1;
@@ -202,6 +238,7 @@ std::string Transaction::getConcatenatedTransactions( void ){
 //               concatenation<< itOut.dato()->getValue() <<' ';
 //               concatenation<< itOut.dato()->getAddr()  <<'\n';
     	  	  	 concatenation += float_to_string_w_precision( itOut.dato()->getValue() , 1 );
+    	  	  	 //concatenation += std::to_string(itOut.dato()->getValue());
     	  	  	 concatenation += ' ';
     	  	  	 concatenation += itOut.dato()->getAddr();
     	  	  	 concatenation += '\n';

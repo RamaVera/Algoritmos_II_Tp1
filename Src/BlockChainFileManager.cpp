@@ -38,6 +38,14 @@ BlockChainFileManager::~BlockChainFileManager() {
 		delete pRawData;
 		pRawData = NULL;
 	}
+	if ( ! this->userBlockChain.vacia() ) {
+			lista  <Block *>::iterador it( this->userBlockChain );
+			it = this->userBlockChain.primero();
+			while ( ! this->userBlockChain.isEmpty()) {
+				delete it.dato();
+				this->userBlockChain.eliminar_nodo(it);
+			}
+		}
 }
 
 // Descripcion: Devuelve en un puntero a fstream pasado como argumento el valor de
@@ -486,14 +494,14 @@ status_t BlockChainFileManager::removeFile(FileTypes type){
 				it.dato()->fs.close();
 			}
 			delete it.dato();
-
+			fileList.eliminar_nodo(it);
 			break;
 		}
 		it.avanzar();
 	}
 	// TODO IMPLEMENTAR UN METODO MEJOR DE BORRADO PUESTO QUE ESTE NO
 	// OBEDECE LA DIRECCION DEL DATO
-	fileList.borrar(it.dato());
+
 	return STATUS_CLOSE_FILE_SUCCESSFULY;
 }
 
@@ -506,7 +514,7 @@ status_t BlockChainFileManager::removeFile(FileTypes type){
 status_t BlockChainFileManager::removeAllFiles(){
 	lista<file_t *>::iterador it(BlockChainFileManager::fileList);
 	it = fileList.primero();
-	while(!it.extremo()){
+	while(!fileList.isEmpty()){
 		it.dato()->fileID = "";
 		it.dato()->iss = NULL;
 		it.dato()->oss = NULL;
@@ -515,7 +523,7 @@ status_t BlockChainFileManager::removeAllFiles(){
 			it.dato()->fs.close();
 		}
 		delete it.dato();
-		it.avanzar();
+		fileList.eliminar_nodo(it);
 	}
 	return STATUS_CLOSE_FILE_SUCCESSFULY;
 }
@@ -596,10 +604,11 @@ status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *
 #define BLOCK_2_LINE_BLOCK_HASH 2
 #define BLOCK_3_LINE_BITS 3
 #define BLOCK_4_LINE_NONCE 4
-#define BLOCK_TRANSAC_TX_INPUT_INDEX 5
-#define BLOCK_TRANSAC_INPUTS 6
-#define BLOCK_TRANSAC_TX_OUTPUT_INDEX 7
-#define BLOCK_TRANSAC_OUTPUTS 8
+#define BLOCK_5_LINE_CANT_TX 5
+#define BLOCK_TRANSAC_TX_INPUT_INDEX 6
+#define BLOCK_TRANSAC_INPUTS 7
+#define BLOCK_TRANSAC_TX_OUTPUT_INDEX 8
+#define BLOCK_TRANSAC_OUTPUTS 9
 
 status_t BlockChainFileManager::validateBlockChain(void){
 	std::istream * iss;
@@ -607,7 +616,7 @@ status_t BlockChainFileManager::validateBlockChain(void){
 
 	std::string line,aux;
 	unsigned int blockLineCounter = 0, trasnferCounter = 0;
-	unsigned int inTx,outTx = 0;
+	unsigned int inTx,outTx,cantTx;
 	bool isCompleteBlock = false;
 	bool isEof = false;
 
@@ -632,39 +641,74 @@ status_t BlockChainFileManager::validateBlockChain(void){
 			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_BITS;} break;
 		case BLOCK_4_LINE_NONCE:
 			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_NONCE;}break;
+		case BLOCK_5_LINE_CANT_TX:
+			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_NONCE;}
+			cantTx = getPositiveNumberFromString(line);
+			break;
 		case BLOCK_TRANSAC_TX_INPUT_INDEX:
 			if( this->isPositiveIntNumberFromString(line) == false){return STATUS_CORRUPT_FORMAT_BAD_TXIN;}
 			inTx = getPositiveNumberFromString(line);
-			break;
+			if(inTx)
+				break;
+			blockLineCounter++;
 		case BLOCK_TRANSAC_INPUTS:
-			trasnferCounter ++;
-			if( this->isHashFromString(this->getSubString(line,' ', 1)) == false){
-				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
-			if( this->isPositiveIntNumberFromString(this->getSubString(line,' ', 2)) == false){
-				return STATUS_CORRUPT_FORMAT_BAD_TXINDEX;}
-			if( this->isHashFromString(this->getSubString(line,' ', 3)) == false){
-				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if(inTx){
+				trasnferCounter ++;
+				if( this->isHashFromString(this->getSubString(line,' ', 1)) == false){
+					return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+				if( this->isPositiveIntNumberFromString(this->getSubString(line,' ', 2)) == false){
+					return STATUS_CORRUPT_FORMAT_BAD_TXINDEX;}
+				if( this->isHashFromString(this->getSubString(line,' ', 3)) == false){
+					return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			}
 			if (trasnferCounter != inTx) blockLineCounter--;
 			else trasnferCounter = 0;
 			break;
 		case BLOCK_TRANSAC_TX_OUTPUT_INDEX:
 			if( this->isPositiveIntNumberFromString(line) == false){ return STATUS_CORRUPT_FORMAT_BAD_TXOUT;}
 			outTx = getPositiveNumberFromString(line);
-			break;
+			if (outTx) break;
 		case BLOCK_TRANSAC_OUTPUTS:
-			trasnferCounter ++;
-			if( this->isPositiveFloatNumberFromString(this->getSubString(line,' ', 1)) == false){
-				return STATUS_CORRUPT_FORMAT_BAD_BTCVALUE;}
-			if( this->isHashFromString(this->getSubString(line,' ', 2)) == false){
-				return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			if (outTx){
+				trasnferCounter ++;
+				if( this->isPositiveFloatNumberFromString(this->getSubString(line,' ', 1)) == false){
+					return STATUS_CORRUPT_FORMAT_BAD_BTCVALUE;}
+				if( this->isHashFromString(this->getSubString(line,' ', 2)) == false){
+					return STATUS_CORRUPT_FORMAT_BAD_HASH;}
+			}
 			if (trasnferCounter != outTx) blockLineCounter--;
 			else{
-				trasnferCounter = 0;
-				blockLineCounter = 0;
-				isCompleteBlock = true;
+				if (cantTx ==1){
+					trasnferCounter = 0;
+					blockLineCounter = 0;
+					isCompleteBlock = true;
+				}else{
+					trasnferCounter = 0;
+					blockLineCounter = BLOCK_5_LINE_CANT_TX;
+					cantTx--;
+					return STATUS_ERROR_LIST_OF_TRANSACT_NOT_SUPPORTED;
+				}
 			}
 			break;
 		}
+
+
+		// Evitar problema de ultima linea con \n y getline en archivos
+		if (!this->getIsStandarfromList(FileTypes::loadBlockChainFile)){
+			static unsigned int lastCharpos;
+			static bool hasEndOfLine = this->hasNewLineAtTheEnd(iss,&lastCharpos);
+			if( hasEndOfLine){
+			//	cout<<lastCharpos<<endl;
+			//	cout<<iss->tellg()<<endl;
+				if(abs(lastCharpos - iss->tellg() ) == 1){
+					if (isCompleteBlock)
+						return STATUS_OK;
+					else
+						return STATUS_BAD_READ_INPUT_FILE;
+				}
+			}
+		}
+
 		// Si se leyo un bloque completo y es el fin de archivo
 		if (isEof){
 			if (isCompleteBlock)
@@ -684,7 +728,7 @@ status_t BlockChainFileManager::loadBlockChain(void){
 
 	std::string line,aux;
 	unsigned int blockLineCounter = 0, trasnferCounter = 0;
-	unsigned int inTx,outTx = 0;
+	unsigned int inTx,outTx,cantTx;
 	bool isCompleteBlock = false;
 	bool isEof = false;
 	bool finishLoading = false;
@@ -718,17 +762,25 @@ status_t BlockChainFileManager::loadBlockChain(void){
 			case BLOCK_4_LINE_NONCE:
 				newBlock->setnonce(std::stoi(line));
 				break;
+			case BLOCK_5_LINE_CANT_TX:
+				//newBlock->settxn_count(std::stoi(line));
+				cantTx = getPositiveNumberFromString(line);
+				break;
 			case BLOCK_TRANSAC_TX_INPUT_INDEX:
 				inTx = getPositiveNumberFromString(line);
 				for(unsigned int i = 0; i < inTx ;i++){
 					newTrans->addTransactionInput();
 				}
-				break;
+				if(inTx)
+					break;
+				blockLineCounter++;
 			case BLOCK_TRANSAC_INPUTS:
-				trasnferCounter ++;
-				newTrans->getTransactionInput(trasnferCounter)->setTxId(this->getSubString(line,' ', 1));
-				newTrans->getTransactionInput(trasnferCounter)->setIdx(std::stoi(this->getSubString(line,' ', 2)));
-				newTrans->getTransactionInput(trasnferCounter)->setAddr(this->getSubString(line,' ', 3));
+				if(inTx){
+					trasnferCounter ++;
+					newTrans->getTransactionInput(trasnferCounter)->setTxId(this->getSubString(line,' ', 1));
+					newTrans->getTransactionInput(trasnferCounter)->setIdx(std::stoi(this->getSubString(line,' ', 2)));
+					newTrans->getTransactionInput(trasnferCounter)->setAddr(this->getSubString(line,' ', 3));
+				}
 				if (trasnferCounter != inTx) blockLineCounter--;
 				else trasnferCounter = 0;
 				break;
@@ -737,21 +789,46 @@ status_t BlockChainFileManager::loadBlockChain(void){
 				for(unsigned int i = 0; i < outTx ;i++){
 					newTrans->addTransactionOutput();
 				}
-				break;
+				if (outTx) break;
 			case BLOCK_TRANSAC_OUTPUTS:
-				trasnferCounter ++;
-				newTrans->getTransactionOutput(trasnferCounter)->setValue(std::stof(this->getSubString(line,' ', 1)));
-				newTrans->getTransactionOutput(trasnferCounter)->setAddr(this->getSubString(line,' ', 2));
+				if(outTx){
+					trasnferCounter ++;
+					newTrans->getTransactionOutput(trasnferCounter)->setValue(std::stof(this->getSubString(line,' ', 1)));
+					newTrans->getTransactionOutput(trasnferCounter)->setAddr(this->getSubString(line,' ', 2));
+				}
 				if (trasnferCounter != outTx) blockLineCounter--;
 				else{
 					trasnferCounter = 0;
-					blockLineCounter = 0;
-					isCompleteBlock = true;
-					newBlock->settransaction(newTrans);
-					this->userBlockChain.insertar(newBlock);
+					if (cantTx ==1){
+						blockLineCounter = 0;
+						isCompleteBlock = true;
+						newBlock->settransaction(newTrans);
+						this->userBlockChain.insertar(newBlock);
+					}else{
+						cantTx--;
+						newBlock->settransaction(newTrans);
+					}
+
 				}
 				break;
 			}
+
+			// Evitar problema de ultima linea con \n y getline en archivos
+			if (!this->getIsStandarfromList(FileTypes::loadBlockChainFile)){
+				static unsigned int lastCharpos;
+				static bool hasEndOfLine = this->hasNewLineAtTheEnd(iss,&lastCharpos);
+				if( hasEndOfLine){
+				//	cout<<lastCharpos<<endl;
+				//	cout<<iss->tellg()<<endl;
+					if(abs(lastCharpos - iss->tellg() ) == 1){
+						if (isCompleteBlock)
+							return STATUS_OK;
+						else
+							return STATUS_BAD_READ_INPUT_FILE;
+					}
+				}
+			}
+
 			// Si se leyo un bloque completo y es el fin de archivo
 			if (isEof){
 				if (isCompleteBlock){
@@ -762,8 +839,8 @@ status_t BlockChainFileManager::loadBlockChain(void){
 					return STATUS_BAD_READ_INPUT_FILE;
 			}else{
 				if (isCompleteBlock){
-				finishLoading = false;
-				break;
+					finishLoading = false;
+					break;
 				}
 			}
 

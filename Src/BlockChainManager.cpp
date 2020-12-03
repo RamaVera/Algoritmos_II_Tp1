@@ -46,7 +46,7 @@ void BlockChainManager::proccesBlockChain(){
 					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash();
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
-					BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( builder.getBlocklActual() ) );
+					BlockChainManager::proccesStatus( bookkeeper.saveOriginBlockInHistoryBook( builder.getBlocklActual() ) );
 
 				}
 				break;
@@ -87,7 +87,7 @@ void BlockChainManager::proccesBlockChain(){
 					// std::cout<< "Finish mining with hash :" << builder.getObtainedHash() << std::endl;
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
-					//BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook(builder.getBlockChainPointer());
+					//BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlockChainPointer());
 				}
 				break;
 			case Commands::block:
@@ -158,7 +158,7 @@ void BlockChainManager::proccesBlockChain(){
 					// FileManager parsea los datos de la blockChain en la lista de bloques
 					BlockChainManager::proccesStatus( fileManager.loadBlockChain() );
 					// Bookkeeper guarda en la historia
-					BlockChainManager::proccesStatus( bookkeeper.saveInHistoryBook( fileManager.getBlockChainPointer() ));
+					BlockChainManager::proccesStatus( bookkeeper.saveUserBlockChainInHistoryBook( fileManager.getBlockChainPointer() ));
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
@@ -199,8 +199,13 @@ void BlockChainManager::proccesBlockChain(){
 				break;
 		}
 	}
-	BlockChainManager::proccesStatus(fileManager.removeAllFiles());
+
+
 	cout << "Finishing Execution " << endl;
+	BlockChainBookkeeper bookkepper;
+	BlockChainManager::proccesStatus( bookkepper.eraseAllBlockChainRegisters() );
+	BlockChainManager::proccesStatus(fileManager.removeAllFiles());
+
 }
 
 // Descripcion: proccesStatus es un metodo que analiza los estados de salida de las clases
@@ -229,7 +234,6 @@ void BlockChainManager::proccesStatus(status_t status){
 	case STATUS_CLOSE_FILE_SUCCESSFULY:
 		break;
 	case STATUS_FINISH_CONVERT_SUCCESSFULY:
-		fileManager << FileTypes::userCommandResponseFiles << "OK\n";
 		break;
 	//-------- Errores ------------------//
 	case STATUS_ERROR_HASH_NOT_FOUND:
@@ -311,6 +315,12 @@ void BlockChainManager::proccesStatus(status_t status){
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Lectura: Archivo de salida da�ado" << std::endl;
 		std::cerr << "Error de Lectura: Archivo de salida da�ado" << std::endl;
+		std::abort();
+		break;
+	case STATUS_ERROR_LIST_OF_TRANSACT_NOT_SUPPORTED:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		//std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
+		std::cerr << "Error: El sistema no soporta entradas con mas de una transaccion por bloque" << std::endl;
 		std::abort();
 		break;
 		case STATUS_NO_BLOCKS_TO_CONVERT:

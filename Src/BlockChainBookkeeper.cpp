@@ -12,9 +12,8 @@ BlockChainBookkeeper::BlockChainBookkeeper() {
 }
 
 BlockChainBookkeeper::~BlockChainBookkeeper() {
-	//TODO verificar con valgrind por que aparece el error free(): double free detected in tcache 2
-	//if(this->ActualTransaction !=NULL)
-		//delete ActualTransaction;
+	if(this->ActualTransaction !=NULL)
+		delete ActualTransaction;
 }
 
 status_t BlockChainBookkeeper::createOriginTransaction(payload_t & payload){
@@ -28,12 +27,20 @@ Transaction * & BlockChainBookkeeper::getActualTransaction(void){
 	return this->ActualTransaction;
 }
 
-status_t BlockChainBookkeeper::saveInHistoryBook(Block* &block){
+
+status_t BlockChainBookkeeper::saveOriginBlockInHistoryBook(Block *& block){
+
+	if (! BlockChainHistoryBook::AlgoChain.isEmpty() ) BlockChainHistoryBook::BorrarHistoria();
+	return saveBlockInHistoryBook(block);
+}
+
+status_t BlockChainBookkeeper::saveBlockInHistoryBook(Block* &block){
 	if (BlockChainHistoryBook::AddBlock(block) ) return STATUS_OK;
 	else return STATUS_BAD_ALLOC;
 }
 
-status_t BlockChainBookkeeper::saveInHistoryBook(lista<Block*> &listaBlock){
+status_t BlockChainBookkeeper::saveUserBlockChainInHistoryBook(lista<Block*> &listaBlock){
+	if (! BlockChainHistoryBook::AlgoChain.isEmpty() ) BlockChainHistoryBook::BorrarHistoria();
 	lista<Block*>::iterador it(listaBlock);
 	it = listaBlock.ultimo();
 	while(!it.extremo()){
@@ -78,4 +85,11 @@ status_t BlockChainBookkeeper::saveInMempool(Transaction * trans){
 const lista<Block *> & BlockChainBookkeeper::getBlockChain(void){
 	return BlockChainHistoryBook::getListaBlocks();
 }
+
+status_t BlockChainBookkeeper::eraseAllBlockChainRegisters(void){
+	BlockChainHistoryBook::BorrarHistoria();
+	//Mempool::borrarMempool();
+	return STATUS_OK;
+}
+
 

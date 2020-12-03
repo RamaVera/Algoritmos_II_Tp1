@@ -15,7 +15,7 @@ BlockChainBuilder::BlockChainBuilder() : BlocklActual(), ListaBlocks(), hash_res
 BlockChainBuilder::BlockChainBuilder(size_t d) : BlocklActual(), ListaBlocks(), hash_resultado( "" ), bits( d ), pRawData(NULL){}
 
 BlockChainBuilder::~BlockChainBuilder() {
-	if ( ! this->ListaBlocks.vacia() ){
+	if ( ! this->ListaBlocks.isEmpty() ){
 	// lista <Transaction>::iterador it();
 		lista <Block *>::iterador it(ListaBlocks);
 		/* Itero la lista para recuperar todos los strings de la coleccion Transaction

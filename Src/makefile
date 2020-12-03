@@ -47,5 +47,14 @@ clean:
 	rm -f core $(PROGR) $(OBJECTS)
 all: $(PROGR)
 	$(CC) $(CPPFLAGS) -o $(PROGR) $(OBJECTS)
-run : $(PROGR)
+memcheck : $(PROGR)
+	valgrind  --leak-check=yes ./$(PROGR) -i input.txt -o output.txt
+memcheck_s : $(PROGR)
 	valgrind -s --leak-check=yes ./$(PROGR) -i input.txt -o output.txt
+std_out : $(PROGR)
+	./$(PROGR) -i input.txt -o -
+std_in : $(PROGR)
+	./$(PROGR) -i - -o output.txt
+std : $(PROGR)
+	./$(PROGR) -i - -o -
+
