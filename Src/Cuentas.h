@@ -15,10 +15,6 @@
 #include "TransactionOutput.h"
 #include "BlockChainBuilder.h"
 
-
-// #include "TiposHash.h"
-
-// #include "sha256.h"
 #include "lista.h"
 
 typedef struct {
@@ -51,6 +47,7 @@ typedef struct {
 } TransactionOutPut_t;
 
 class Cuentas {
+
 private:
 	lista <cuentas_t *> listadocuentas;	      	// Lista de cuentas_t
 	size_t cantidad; 							// Total de cuentas_t

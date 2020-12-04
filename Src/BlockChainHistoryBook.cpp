@@ -104,7 +104,7 @@ const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const s
 	return TI;
 }
 
-void BlockChainHistoryBook::BorrarHistoria(void){
+void BlockChainHistoryBook::BorrarHistoria( void ) {
 	// AlgoChain se autodestruye, antes debo liberar la memoria asignada en cada elemento * AlgoChain de la lista
 	// El compilador ejecuta antes los destructores de las clases hijas que liberan su memoria dinámica.
 	if ( ! AlgoChain.vacia() ) {
@@ -118,7 +118,7 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 	}
 }
 
-bool BlockChainHistoryBook::AddBlock( Block * & B ){
+bool BlockChainHistoryBook::AddBlock( Block * & B ) {
 	Block * newBlock = new Block( *B );
 	AlgoChain.insertar( newBlock );
 	// Aca debo en Cuentas actualizar datos
@@ -163,10 +163,19 @@ lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::st
 			lista <Transaction *> itTrans = it.dato()->getListaTran();
 			lista <Transaction *>::iterador itLT( itTrans );
 			itLT = itTrans.primero();
+			if ( it.dato()->getpre_block() == b_prev ) {
+				// Shathosi Block
+				return itLT.dato()->getTransactionOutput();
+			}
 			do {
 				lista <TransactionInput *> LTI = itLT.dato()->getListaTransactionInput();
 				lista <TransactionInput *>::iterador itLTI( LTI );
-				
+				do {
+					if ( itLTI.dato()->getTxId() == tx_id && itLTI.dato()->getIdx() == idx ) {
+						return itLT.dato()->getTransactionOutput();
+					}
+					itLTI.avanzar();
+				} while ( ! itLTI.extremo() );
 				itLT.avanzar();
 			} while ( ! itLT.extremo() );
 			it.avanzar();

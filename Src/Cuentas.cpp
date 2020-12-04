@@ -3,6 +3,7 @@
  */
 
 #include "Cuentas.h"
+#include "BlockChainHistoryBook.h"
 
 //---Constructores---//
 
@@ -11,7 +12,6 @@ Cuentas::Cuentas() {
 }
 
 //---Destructor---//
-
 Cuentas::~Cuentas() {
  // lista->listadocuentas se elimina en el ámbito del destructor de lista.h
  // Sólo hay que liberar los punteros dentro de cada dato.
@@ -26,7 +26,6 @@ Cuentas::~Cuentas() {
 }
 
 //---Getters---//
-
 size_t Cuentas::getcantidad() {
 	return this->cantidad;
 }
@@ -565,7 +564,7 @@ bool Cuentas::updatedatos( Block * & B ) {
 	std::string b_prev = "";
 
 	if ( B == nullptr ) return false;
-	
+
 	if ( ! B->getListaTran().vacia() ) {
 		lista <Transaction *>::iterador it( B->getListaTran() );
 		lista <TransactionOutput *> ListaTO;
@@ -589,8 +588,17 @@ bool Cuentas::updatedatos( Block * & B ) {
 				// Para buscar los montos de los Inputs hay que ir a la AlgoChain a 
 				// con TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 				// y sacar las addr y los montos con:
-				//  static const lista <TransactionOutPut *> TransactionOutPut * obtenerOutput( std::string tx_id, const std::string tx_id );
-				this->addaddr( itTI.dato()->getAddr(), 0 );
+				// lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::string tx_id, const int idx ) {
+				//lista <TransactionOutput *> ListaTO = BlockChainHistoryBook::obtenerOutputs( itTI.dato()->getTxId(), itTI.dato()->getIdx() );
+				lista <TransactionOutput *> ListaTO = BlockChainHistoryBook::obtenerOutputs( itTI.dato()->getTxId(), itTI.dato()->getIdx() );
+				lista <TransactionOutput *>::iterador itTO( ListaTO );
+				itTO = ListaTO.primero();
+				if ( ! ListaTO.vacia() )  {
+					do {
+						this->addaddr( itTI.dato()->getAddr(), 0 );
+						itTO.avanzar();				
+					} while ( ! itTO.extremo() );
+				}
 				itTI.avanzar();				
 			} while ( ! itTI.extremo() );
 
