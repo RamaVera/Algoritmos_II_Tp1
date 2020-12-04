@@ -595,7 +595,7 @@ bool Cuentas::updatedatos( Block * & B ) {
 				itTO = ListaTO.primero();
 				if ( ! ListaTO.vacia() )  {
 					do {
-						this->addaddr( itTI.dato()->getAddr(), 0 );
+						this->addaddr( itTI.dato()->getAddr(), itTO.dato()->getValue() );
 						itTO.avanzar();				
 					} while ( ! itTO.extremo() );
 				}
