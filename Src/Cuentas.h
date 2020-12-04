@@ -87,7 +87,6 @@ public:
 	void listadototal( const float saldominimo = 0 );
 	void vaciarcuentas( void );
 	bool updatedatos( Block *  & B );
-	bool updatedatosdatos( lista <Block *> & lista );
 	bool updatedatosdatos( Transaction * & T );
 
 	// Persistencia del Objeto //

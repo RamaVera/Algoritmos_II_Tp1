@@ -571,6 +571,7 @@ bool Cuentas::updatedatos( Block * & B ) {
 		for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
 		it = B->getListaTran().primero();
 		if ( B->getpre_block() == b_prev )  {
+			// Sathosi Block Zero
 			ListaTO = it.dato()->getTransactionOutput();
 			lista <TransactionOutput *>::iterador itTO( ListaTO );
 			itTO = ListaTO.primero();
@@ -580,22 +581,21 @@ bool Cuentas::updatedatos( Block * & B ) {
 			}
 		}
 		do {
-			lista <TransactionInput *> ListaTI;
-			ListaTI = it.dato()->getListaTransactionInput();
+			lista <TransactionInput *> ListaTI = it.dato()->getListaTransactionInput();
 			lista <TransactionInput *>::iterador itTI( ListaTI );
 			itTI = ListaTI.primero();
 			do {
-				// Para buscar los montos de los Inputs hay que ir a la AlgoChain a 
+				// Para buscar los montos de los Inputs hay que ir a la AlgoChain 
 				// con TransactionOutPut_t obtenerOutput( lista <Block *> & AlgoChain, TransactionInput_t TI );
 				// y sacar las addr y los montos con:
-				// lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::string tx_id, const int idx ) {
-				//lista <TransactionOutput *> ListaTO = BlockChainHistoryBook::obtenerOutputs( itTI.dato()->getTxId(), itTI.dato()->getIdx() );
 				lista <TransactionOutput *> ListaTO = BlockChainHistoryBook::obtenerOutputs( itTI.dato()->getTxId(), itTI.dato()->getIdx() );
-				lista <TransactionOutput *>::iterador itTO( ListaTO );
-				itTO = ListaTO.primero();
 				if ( ! ListaTO.vacia() )  {
+					lista <TransactionOutput *>::iterador itTO( ListaTO );
+					itTO = ListaTO.primero();
 					do {
-						this->addaddr( itTI.dato()->getAddr(), itTO.dato()->getValue() );
+						if ( itTO.dato()->getAddr() == itTI.dato()->getAddr()  ) {
+							this->addaddr( itTI.dato()->getAddr(), - itTO.dato()->getValue() );	// Cuenta Origen, débito
+						}         
 						itTO.avanzar();				
 					} while ( ! itTO.extremo() );
 				}
@@ -606,7 +606,7 @@ bool Cuentas::updatedatos( Block * & B ) {
 			lista <TransactionOutput *>::iterador itTO( ListaTO );
 			itTO = ListaTO.primero();
 			do {
-				// Aca es más facil porque son creditos, cuentas
+				// Acá es más fácil porque son créditos, cuentas
 				//this->addcuenta( itTO.dato()->getAddr(), itTO.dato()->getValue );
 				if ( this->addmonto( itTO.dato()->getAddr(), itTO.dato()->getValue() ) ) {
 					// Agregado Ok
@@ -620,10 +620,9 @@ bool Cuentas::updatedatos( Block * & B ) {
 	return true;
 }
 
-bool Cuentas::updatedatosdatos( lista <Block *> & lista ) {
-	return true;
-}
-
 bool Cuentas::updatedatosdatos( Transaction * & T ) {
 	return true;
 }
+
+
+

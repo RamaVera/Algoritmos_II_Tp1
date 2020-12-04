@@ -35,6 +35,7 @@ private:
 
 public:
 	static lista <TransactionOutput *> obtenerOutputs( const std::string tx_id, const int idx );
+	static bool updatedatosdatos( Cuentas & Listado );
 
 };
 

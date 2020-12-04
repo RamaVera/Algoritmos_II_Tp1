@@ -183,3 +183,17 @@ lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::st
 	}
 	return ListaTranOut;
 }
+
+bool BlockChainHistoryBook::updatedatosdatos( Cuentas & Listado ) {
+	if ( ! BlockChainHistoryBook::AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.ultimo();
+		do {
+			if ( ! Listado.updatedatos( it.dato() ) ) {
+				break;
+			}
+			it.retroceder();
+		} while ( ! it.extremo() );
+	}
+	return true;
+}
