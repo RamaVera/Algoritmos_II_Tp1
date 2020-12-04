@@ -26,6 +26,7 @@ class Mempool{
 		static void addNewTransaction(Transaction *& new_txn);     // Usa metodos de LISTA para agregar un nuevo nodo con una transaccion
 		//static Transaction & get_transaction_n(int n);   		// DEVUELVE LA N-ESIMA TRANSACCION DE LA MEMPOOL (LA MEMPOOL SE ORGANIZA EN ORDEN DESCENDENTE)
 		static lista <Transaction *> & getTransactionsList();     // Devuelve un puntero a la lista de transacciones
+		static Transaction * getTransactionsFromMempool(std::string hashUser);
 		static size_t getMempoolLength();
 		static void BorrarMempool(void);
 

@@ -1,4 +1,7 @@
 init ramiro 1000 5
 transfer ramiro alan 400
+transfer alan sergio 200 bob 10
 mine 5
+block 71883c1971aa225b6a8ffe3e02f9e8ab3966da34444446fa6ddd4e7f7ef00f5b
+txn e1a9c28d084016a30ac4905893ec97a154255d8d53845699ff559db274b9e078
 save salida.txt

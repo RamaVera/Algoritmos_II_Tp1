@@ -10,7 +10,7 @@
 lista<Block*> BlockChainHistoryBook::AlgoChain;
 
 // Para usar x línea de comandos block <id>
-const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
+ Block * BlockChainHistoryBook::searchBlock( const std::string HashBlock ) {
 	Block * B = NULL;
 	std::string b_prev = "";
 
@@ -28,15 +28,13 @@ const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
 	if ( ! AlgoChain.vacia() ) {
 		lista <Block *>::iterador it( AlgoChain );
 		it = AlgoChain.primero();
-		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
-			// Mal definido el Block Zero
-			return B;
-		}
+//		if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
+//			// Mal definido el Block Zero
+//			return B;
+//		}
 		do {
-			if ( ! ( it.dato()->getpre_block() == b_prev ) ) {
-				b_prev = it.dato()->getpre_block();
-			}
-			if ( ! ( it.dato()->gettxns_hash() == txns_hash ) ) {
+
+			if ( ! ( it.dato()->getpre_block() == HashBlock ) ) {
 				B = it.dato();
 				break;
 			}
@@ -46,8 +44,38 @@ const Block * BlockChainHistoryBook::getBlock( const std::string txns_hash ) {
 	return B;
 }
 
-// Para usar x línea de comandos txn <id>
-const TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const std::string tx_id ) {
+
+const lista<Transaction *> * BlockChainHistoryBook::searchTransaction(const std::string txns_hash ){
+	const lista<Transaction *> * T = NULL;
+	std::string b_prev;
+
+	// EL HASH YA ES VALIDADO EN FILEMANAGER
+	// Checks
+	//if ( txns_hash.empty()  ) {
+	//	return B;
+	//}
+	//else if ( ! Block::CheckHash( txns_hash, TiposHash::clavehash256 ) ) {
+	//	return B;
+	//}
+	// End Checks
+
+	if ( ! AlgoChain.vacia() ) {
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+
+		do {
+			if ( ! ( it.dato()->gettxns_hash() == txns_hash ) ) {
+			T = &(it.dato()->getListaTran());
+			break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return T;
+}
+
+
+ TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const std::string tx_id ) {
 	std::string b_prev;
 	TransactionInput * TI = NULL;
 

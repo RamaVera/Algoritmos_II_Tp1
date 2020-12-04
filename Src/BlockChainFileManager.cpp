@@ -570,14 +570,34 @@ BlockChainFileManager& BlockChainFileManager::operator<<(std::string message){
 // Precondicion:
 // PostCondicion:
 status_t BlockChainFileManager::convert(FileTypes type, const lista <Block *> & BlockChain){
-
+	ostream * oss;
 	switch(type){
 	case FileTypes::saveBlockChainFile:
-		ostream * oss;
 		if( !this->getOssfromList(type,&oss) ) return STATUS_BAD_READ_OUTPUT_FILE;
 		return this->convert(oss, BlockChain);
 		break;
 	case FileTypes::userCommandResponseFiles:
+		if( !this->getOssfromList(type,&oss) ) return STATUS_BAD_READ_OUTPUT_FILE;
+		return this->convert(oss, BlockChain);
+		break;
+	case FileTypes::userCommandInputFiles:
+	case FileTypes::loadBlockChainFile:
+	default:
+		return STATUS_NO_BLOCKS_TO_CONVERT;
+		break;
+	}
+	return STATUS_BAD_READ_OUTPUT_FILE;
+}
+
+status_t BlockChainFileManager::convert(FileTypes type, const lista <Transaction *> & listaTran){
+	switch(type){
+	case FileTypes::saveBlockChainFile:
+		break;
+	case FileTypes::userCommandResponseFiles:
+		ostream * oss;
+		if( !this->getOssfromList(type,&oss) ) return STATUS_BAD_READ_OUTPUT_FILE;
+		return this->convert(oss, listaTran);
+		break;
 	case FileTypes::userCommandInputFiles:
 	case FileTypes::loadBlockChainFile:
 	default:
@@ -609,6 +629,18 @@ status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Block *
 	return STATUS_FINISH_CONVERT_SUCCESSFULY;
 }
 
+status_t BlockChainFileManager::convert(std::ostream * oss, const lista <Transaction *> & listaTran){
+	lista <Transaction *> ::iterador it(listaTran);
+	it = listaTran.ultimo();
+
+	if(!oss->good())						return STATUS_BAD_READ_OUTPUT_FILE;
+	if( listaTran.vacia() )					return STATUS_NO_BLOCKS_TO_CONVERT;
+	while(!it.extremo()){
+		*oss << it.dato()->getConcatenatedTransactions();
+		it.retroceder();
+	}
+	return STATUS_FINISH_CONVERT_SUCCESSFULY;
+}
 #define BLOCK_1_LINE_PREVIOUS_HASH 1
 #define BLOCK_2_LINE_BLOCK_HASH 2
 #define BLOCK_3_LINE_BITS 3

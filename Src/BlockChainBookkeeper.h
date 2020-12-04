@@ -22,8 +22,11 @@
 class BlockChainBookkeeper {
 
 private:
+	Block * ActualBlock;
 	Transaction * ActualTransaction;
-	lista<Transaction *> MempoolTransactions;
+	lista<Block * > BlockList;
+	lista<Transaction *> TransactionList;
+
 public:
 	BlockChainBookkeeper();
 	~BlockChainBookkeeper();
@@ -35,12 +38,18 @@ public:
 	status_t saveUserBlockChainInHistoryBook(lista<Block*> &listaBlock);
 	status_t saveInMempool(Transaction * trans);
 	status_t eraseAllBlockChainRegisters(void);
+	status_t searchInHistoryBook(HashIdType type, std::string hashId);
 
 	std::string getLastBlockHash(void);
 	std::string getTransactionHash(void);
 	const lista<Block *> & getBlockChain(void);
+	Block * &getActualBlock(void);
 	Transaction * & getActualTransaction(void);
+	lista<Block *> & getBlockList(void);
+	lista<Transaction *> & getTransactionList(void);
 	lista<Transaction *> &  getMempool(void );
+
+
 };
 
 #endif /* BLOCKCHAINBOOKKEEPER_H_ */

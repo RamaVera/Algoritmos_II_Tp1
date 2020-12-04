@@ -15,14 +15,22 @@ BlockChainBookkeeper::~BlockChainBookkeeper() {
 	if(this->ActualTransaction !=NULL)
 		delete ActualTransaction;
 
-	if ( ! this->MempoolTransactions.vacia() ) {
-			lista  <Transaction *>::iterador it( this->MempoolTransactions );
-			it = this->MempoolTransactions.primero();
-			while ( ! this->MempoolTransactions.isEmpty()) {
+	if ( ! this->TransactionList.vacia() ) {
+			lista  <Transaction *>::iterador it( this->TransactionList );
+			it = this->TransactionList.primero();
+			while ( ! this->TransactionList.isEmpty()) {
 				delete it.dato();
-				this->MempoolTransactions.eliminar_nodo(it);
+				this->TransactionList.eliminar_nodo(it);
 			}
-		}
+	}
+	if ( ! this->BlockList.vacia() ) {
+				lista  <Block *>::iterador it( this->BlockList );
+				it = this->BlockList.primero();
+				while ( ! this->BlockList.isEmpty()) {
+					delete it.dato();
+					this->BlockList.eliminar_nodo(it);
+				}
+	}
 }
 
 status_t BlockChainBookkeeper::createOriginTransaction(payload_t & payload){
@@ -36,6 +44,9 @@ Transaction * & BlockChainBookkeeper::getActualTransaction(void){
 	return this->ActualTransaction;
 }
 
+Block * & BlockChainBookkeeper::getActualBlock(void){
+	return this->ActualBlock;
+}
 
 status_t BlockChainBookkeeper::saveOriginBlockInHistoryBook(Block *& block){
 
@@ -61,15 +72,18 @@ status_t BlockChainBookkeeper::saveUserBlockChainInHistoryBook(lista<Block*> &li
 }
 
 status_t BlockChainBookkeeper::createTransaction(payload_t payload){
-	Transaction * tr;
 	std::string _user_ = payload.ArgTranfer->dequeue();
 	const string hashUser= sha256(sha256(_user_));
 
 	//TODO Buscar en la lista de usuario a ver si tiene saldo
 
 	// Busco en la historia la transaccion asociado al usuario pasado por hash
-	tr = BlockChainHistoryBook::getTransactionByTransactionOutputUser(hashUser);
-	if(tr == NULL) return STATUS_ERROR_HASH_NOT_FOUND;
+	Transaction * tr = BlockChainHistoryBook::getTransactionByTransactionOutputUser(hashUser);
+	if(tr == NULL){
+		 tr = Mempool::getTransactionsFromMempool(hashUser);
+		 if(tr == NULL) 	 return STATUS_ERROR_HASH_NOT_FOUND;
+	}
+
 
 	// Mirando como es la estructura de la transaccion completo el outpoint
 
@@ -116,15 +130,15 @@ lista<Transaction *> & BlockChainBookkeeper::getMempool(){
 			Transaction actualTran;
 			actualTran = *(itMempool.dato());
 			Transaction * copyTrans = new Transaction(actualTran);
-			this->MempoolTransactions.insertar(copyTrans) ;
+			this->TransactionList.insertar(copyTrans) ;
 			itMempool.avanzar();
 		}
 		Mempool::BorrarMempool();
 	}else{
 		this->ActualTransaction = new Transaction(0,0);
-		this->MempoolTransactions.insertar(this->ActualTransaction );
+		this->TransactionList.insertar(this->ActualTransaction );
 	}
-	return this->MempoolTransactions;
+	return this->TransactionList;
 }
 
 
@@ -134,8 +148,45 @@ status_t BlockChainBookkeeper::saveInMempool(Transaction * trans){
 	return STATUS_OK;
 }
 
+status_t BlockChainBookkeeper::searchInHistoryBook(HashIdType type, std::string hashId){
+
+	switch(type){
+	case HashIdType::blockId:{
+		Block * B = BlockChainHistoryBook::searchBlock(hashId);
+		if(B == NULL) return STATUS_ERROR_HASH_NOT_FOUND;
+		Block * newBlock = new Block(*B);
+		this->BlockList.insertar(newBlock);
+		return STATUS_OK;
+		break;
+	}
+
+	case HashIdType::txnId:{
+		const lista <Transaction *> * T = BlockChainHistoryBook::searchTransaction(hashId);
+		if(T == NULL) return STATUS_ERROR_HASH_NOT_FOUND;
+		lista <Transaction *>::iterador it(*T);
+		while(!it.extremo()){
+			Transaction * newTrans = new Transaction(*(it.dato()));
+			this->TransactionList.insertar(newTrans) ;
+			it.avanzar();
+		}
+		return STATUS_OK;
+		break;
+		}
+	}
+	return STATUS_ERROR_HASH_NOT_FOUND;
+}
+
+
 const lista<Block *> & BlockChainBookkeeper::getBlockChain(void){
 	return BlockChainHistoryBook::getListaBlocks();
+}
+
+lista<Block *> & BlockChainBookkeeper::getBlockList(void){
+	return this->BlockList;
+}
+
+lista<Transaction *> & BlockChainBookkeeper::getTransactionList(void){
+	return this->TransactionList;
 }
 
 status_t BlockChainBookkeeper::eraseAllBlockChainRegisters(void){

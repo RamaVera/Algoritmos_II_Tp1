@@ -71,7 +71,9 @@ public:
 	status_t loadBlockChain(void);
 	status_t parse(std::istream * iss,raw_t * &pRawData);
 	status_t convert(std::ostream * oss,const lista <Block *> & BlockChain);
+	status_t convert(std::ostream * oss,const lista <Transaction *> & listaTran);
 	status_t convert(FileTypes type, const lista <Block *> & BlockChain);
+	status_t convert(FileTypes type, const lista <Transaction *> & listaTran);
 	status_t translateCommands(payload_t & payload);
 	status_t addFile( file_t & newFile);
 	status_t removeFile(FileTypes type);

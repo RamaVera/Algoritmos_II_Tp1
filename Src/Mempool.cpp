@@ -38,6 +38,36 @@ void Mempool::BorrarMempool(void){
 }
 
 
+Transaction * Mempool::getTransactionsFromMempool(std::string hashUser){
+	if ( ! transList.vacia() ) {
+		lista <Transaction *>::iterador itTrans( transList );
+		// La lista a iterar es la de TransactionInput
+		itTrans =transList.primero();
+		if ( !transList.vacia() ) {
+			do {
+				// De las dos listas, itero las de TI
+				lista <TransactionOutput *> tOutput;
+				tOutput = itTrans.dato()->getTransactionOutputList();
+				lista <TransactionOutput *>::iterador itTransOutput( tOutput );
+				itTransOutput = tOutput.primero();
+				if ( ! tOutput.vacia() ) {
+					do {
+						// Si encuentro al usuario en el output
+						// devuelvo el bloque para analizarlo
+						// afuera
+						if ( hashUser.compare(itTransOutput.dato()->getAddr()) == 0)  {
+							return itTrans.dato();
+						}
+						itTransOutput.avanzar();
+					}  while ( ! itTransOutput.extremo() );
+				}
+				itTrans.avanzar();
+			} while ( ! itTrans.extremo() );
+		}
+	}
+	return NULL;
+}
+
 
 
 

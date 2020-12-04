@@ -99,12 +99,17 @@ void BlockChainManager::proccesBlockChain(){
 					// Datos del payload que sirven en este caso.
 					// std::string id = payload.id;
 					//--------------------------------------------------------------//
-					// BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
 
 					// Blockkeeper busca en su libro contable el bloque requerido.
 					// 'Block' es un tipo enumerativo interno de bookkeeper para
 					// buscar solo mirando los hash de bloques.
-					// BlockChainManager::proccesStatus( bookkeeper.searchInHistoryBook( 'Block', payload.id );
+					BlockChainManager::proccesStatus( bookkeeper.searchInHistoryBook( HashIdType::blockId, payload.id ) );
+
+					// Imprime la transaccion en el archivo de respuesta
+					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::userCommandResponseFiles,bookkeeper.getBlockList()) );
+
+
 				}
 				break;
 			case Commands::balance:
@@ -127,12 +132,16 @@ void BlockChainManager::proccesBlockChain(){
 					// Datos del payload que sirven en este caso.
 					// std::string id = payload.id;
 					//--------------------------------------------------------------//
-					// BlockChainBookkeeper bookkeeper;
+					BlockChainBookkeeper bookkeeper;
 
 					// Blockkeeper busca en su libro contable la transaccion requerida.
 					// 'Transaction' es un tipo enumerativo interno de bookkeeper para
 					// buscar solo mirando los hash de Transaction.
-					// BlockChainManager::proccesStatus( bookkeeper.searchInMempool( 'Transaction', payload.id );
+					BlockChainManager::proccesStatus( bookkeeper.searchInHistoryBook( HashIdType::txnId, payload.id ) );
+
+					// Imprime la transaccion en el archivo de respuesta
+					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::userCommandResponseFiles,bookkeeper.getTransactionList()) );
+
 				}
 				break;
 			case Commands::load:
