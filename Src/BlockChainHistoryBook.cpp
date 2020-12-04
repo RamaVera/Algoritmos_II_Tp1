@@ -8,6 +8,7 @@
 #include "BlockChainHistoryBook.h"
 
 lista<Block*> BlockChainHistoryBook::AlgoChain;
+Cuentas BlockChainHistoryBook::ListadoCuentas;
 
 // Para usar x línea de comandos block <id>
  Block * BlockChainHistoryBook::searchBlock( const std::string HashBlock ) {
@@ -46,7 +47,7 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 
 
 const lista<Transaction *> * BlockChainHistoryBook::searchTransaction(const std::string txns_hash ){
-	const lista<Transaction *> * T = NULL;
+	const lista<Transaction *> * T = nullptr;
 	std::string b_prev;
 
 	// EL HASH YA ES VALIDADO EN FILEMANAGER
@@ -200,6 +201,7 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 			delete it.dato();
 			AlgoChain.eliminar_nodo(it);
 		}
+		BlockChainHistoryBook::ListadoCuentas.vaciarcuentas();
 	}
 }
 
@@ -207,6 +209,64 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 bool BlockChainHistoryBook::AddBlock( Block *& B ){
 	Block * newBlock = new Block(*B);
 	AlgoChain.insertar(newBlock);
+	BlockChainHistoryBook::ListadoCuentas.updatedatos( B );
 	return true;
+}
+
+bool BlockChainHistoryBook::AddListaBlocks( lista <Block *> & lista ) {
+
+	if ( AlgoChain.vacia() ) {
+		AlgoChain = lista;
+	}
+	else if ( !lista.vacia() ) {
+			// TODO
+	}
+	// BlockChainHistoryBook::ListadoCuentas.updatedatos( lista );
+	return true;
+}
+
+lista <TransactionOutput *> BlockChainHistoryBook::obtenerOutputs( const std::string tx_id, const int idx ) {
+	std::string b_prev = "";
+	lista <TransactionOutput *> ListaTranOut;
+
+	// Checks
+	if ( tx_id.empty() ) {
+		return ListaTranOut;
+	}
+	//else if ( ! Block::CheckHash( tx_id, TiposHash::clavehash256 ) ) {
+	//	return ListaTranOut;
+	//}
+	if ( idx < 0 ) {
+		return ListaTranOut;
+	}
+	// End Checks
+
+	if ( !AlgoChain.vacia() ) {
+		for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
+		lista <Block *>::iterador it( AlgoChain );
+		it = AlgoChain.primero();
+		do {
+			lista <Transaction *> itTrans = it.dato()->getListaTran();
+			lista <Transaction *>::iterador itLT( itTrans );
+			itLT = itTrans.primero();
+			if ( it.dato()->getpre_block() == b_prev ) {
+				// Shathosi Block
+				return itLT.dato()->getTransactionOutputList();
+			}
+			do {
+				lista <TransactionInput *> LTI = itLT.dato()->getTransactionInputList();
+				lista <TransactionInput *>::iterador itLTI( LTI );
+				do {
+					if ( itLTI.dato()->getTxId() == tx_id && itLTI.dato()->getIdx() == idx ) {
+						return itLT.dato()->getTransactionOutputList();
+					}
+					itLTI.avanzar();
+				} while ( ! itLTI.extremo() );
+				itLT.avanzar();
+			} while ( ! itLT.extremo() );
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return ListaTranOut;
 }
 

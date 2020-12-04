@@ -71,7 +71,7 @@ BlockChainBuilder::~BlockChainBuilder() {
 //	else {
 //		int i = CheckHexa( valor );
 //		if ( i > 0 ) {
-//			// Anotar la posici�n y valor del d�gito err�neo
+//			// Anotar la posición y valor del dígito erróneo
 //			return false;
 //		}
 //		else return true;
@@ -96,7 +96,7 @@ bool BlockChainBuilder::CalculoBits( std::string hash, size_t bits ) {
 		}
 		else {
 			// Incluye cadena hash vacia y bits == 0
-			// Lo bueno de los booleanos es que siempre estas como m�ximo a un bit de acertar.
+			// Lo bueno de los booleanos es que siempre estas como máximo a un bit de acertar.
 			return false;
 		}
 	}

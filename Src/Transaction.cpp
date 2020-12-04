@@ -54,7 +54,7 @@ Transaction::Transaction(const Transaction & otherTrans){
 
 //Descripcion: Instancia el objeto Transaction a partir de un archivo raw_t
 //Precondicion:
-//Postcondicion: Dos punteros a memoria de tama�o definido creados y
+//Postcondicion: Dos punteros a memoria de tamaño definido creados y
 // precargados con los datos de raw_t
 Transaction::Transaction( const raw_t & Raw ){
 	//TODO preparar Transaction para una cadena de Raw

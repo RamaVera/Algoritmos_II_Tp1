@@ -1,5 +1,5 @@
 
-OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o BlockChainHistoryBook.o Mempool.o # Los archivos compilados individuales
+OBJECTS = main.o sha256.o cmdline.o  Queue.o TransactionInput.o TransactionOutput.o Transaction.o Block.o BlockChainBuilder.o BlockChainFileManager.o BlockChainManager.o BlockChainBookkeeper.o BlockChainHistoryBook.o Mempool.o Cuentas.o# Los archivos compilados individuales
 PROGR = miner.exe # Nombre del archivo ejecutable
 CPPFLAGS = -g -Wall -pedantic -Werror # -g opcion de g++ para debugear
 
@@ -18,7 +18,7 @@ sha246.o : sha246.cpp sha246.h
 queue.o : Queue.cpp Queue.h
 	$(CC) $(CPPFLAGS) -c Queue.cpp
 Mempool.o : Mempool.cpp Mempool.h lista.h
-	$(CC) $(CPPFLAGS) -c Mempool.cpp	
+	$(CC) $(CPPFLAGS) -c Mempool.cpp
 BlockChainManager.o : BlockChainManager.cpp BlockChainManager.h BlockChainFileManager.h BlockChainBuilder.h BlockChainBookkeeper.h BlockChainStatus.h 
 	$(CC) $(CPPFLAGS) -c BlockChainManager.cpp
 BlockChainFileManager.o : BlockChainFileManager.cpp BlockChainFileManager.h BlockChainBuilder.h BlockChainDataTypes.h BlockChainStatus.h Queue.h
@@ -27,8 +27,10 @@ BlockChainBuilder.o : BlockChainBuilder.cpp BlockChainBuilder.h lista.h sha256.h
 	$(CC) $(CPPFLAGS) -c BlockChainBuilder.cpp
 BlockChainBookkeeper.o : BlockChainBookkeeper.cpp BlockChainBookkeeper.h BlockChainDataTypes.h BlockChainStatus.h
 	$(CC) $(CPPFLAGS) -c BlockChainBookkeeper.cpp
-BlockChainHistoryBook.o : BlockChainHistoryBook.cpp BlockChainHistoryBook.h Block.h lista.h
+BlockChainHistoryBook.o : BlockChainHistoryBook.cpp BlockChainHistoryBook.h Block.h lista.h Cuentas.h
 	$(CC) $(CPPFLAGS) -c BlockChainHistoryBook.cpp
+Cuentas.o : Cuentas.cpp Cuentas.h BlockChainHistoryBook.h BlockChainBuilder.h TransactionOutput.h TransactionInput.h
+	$(CC) $(CPPFLAGS) -c Cuentas.cpp 
 Block.o : Block.cpp Block.h Transaction.h lista.h TiposHash.h BlockChainDataTypes.h
 	$(CC) $(CPPFLAGS) -c Block.cpp
 Transaction.o : Transaction.cpp Transaction.h lista.h TransactionOutput.h TransactionInput.h  BlockChainDataTypes.h
