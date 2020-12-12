@@ -11,12 +11,14 @@
 #include <string>
 #include "lista.h"
 #include "Block.h"
-#include "TransactionOutput.h"
-#include "TransactionInput.h"
 #include "Cuentas.h"
 
-class BlockChainHistoryBook {
+enum class HashIdType{
+	blockId,
+	txnId,
+};
 
+class BlockChainHistoryBook {
 private:
 	friend class BlockChainBookkeeper;
 	static lista<Block*> AlgoChain;
@@ -24,9 +26,11 @@ private:
 	//---Getters---//
 	static const lista <Block *> & getListaBlocks() { return AlgoChain; };
 	// Para usar x línea de comandos block <id>
-	static const Block * getBlock( const std::string txns_hash );						// Ante cualquier error devuelve NULL
+	static Block * searchBlock( const std::string txns_hash );							// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>
-	static const TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
+	static TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
+	static const lista<Transaction *> * searchTransaction(const std::string txns_hash );
+	static Transaction * getTransactionByTransactionOutputUser( const std::string user );
 	//---Setters---//
 	//---Otros---//
 	static void BorrarHistoria( void );
@@ -35,8 +39,10 @@ private:
 
 public:
 	static lista <TransactionOutput *> obtenerOutputs( const std::string tx_id, const int idx );
-	static bool updatedatosdatos( Cuentas & Listado );
-
+	static bool updatedatosdatos();
+	
+	static void imprimirdetalle( const std::string addr );
+	static lista <movimientos_t *> obtenerdetalle( std::string addr );
 };
 
 #endif /* BLOCKCHAINHISTORYBOOK_H_ */

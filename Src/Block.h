@@ -1,28 +1,22 @@
-//Archivo fuente header clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación II.
+//Archivo fuente header clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación 2.
 
 #ifndef BLOCK_H_
 #define BLOCK_H_
 
-#include<string>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include "sha256.h"
+#include "lista.h"
 #include "TiposHash.h"
 #include "Transaction.h"
-#include "lista.h"
+
 #include "BlockChainDataTypes.h"
 
 // const size_t LargoHashEstandar = 64;
 // const size_t LargoHashFirma    = 40;	// Hash Pública de la Cuenta
 // https://stackoverflow.com/questions/2268749/defining-global-constant-in-c
 // Análisis de Pro vs Contras contra #define y otras formas
-
-/*
-   1ª Cuestión. La class Block carece de lógica interna, no accede a la función sha256(), por ejemplo
-      En la situación del TP1, 
-	    a) se le dan funcionalidades a Block haciéndola más autónoma y reutilizable
-	    b) O Builder accede y compagina dentro de Block y Transaction los hash del árbol
-					La función ArbolMerkle debe ser recursiva. Toma de a pares hasta que sólo quedan <= 2.
-		https://bitcoin.es/criptomonedas/funciones-hash-y-arboles-de-merkle-protegen-blockchain/
-		https://viviendo20.wordpress.com/2018/06/08/blockchain-el-arbol-de-merkle/
-*/
 
 using namespace std;
 
@@ -32,7 +26,7 @@ class Block {
 		std::string pre_block;
 		std::string txns_hash;	// <- retiene el hash256(hash256(cadena_prehash))
 		size_t bits;			// La dificultad de bits
-		std::string nonce;
+		size_t nonce;
 		std::string hash_Merkle;
 		StatusBlock eBlock;
 		// Atributos Seccion Body;
@@ -53,40 +47,39 @@ class Block {
         // Constructores
         Block();
 		Block( const raw_t & raw );
+		Block( const Transaction & tr);
+		Block(  Block & otherBlock);
+		Block( const lista<Transaction*> & tr);
 		//Block( const & std::string previo_block, size_t bits, const & raw_t );
 		// size_t bits sale de BlockChainManager::getUserDefinedDifficulty(void), pero referenciar a esta clase implica un encastramiento indeseado.
         // Destructor
         ~Block();
 		// Getters
-		size_t gettxn_count();
 		std::string getpre_block();
 		std::string gettxns_hash();
 		unsigned int getbits();
-		std::string getnonce();
+		size_t getnonce();
+		std::string getStrNonce();
+		size_t gettxn_count();
 		std::string getcadenaprehash();
 		std::string gethash_Merkle();
+		std::string getBlockHash();
+		const lista <Transaction *>& getListaTran();
 		Transaction * getTran( size_t Index );
-		const lista <Transaction *> getListaTran();
 		// Setters
 		bool setpre_block( std::string valor );
 		bool settxns_hash( std::string valor );		// Debo dejar el método de asignación. El cálculo Hash es externo al objeto block, no está encapsulado.
 		bool setbits( size_t valor );
-		bool setnonce( std::string valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
+		bool setnonce( size_t valor );				// Debo dejar el método de asignación. El cálculo del Nonce es externo al objeto block, no está encapsulado.
 		bool setseconds( double segundos );
+		bool settxn_count(size_t valor);
 		bool settransaction( const raw_t & raw );
+		bool settransaction( Transaction * pTr);
 		StatusBlock EstatusBlock();
 		// Métodos públicos
 		double tiempominado();
 		std::string Calculononce();
-		// Add Ons
-		bool Minando();
-		bool CalculoBits( std::string hash, size_t bits );
-		static int dificultad( const std::string & value, const size_t dif );
-		static int CheckDificultadOk( const std::string & cadenaHexa, const size_t dif );
-		static bool CheckHash( const std::string valor, TiposHash Tipo = TiposHash::clavehash256 );
-		static size_t CheckHexa( const std::string value );
-		static std::string hex_str_to_bin_str( const std::string & hex );
-		static const char* hex_char_to_bin( char c );
+
 };
 
 #endif /* BLOCK_H_ */

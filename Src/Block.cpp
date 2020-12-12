@@ -1,17 +1,7 @@
-//Archivo fuente clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación II.
-
-#include<string>
-#include <cstdlib>
-#include <iostream>
-#include <time.h> 
+//Archivo fuente clase Block / AlgoBlock del tp0 para la materia 9512 Algoritmos y Programación 2.
 
 #include "Block.h"
-#include "TiposHash.h"
-#include "Transaction.h"
-#include "BlockChainBuilder.h"
 
-#include "sha256.h"
-#include "vector.h"
 
 // Constructores
 Block::Block()
@@ -27,17 +17,6 @@ Block::Block()
 Block::Block( const raw_t & raw )
 	: pre_block(""), txns_hash(""), bits( 3  /* El valor por default establecido en el TP0 */), nonce(0), eBlock(StatusBlock::BlockSinDatos)
 {
-	/* Básicamente:
-			se instancia un objeto Transaction, se asume que se reciben datos consistentes.
-			Se le transfiere en crudo el raw_t, (por ejemplo en el constructor directamente).
-			La clase Transaction luego debería instanciar los TransactionInput y TransactionOutput correspondientes.
-			Y calcular al finalizar la carga de los objetos el string de resultado.
-			Al final se añade el objeto a ListaTran.
-		Dudas:
-			si en el txt se lee un Block que contiene varios Transaction, como los recibe Block ? 
-			      En una lista lista.h o en un arreglo dinámico vector.h raw_t?
-			En este caso se recibe solo un raw_t, igualmente lo cargo en una lista, para hacerlo más genérico.
-	*/
 	try {
 		this->CurTran = new Transaction( raw );  	// <- Ojo, nuevo constructor
 		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
@@ -52,17 +31,81 @@ Block::Block( const raw_t & raw )
 	}
 }
 
+Block::Block( const  Transaction & tr)
+	: pre_block(""), txns_hash(""), bits(), nonce(0), eBlock(StatusBlock::BlockSinDatos)
+{
+	try {
+		this->CurTran = new Transaction( tr );
+		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
+		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+		RecalculoHash();
+	}
+	catch (std::bad_alloc& ba)
+	{
+		this->eBlock = StatusBlock::BlockBadAlloc;
+		std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+	}
+}
+
+Block::Block( const  lista<Transaction*> & trList)
+	: pre_block(""), txns_hash(""), bits(), nonce(0), eBlock(StatusBlock::BlockSinDatos)
+{
+	lista<Transaction*> ::iterador it(trList);
+	try {
+		while(!it.extremo()){
+			Transaction actualTran;
+			actualTran = *(it.dato());
+			Transaction * copyTrans = new Transaction(actualTran);
+			this->ListaTran.insertar(copyTrans) ;
+			it.avanzar();
+		}
+		this->txn_count = trList.tamano();
+		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+		RecalculoHash();
+	}
+	catch (std::bad_alloc& ba)
+	{
+		this->eBlock = StatusBlock::BlockBadAlloc;
+		std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+	}
+}
+
+Block::Block(Block & otherBlock){
+	pre_block = otherBlock.getpre_block();
+	txns_hash = otherBlock.gettxns_hash();
+	bits = otherBlock.getbits();
+	nonce = otherBlock.getnonce();
+	eBlock = otherBlock.eBlock;
+	txn_count = otherBlock.gettxn_count();
+	cadena_prehash = otherBlock.getcadenaprehash();
+	lista<Transaction *>::iterador itTran(otherBlock.getListaTran());
+	itTran = otherBlock.getListaTran().ultimo();
+	CurTran = itTran.dato();
+	while(! itTran.extremo())
+	{
+		Transaction * copyTran = new Transaction(*itTran.dato());
+		this->ListaTran.insertar(copyTran);
+		itTran.avanzar();
+	}
+
+}
+
 // Destructor
 Block::~Block() {
 	// ListaTran se autodestruye, antes debo liberar la memoria asignada en cada elemento * ListaTran de la lista
 	if ( ! this->ListaTran.vacia() ) {
+
 		lista <Transaction *>::iterador it(ListaTran);
 		/* Itero la lista para recuperar todos los strings de la coleccion Transaction
 		   que necesito para calcular el Hash.
 		*/
 		it = this->ListaTran.primero();
 		while ( ! it.extremo() ) {
-			delete it.dato();
+			if(it.dato() != NULL){
+				delete it.dato();
+				it.dato() = NULL;
+			}
 			it.avanzar();
 		}
 	}
@@ -85,8 +128,12 @@ unsigned int Block::getbits() {
 	return this->bits;
 }
 
-std::string Block::getnonce() {
+size_t Block::getnonce() {
 	return this->nonce;
+}
+
+std::string Block::getStrNonce() {
+	return std::to_string(this->nonce);
 }
 
 std::string Block::getcadenaprehash() {
@@ -117,8 +164,26 @@ Transaction * Block::getTran( size_t Index ) {
 	return T;
 }
 
-const lista <Transaction *> Block::getListaTran() {
+const lista <Transaction *>& Block::getListaTran() {
 	return this->ListaTran;
+}
+
+std::string Block::gethash_Merkle() {
+	return this->hash_Merkle;
+}
+std::string Block::getBlockHash(){
+	//El campo prev block del header de un bloque b indica el hash del bloque antecesor b 0 en la
+	//Algochain. De este modo, prev block = SHA256 ( SHA256 ( b 0 )) . Dicho hash lo calcularemos
+	//sobre una concatenación secuencial de todos los campos de b 0 respetando exactamente el
+	//formato de bloque que describiremos en la Sección
+	std::string blockConcantenation;
+	blockConcantenation += this->pre_block					+ '\n';
+	blockConcantenation += this->txns_hash 			 		+ '\n';
+	blockConcantenation += std::to_string(this->bits) 		+ '\n';
+	blockConcantenation += std::to_string(this->nonce)		+ '\n';
+	blockConcantenation += std::to_string(this->txn_count)	+ '\n';
+	blockConcantenation += this->cadena_prehash; //El '\n' viene incluido
+	return sha256(sha256(blockConcantenation));
 }
 
 // Setters
@@ -167,8 +232,13 @@ bool Block::setbits( size_t valor ) {
 	return true;
 }
 
-bool Block::setnonce( std::string valor ) {
+bool Block::setnonce( size_t valor ) {
 	this->nonce = valor;
+	return true;
+}
+
+bool Block::settxn_count(size_t valor){
+	this->txn_count = valor;
 	return true;
 }
 
@@ -176,7 +246,7 @@ bool Block::settransaction( const raw_t & raw ) {
 	try {
 		this->CurTran = new Transaction( raw );  	// <- Ojo, nuevo constructor
 		this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
-		this->txn_count = 1;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+		this->txn_count ++;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
 		this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
 		RecalculoHash();
 		return true;
@@ -188,6 +258,24 @@ bool Block::settransaction( const raw_t & raw ) {
 		return false;
 	}
 }
+
+bool Block::settransaction(Transaction * pTr){
+	try {
+			this->CurTran = pTr;  	// <- Ojo, nuevo constructor
+			this->ListaTran.insertar( this->CurTran );	// Para el Constructor con un contenedor de raw_t habrá que iterar pasando el mismo tipo de parámetros al constructor de Transaction
+			this->txn_count ++;						// Para el Constructor que recibe un Contenedor, se incrementa en cada instancia nueva de Transaction
+			this->eBlock = StatusBlock::BlockPendienteCadena_prehash;
+			RecalculoHash();
+			return true;
+		}
+		catch (std::bad_alloc& ba)
+		{
+			this->eBlock = StatusBlock::BlockBadAlloc;
+			std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+			return false;
+		}
+}
+
 bool Block::setseconds( double segundos ) {
 	this->seconds = segundos;
 	return true;
@@ -216,54 +304,9 @@ std::string Block::RecalculoHash( void ) {
 }
 
 std::string Block::Calculononce() {
-	size_t contador = 0;
-	this->nonce = std::to_string( contador++ );
-	return this->nonce;
-}
-
-bool Block::Minando() {
-	std::string resultado = "", hash_resultado = "";
-
-	time_t timer1, timer2;
-	time(&timer1);  	/* get current time; same as: timer = time(NULL)  */
-	resultado = this->getpre_block() + '\n';          // <- getter que extrae la clave doble hash del Block previo.
-	resultado += this->getcadenaprehash() + '\n'; 	// <- getter que extrae el string en la Clase Transaction.
-	resultado += std::to_string( this->getbits() ) + '\n';
-	if ( resultado.length() > 0 ) {
-		while ( true ) {
-			std::string nonce_temp = "";
-			nonce_temp = this->Calculononce();
-			hash_resultado = sha256 ( sha256( resultado + nonce_temp ) );
-			if ( CalculoBits( hash_resultado, this->bits ) ) {
-				this->txns_hash = hash_resultado;
-				break;	// Corto el bucle.
-			}
-		}
-	}
-	time(&timer2);
-	this->seconds = difftime( timer1, timer2 );
-
-	return true;
-}
-
-bool Block::CalculoBits( std::string hash, size_t bits ) {
-	int resultado;
-	if ( hash.length() > 0  ) {
-		std::string hash_hex = "";
-		hash_hex = Block::hex_str_to_bin_str( hash );  // No lleva this-> porque es static
-		resultado = Block::CheckDificultadOk( hash_hex, bits );
-		if ( resultado == 1 ) {
-			return true;
-		}
-		else {
-			// Incluye cadena hash vacia y bits == 0
-			// Lo bueno de los booleanos es que siempre estas como máximo a un bit de acertar.
-			return false;
-		}
-	}
-	else {
-		return false;
-	}
+	static size_t contador = 0;
+	this->nonce = contador++;
+	return std::to_string( this->nonce );
 }
 
 std::string Block::ArbolMerkle( void ) {
@@ -286,7 +329,7 @@ std::string Block::ArbolMerkle( void ) {
 		while ( ! it.extremo() ) {
 			strMerkle[i++] =  sha256( sha256( it.dato()->getConcatenatedTransactions() ) );
 			it.avanzar();
-		}
+		};
 		// TODO. Analizar ventajas en este tramo de llevarlo a recursivo e inplace.
 		for ( size_t j = 0; ( j < tam ) && ( tam > 1 ); j++  ) {
 			for ( i = 0; i < largo; i += 2 ) {
@@ -305,107 +348,12 @@ std::string Block::ArbolMerkle( void ) {
 			else {
 				tam = ( tam + 1) / 2;
 			}
+			
 		}
 		cadena = strMerkle[ 0 ];
 	}
 	return cadena;
 }
 
-std::string Block::gethash_Merkle() {
-	return this->hash_Merkle;
-}
 
-int Block::dificultad( const std::string & value, const size_t dif ) {
-	// Se corta el recorrido de la cadena una vez alcanzado el valor dif
-	size_t j = 0;
 
-	if ( value.empty() ) return -1;
-	else if ( dif == 0 ) return -1;
-
-	for ( size_t i = 0;  value[ i ]; i++ ) {
-		if ( value[ i ] == '0' ) j++;
-		else if ( value[ i ] == '1' ) break;
-		else return -1;
-		if ( j >= dif ) break; 
-	}
-	return j;
-}
-
-int Block::CheckDificultadOk( const std::string & cadenaHexa, const size_t dif ) {
-	int d;
-	if ( cadenaHexa.empty() ) return -3;
-	if ( dif == 0 ) return -2;
-	d = dificultad( cadenaHexa, dif);
-	if ( d < 0 ) return -1;
-	return (size_t) d >= dif ? 1 : 0;
-}
-
-size_t Block::CheckHexa( const std::string value ) {
-	size_t i;
-	for (i = 0; i != value.length(); ++i) {
-		if ( ! isxdigit ( value[i] ) ) break;
-	}
-	if ( i < value.length() ) return i;
-	return 0;
-}
-
-bool Block::CheckHash( const std::string valor, TiposHash Tipo ) {
-	if ( valor.empty() ) {
-		return false;
-	}
-	//else if ( Tipo  == TiposHash::clavehash256 && valor.length() != LargoHashEstandar ) {
-	else if ( Tipo  == TiposHash::clavehash256 && valor.length() != (size_t) LargoHash::LargoHashEstandar ) {
-		return false;
-	}
-	//else if ( Tipo  == TiposHash::clavefirma && valor.length() != LargoHashFirma ) {
-	else if ( Tipo  == TiposHash::clavefirma && valor.length() != (size_t) LargoHash::LargoHashFirma ) {
-		return false;
-	}
-	else {
-		size_t i = Block::CheckHexa( valor );
-		if ( i > 0 ) {
-			// Anotar la posición y valor del dígito erróneo
-			return false;
-		}
-		else return true;
-	}
-}
-
-std::string Block::hex_str_to_bin_str( const std::string & hex )
-{
-    // TODO use a loop from <algorithm> or smth
-    std::string bin;
-	std::string hexbin;
-    for( size_t i = 0; i != hex.length(); ++i ) {
-		hexbin = hex_char_to_bin( hex[i] );
-		if ( hexbin.empty() ) return "";
-		bin += hexbin;
-	}
-    return bin;
-}
-
-const char* Block::hex_char_to_bin( char c )
-{
-    // TODO handle default / error
-	// https://stackoverflow.com/questions/18310952/convert-strings-between-hex-format-and-binary-format
-    switch( toupper(c) )
-    {
-        case '0': return "0000";
-        case '1': return "0001";
-        case '2': return "0010";
-        case '3': return "0011";
-        case '4': return "0100";
-        case '5': return "0101";
-        case '6': return "0110";
-        case '7': return "0111";
-        case '8': return "1000";
-        case '9': return "1001";
-        case 'A': return "1010";
-        case 'B': return "1011";
-        case 'C': return "1100";
-        case 'D': return "1101";
-        case 'E': return "1110";
-        case 'F': return "1111";
-		default: return "";
-    }
-}
