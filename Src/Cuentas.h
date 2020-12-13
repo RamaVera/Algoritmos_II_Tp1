@@ -32,6 +32,7 @@ typedef struct {
 	float saldo;								// Saldo
 	float pendiente;							// Pendiente en MemPool -> + o -, si es - abs(pendiente) <= saldo
 	lista <movimientos_t *> detalle;			// Extracto de la cuenta
+	lista <movimientos_t *> mempool;			// Extracto pendiente
 } cuentas_t;
 
 typedef struct {
@@ -66,11 +67,14 @@ public:
 	size_t getnumerocuenta( const std::string addr, const std::string alias );
 	// const cuentas_t * getdetallecuenta( const std::string addr, li1sta <Block *> & AlgoChain );
 	size_t getcantidad();
+	cuentas_t * getcuenta( const std::string addr );
+	lista <movimientos_t *> getdetalle( const std::string addr );
 
 	//---Setters---//
 	bool setalias( const std::string addr, const std::string alias );
 	bool setsaldo( const std::string addr, const float monto );
 	bool setpendiente( const std::string addr, const float monto );
+	bool setdetalle( const std::string addr, lista <movimientos_t *> detalle );
 
 	//---Otros---//
 	size_t iscuenta( const std::string addr );
@@ -80,6 +84,7 @@ public:
 	bool addcuenta( std::string addr, const std::string alias = "", const float monto = 0 );
 	bool addcuenta( std::string addr, const std::string alias = "" );
 	bool addcuenta( std::string addr, const float monto );
+	bool addmovimiento( std::string addr, movimientos_t * movimiento );
 	bool deposito( const std::string addr, const float monto );
 	bool extraccion( const std::string addr, const float monto );
 	bool depositopendiente( const std::string addr, const float monto );

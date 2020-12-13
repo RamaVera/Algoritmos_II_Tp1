@@ -1,19 +1,41 @@
-//Archivo fuente clase Mempool / AlgoBlock del tp1 para la materia 9512 Algoritmos y Programación II.
-
 /*
-   No estoy seguro de usar una Cola.
-   Que pasa con las transacciones que no pueden ser minadas o presentan problemas
-   Se mantienen en la lista? o se las desencola directamente del MeemPool.
-*/
+ * mempool.h
+ *
+ *  Created on: Nov 16, 2020
+ *      Author: a
+ */
 
-#include <cola.h>
+#ifndef MEMPOOL_H_
+#define MEMPOOL_H_
 
-class mempool {
+
+using namespace std;
+//#include "MempoolUnit.h"
+#include "Transaction.h"
+#include "lista.h"
+#include "Cuentas.h"
+
+// static lista <Transaction *> Mempool::Mempool;
+
+
+class Mempool{
+
 	private:
-		Cola <Transaction *> MemPool
+
+		//friend class Transaction;
+		friend class BlockChainBookkeeper;
+		static lista <Transaction *> transList;
+		static void addNewTransaction(Transaction *& new_txn);     // Usa metodos de LISTA para agregar un nuevo nodo con una transaccion
+		//static Transaction & get_transaction_n(int n);   		// DEVUELVE LA N-ESIMA TRANSACCION DE LA MEMPOOL (LA MEMPOOL SE ORGANIZA EN ORDEN DESCENDENTE)
+		static lista <Transaction *> & getTransactionsList();     // Devuelve un puntero a la lista de transacciones
+		static Transaction * getTransactionsFromMempool(std::string hashUser);
+		static size_t getMempoolLength();
+		static void BorrarMempool(void);
+		bool getlistamovimientos( cuentas_t & c ); 	// Recupera lista transacciones en formato Cuenta C.addr.
 	public:
-		agregar( Transaction * & T );
-		Transaction * T LeerCola();
-		Transaction * T DesenColar();
-		BorrarCola();
+
 };
+
+
+
+#endif /* MEMPOOL_H_ */
