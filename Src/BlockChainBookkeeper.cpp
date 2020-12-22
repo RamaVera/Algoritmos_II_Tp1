@@ -80,7 +80,7 @@ status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 	// Busco en la historia la transaccion asociado al usuario pasado por hash
 	Transaction * tr = BlockChainHistoryBook::getTransactionByTransactionOutputUser(hashUser);
 	if(tr == NULL){
-		 tr = Mempool::getTransactionsFromMempool(hashUser);
+		 tr = Mempool::searchOutputUser(hashUser);
 		 if(tr == NULL) 	 return STATUS_ERROR_HASH_NOT_FOUND;
 	}
 
@@ -161,9 +161,19 @@ status_t BlockChainBookkeeper::searchInHistoryBook(HashIdType type, std::string 
 	}
 
 	case HashIdType::txnId:{
-		const lista <Transaction *> * T = BlockChainHistoryBook::searchTransaction(hashId);
-		if(T == NULL) return STATUS_ERROR_HASH_NOT_FOUND;
-		lista <Transaction *>::iterador it(*T);
+		Transaction * TxFromAlgochain = BlockChainHistoryBook::searchTransaction(hashId);
+		Transaction * TxFromMempool   = Mempool::searchTransaction(hashId);
+
+		if( TxFromAlgochain == NULL && TxFromMempool == NULL) return STATUS_ERROR_HASH_NOT_FOUND;
+
+		lista <Transaction *>  T;
+		if( TxFromAlgochain != NULL )
+			T.insertar(TxFromAlgochain);
+		else
+			T.insertar(TxFromMempool);
+
+		lista<Transaction *> ::iterador it(T);
+
 		while(!it.extremo()){
 			Transaction * newTrans = new Transaction(*(it.dato()));
 			this->TransactionList.insertar(newTrans) ;

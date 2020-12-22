@@ -6,7 +6,7 @@
  */
 
 #include "Mempool.h"
-#include "lista.h"
+
 
 lista <Transaction *> Mempool::transList;
 
@@ -38,7 +38,7 @@ void Mempool::BorrarMempool(void){
 }
 
 
-Transaction * Mempool::getTransactionsFromMempool(std::string hashUser){
+Transaction * Mempool::searchOutputUser(std::string hashUser){
 	if ( ! transList.vacia() ) {
 		lista <Transaction *>::iterador itTrans( transList );
 		// La lista a iterar es la de TransactionInput
@@ -68,6 +68,25 @@ Transaction * Mempool::getTransactionsFromMempool(std::string hashUser){
 	return NULL;
 }
 
+Transaction * Mempool::searchTransaction(const std::string txns_hash ){
+	Transaction * T = NULL;
+
+	if ( ! transList.vacia() ) {
+		lista <Transaction *>::iterador it( transList );
+		it = transList.primero();
+
+		do {
+			std::string hashTxnCandidate = sha256(sha256( it.dato()->getConcatenatedTransactions() ));
+
+			if ( txns_hash.compare(hashTxnCandidate) == 0 ) {
+				T = it.dato();
+				break;
+			}
+			it.avanzar();
+		} while ( ! it.extremo() );
+	}
+	return T;
+}
 
 
 

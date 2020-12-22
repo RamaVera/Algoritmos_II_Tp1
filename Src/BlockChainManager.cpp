@@ -249,7 +249,7 @@ void BlockChainManager::proccesStatus(status_t status){
 	//-------- Errores ------------------//
 	case STATUS_ERROR_HASH_NOT_FOUND:
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
-		std::cerr << "Error Comando no conocido" << std::endl;
+		std::cerr << "Error Hash Id no encontrado" << std::endl;
 		//std::abort();
 		break;
 	case STATUS_ERROR_COMMAND_NOT_FOUND:

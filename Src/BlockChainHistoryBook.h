@@ -11,6 +11,7 @@
 #include <string>
 #include "lista.h"
 #include "Block.h"
+#include "sha256.h"
 
 enum class HashIdType{
 	blockId,
@@ -26,7 +27,7 @@ private:
 	// Para usar x línea de comandos block <id>
 	static Block * searchBlock( const std::string txns_hash );							// Ante cualquier error devuelve NULL
 	// Para usar x línea de comandos txn <id>
-	static const lista<Transaction *> * searchTransaction(const std::string txns_hash );
+	static Transaction * searchTransaction(const std::string txns_hash );
 	static Transaction * getTransactionByTransactionOutputUser( const std::string user );
 	static TransactionInput * obtenerTransactionInput( const std::string tx_id );	// Ante cualquier error devuelve NULL
 

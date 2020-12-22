@@ -1,8 +1,5 @@
-init ramiro 1000 5
-transfer ramiro alan 400
-transfer alan sergio 200 bob 10
-mine 5
-block 71883c1971aa225b6a8ffe3e02f9e8ab3966da34444446fa6ddd4e7f7ef00f5b
-txn e1a9c28d084016a30ac4905893ec97a154255d8d53845699ff559db274b9e078
-load blockchain.txt
-save salida.txt
+init ramiro 10000 3
+block 7e72e41130d51d97a86375cbb98478d0fe843d9ff9ba16f72f20489f8ddf91e6
+txn 9abd8c120a5448a37b56614b81ee5261d6ddcd281e80797a276743a0f7aa4540
+transfer ramiro alan 100
+txn 83d560a9e712ea420a3b31f645bdb57d2b9ab98fb4a10d05a61eaac38e99f8bf

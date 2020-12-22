@@ -13,6 +13,7 @@ using namespace std;
 //#include "MempoolUnit.h"
 #include "Transaction.h"
 #include "lista.h"
+#include "sha256.h"
 // static lista <Transaction *> Mempool::Mempool;
 
 
@@ -26,7 +27,8 @@ class Mempool{
 		static void addNewTransaction(Transaction *& new_txn);     // Usa metodos de LISTA para agregar un nuevo nodo con una transaccion
 		//static Transaction & get_transaction_n(int n);   		// DEVUELVE LA N-ESIMA TRANSACCION DE LA MEMPOOL (LA MEMPOOL SE ORGANIZA EN ORDEN DESCENDENTE)
 		static lista <Transaction *> & getTransactionsList();     // Devuelve un puntero a la lista de transacciones
-		static Transaction * getTransactionsFromMempool(std::string hashUser);
+		static Transaction * searchOutputUser(std::string hashUser);
+		static Transaction * searchTransaction(const std::string txns_hash );
 		static size_t getMempoolLength();
 		static void BorrarMempool(void);
 

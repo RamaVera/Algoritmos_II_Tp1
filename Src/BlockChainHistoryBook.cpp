@@ -32,7 +32,7 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 			//std::cout << "Debug " << std::endl;
 			//std::cout << it.dato()->getBlockHash() << std::endl;
 			//std::cout << HashBlock << std::endl;
-			if ( HashBlock.compare(it.dato()->getBlockHash()) == 0  ){
+			if ( HashBlock.compare(it.dato()->getBlockHash()) == 0 ){
 				B = it.dato();
 				break;
 			}
@@ -43,35 +43,38 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 }
 
 
-const lista<Transaction *> * BlockChainHistoryBook::searchTransaction(const std::string txns_hash ){
-	const lista<Transaction *> * T = NULL;
-	std::string b_prev;
+Transaction * BlockChainHistoryBook::searchTransaction(const std::string txns_hash ){
 
-	// EL HASH YA ES VALIDADO EN FILEMANAGER
-	// Checks
-	//if ( txns_hash.empty()  ) {
-	//	return B;
-	//}
-	//else if ( ! Block::CheckHash( txns_hash, TiposHash::clavehash256 ) ) {
-	//	return B;
-	//}
-	// End Checks
+	Transaction * Trans = NULL;
 
 	if ( ! AlgoChain.vacia() ) {
-		lista <Block *>::iterador it( AlgoChain );
-		it = AlgoChain.primero();
-
+		lista <Block *>::iterador itBlock( AlgoChain );
+		itBlock = AlgoChain.primero();
 		do {
-			if ( ! ( it.dato()->gettxns_hash() == txns_hash ) ) {
-			T = &(it.dato()->getListaTran());
-			break;
-			}
-			it.avanzar();
-		} while ( ! it.extremo() );
-	}
-	return T;
-}
+			// Debo abrir un segundo bloque de iteraciones sobre la lista de TI
+			lista <Transaction *> trns;
+			trns = itBlock.dato()->getListaTran();
+			lista <Transaction *>::iterador itTrans( trns );
+			// La lista a iterar es la de TransactionInput
+			itTrans = trns.primero();
+			if ( ! trns.vacia() ) {
+				do{
+					std::string hashTxnCandidate = sha256(sha256( itTrans.dato()->getConcatenatedTransactions() ));
 
+					if ( txns_hash.compare(hashTxnCandidate) == 0 ) {
+						Trans = itTrans.dato();
+						break;
+					}
+
+
+					itTrans.avanzar();
+				} while ( ! itTrans.extremo() );
+			}
+			itBlock.avanzar();
+		} while ( ! itBlock.extremo() );
+	}
+	return Trans;
+}
 
  TransactionInput * BlockChainHistoryBook::obtenerTransactionInput( const std::string tx_id ) {
 	std::string b_prev;
