@@ -12,8 +12,6 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 // Para usar x línea de comandos block <id>
  Block * BlockChainHistoryBook::searchBlock( const std::string HashBlock ) {
 	Block * B = NULL;
-	std::string b_prev = "";
-
 	// EL HASH YA ES VALIDADO EN FILEMANAGER
 	// Checks
 	//if ( txns_hash.empty()  ) {
@@ -23,8 +21,6 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 	//	return B;
 	//}
 	// End Checks
-
-	for ( size_t i = 0; i < (size_t) LargoHash::LargoHashEstandar; i++) { b_prev += '0'; }  // Block Zero
 	if ( ! AlgoChain.vacia() ) {
 		lista <Block *>::iterador it( AlgoChain );
 		it = AlgoChain.primero();
@@ -33,8 +29,10 @@ lista<Block*> BlockChainHistoryBook::AlgoChain;
 //			return B;
 //		}
 		do {
-
-			if ( ! ( it.dato()->getpre_block() == HashBlock ) ) {
+			//std::cout << "Debug " << std::endl;
+			//std::cout << it.dato()->getBlockHash() << std::endl;
+			//std::cout << HashBlock << std::endl;
+			if ( HashBlock.compare(it.dato()->getBlockHash()) == 0  ){
 				B = it.dato();
 				break;
 			}

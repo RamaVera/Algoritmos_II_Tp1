@@ -40,8 +40,6 @@ class Block {
 		std::string RecalculoHash( void );
 		std::string ArbolMerkle( void );
 
-		friend class Extracto; 
-
 	public:
     // Métodos
         // Constructores

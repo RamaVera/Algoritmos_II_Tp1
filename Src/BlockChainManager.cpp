@@ -45,7 +45,7 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Builder crea un bloque origen con los datos suministrados por bookkeeper
 					BlockChainManager::proccesStatus( builder.createOriginBlock( *(bookkeeper.getActualTransaction()) ) );
-					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash()<<"\n";
+					fileManager << FileTypes::userCommandResponseFiles << builder.getBlocklActual()->getBlockHash() << "\n";
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
 					BlockChainManager::proccesStatus( bookkeeper.saveOriginBlockInHistoryBook( builder.getBlocklActual() ) );
@@ -86,7 +86,7 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Builder mina a partir de la mempool y del hash del bloque anterior
 					BlockChainManager::proccesStatus( builder.createBlock( bookkeeper.getMempool(),prevoiusBlockHash) );
-					fileManager << FileTypes::userCommandResponseFiles << builder.getObtainedHash() <<"\n";
+					fileManager << FileTypes::userCommandResponseFiles << builder.getBlocklActual()->getBlockHash() << "\n";
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
 					BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlocklActual() ));
@@ -102,7 +102,7 @@ void BlockChainManager::proccesBlockChain(){
 					BlockChainBookkeeper bookkeeper;
 
 					// Blockkeeper busca en su libro contable el bloque requerido.
-					// 'Block' es un tipo enumerativo interno de bookkeeper para
+					// 'blockId' es un tipo enumerativo interno de bookkeeper para
 					// buscar solo mirando los hash de bloques.
 					BlockChainManager::proccesStatus( bookkeeper.searchInHistoryBook( HashIdType::blockId, payload.id ) );
 
