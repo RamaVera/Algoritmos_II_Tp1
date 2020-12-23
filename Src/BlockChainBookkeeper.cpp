@@ -89,12 +89,14 @@ status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 
 	// Contando con txIn encuentro el valor de indice del outpoint
 	unsigned int txIn = 0;
+	float UserValue;
 	lista <TransactionOutput *> tOutput;
 	tOutput =tr->getTransactionOutputList();
 	lista <TransactionOutput  *>::iterador itTransOutput( tOutput);
 	itTransOutput = tOutput.primero();
 	do {
 		if ( hashUser.compare(itTransOutput.dato()->getAddr()) == 0 )  {
+			UserValue = itTransOutput.dato()->getValue();
 		break;
 		}
 		txIn++;
@@ -112,11 +114,18 @@ status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 
 	unsigned int OutputNumber = 1 ;
 	while( ! payload.ArgTranfer->isEmpty()){
-		this->ActualTransaction->addTransactionOutput();
-		this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(sha256(sha256(payload.ArgTranfer->dequeue())));
-		this->ActualTransaction->getTransactionOutput(OutputNumber)->setValue(std::stof(payload.ArgTranfer->dequeue()));
-		OutputNumber++;
+		this->ActualTransaction->addTransactionOutput(); // El insertar interno me hace aumentar automaticamente
+		string addr = payload.ArgTranfer->dequeue();
+		this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(sha256(sha256(addr)));
+		float value = std::stof(payload.ArgTranfer->dequeue());
+		UserValue -= value;
+		this->ActualTransaction->getTransactionOutput(OutputNumber)->setValue(value);
+		//OutputNumber++;
 	}
+
+	this->ActualTransaction->addTransactionOutput();
+	this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(hashUser);
+	this->ActualTransaction->getTransactionOutput(OutputNumber)->setValue(UserValue);
 
 	//@TODO falta agregar como output el vuelto
 	return STATUS_OK;

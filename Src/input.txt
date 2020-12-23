@@ -1,5 +1,6 @@
 init ramiro 10000 3
 block 7e72e41130d51d97a86375cbb98478d0fe843d9ff9ba16f72f20489f8ddf91e6
 txn 9abd8c120a5448a37b56614b81ee5261d6ddcd281e80797a276743a0f7aa4540
-transfer ramiro alan 100
-txn 83d560a9e712ea420a3b31f645bdb57d2b9ab98fb4a10d05a61eaac38e99f8bf
+transfer ramiro alan 100 sergio 100 bob 10
+mine 5
+block 3f9fa1adc03faf5b0e0f6dafd8c827b21efed538b09b9b0c9458ca87c64f37ae
