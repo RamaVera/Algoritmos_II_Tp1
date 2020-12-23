@@ -43,30 +43,33 @@ Transaction * Mempool::searchOutputUser(std::string hashUser){
 		lista <Transaction *>::iterador itTrans( transList );
 		// La lista a iterar es la de TransactionInput
 		itTrans =transList.primero();
-		if ( !transList.vacia() ) {
-			do {
-				// De las dos listas, itero las de TI
-				lista <TransactionOutput *> tOutput;
-				tOutput = itTrans.dato()->getTransactionOutputList();
-				lista <TransactionOutput *>::iterador itTransOutput( tOutput );
-				itTransOutput = tOutput.primero();
-				if ( ! tOutput.vacia() ) {
-					do {
-						// Si encuentro al usuario en el output
-						// devuelvo el bloque para analizarlo
-						// afuera
-						if ( hashUser.compare(itTransOutput.dato()->getAddr()) == 0)  {
-							return itTrans.dato();
-						}
-						itTransOutput.avanzar();
-					}  while ( ! itTransOutput.extremo() );
-				}
-				itTrans.avanzar();
-			} while ( ! itTrans.extremo() );
-		}
+
+		do {
+			// De las dos listas, itero las de TI
+			lista <TransactionOutput *> tOutput;
+			tOutput = itTrans.dato()->getTransactionOutputList();
+			lista <TransactionOutput *>::iterador itTransOutput( tOutput );
+			itTransOutput = tOutput.primero();
+			if ( ! tOutput.vacia() ) {
+				do {
+					// Si encuentro al usuario en el output
+					// devuelvo el bloque para analizarlo
+					// afuera
+					if ( hashUser.compare(itTransOutput.dato()->getAddr()) == 0)  {
+						return itTrans.dato();
+					}
+					itTransOutput.avanzar();
+				}  while ( ! itTransOutput.extremo() );
+			}
+			itTrans.avanzar();
+		} while ( ! itTrans.extremo() );
+
 	}
 	return NULL;
 }
+
+
+
 
 Transaction * Mempool::searchTransaction(const std::string txns_hash ){
 	Transaction * T = NULL;
@@ -88,6 +91,80 @@ Transaction * Mempool::searchTransaction(const std::string txns_hash ){
 	return T;
 }
 
+//bool Mempool::getlistamovimientos( cuentas_t & c ) {
+//	// Checks
+//	if ( c.addr.empty() ) return false;
+//
+//	if ( ! transList.vacia() ) {
+//		bool Cuentaorigen = false;
+//		lista <Transaction *>::iterador itTrans( transList );
+//		itTrans =transList.primero();
+//		do {
+//			// Itero TI para sacar la Cuenta Origen
+//			lista <TransactionInput *> tIntput;
+//			tIntput = itTrans.dato()->getTransactionInputList();
+//			lista <TransactionInput *>::iterador itTransInput( tIntput );
+//			itTransInput = tIntput.primero();
+//			if ( ! tIntput.vacia() ) {
+//				do {
+//					if ( c.addr == itTransInput.dato()->getAddr() )  {
+//						Cuentaorigen = true;
+//						break;
+//					}
+//					itTransInput.avanzar();
+//				}  while ( ! itTransInput.extremo() );
+//			}
+//
+//			lista <TransactionOutput *> tOutput;
+//			tOutput = itTrans.dato()->getTransactionOutputList();
+//			lista <TransactionOutput *>::iterador itTransOutput( tOutput );
+//			itTransOutput = tOutput.primero();
+//			if ( ! tOutput.vacia() ) {
+//				movimientos_t * t;
+//				do {
+//					// Si encuentro al usuario en el output
+//					// devuelvo el bloque para analizarlo
+//					// afuera
+//					//if ( hashUser.compare(itTransOutput.dato()->getAddr()) == 0 )  {  	// TODO <- ver como es
+//					if ( Cuentaorigen ) {
+//						// Son todas salidas o pagos
+//						if ( c.addr == itTransOutput.dato()->getAddr() )  {
+//							// Vuelto, no se anota, porque es un débito/crédito a la misma cuenta, un movimiento de orden
+//						}
+//						else {
+//							// Pagos
+//							t->txns_hash = "";	// <- Es memPool
+//							t->tx_id = "";		// <- Es memPool
+//							t->idx = 0;			// <- Es memPool
+//							t->addr = itTransOutput.dato()->getAddr();
+//							t->value -= itTransOutput.dato()->getValue();
+//							c.pendiente -= itTransOutput.dato()->getValue();
+//							c.mempool.insertar( t );
+//						}
+//					}
+//					else {
+//						// Son entradas
+//						if ( c.addr == itTransOutput.dato()->getAddr() )  {
+//							// Créditos
+//							t->txns_hash = "";	// <- Es memPool
+//							t->tx_id = "";		// <- Es memPool
+//							t->idx = 0;			// <- Es memPool
+//							t->addr = itTransOutput.dato()->getAddr();
+//							t->value -= itTransOutput.dato()->getValue();
+//							c.pendiente += itTransOutput.dato()->getValue();
+//							c.mempool.insertar( t );
+//						}
+//					}
+//					itTransOutput.avanzar();
+//				}  while ( ! itTransOutput.extremo() );
+//			}
+//			itTrans.avanzar();
+//		} while ( ! itTrans.extremo() );
+//
+//	}
+//	return true;
+//}
+//
 
 
 /*

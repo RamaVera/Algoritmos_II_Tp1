@@ -24,12 +24,12 @@ void BlockChainManager::proccesBlockChain(){
 
 	while (BlockChainManager::command != STATUS_NO_MORE_COMMANDS ){
 		BlockChainManager::proccesStatus( fileManager.translateCommands(payload) );
-		std::cout<< "Begin Parse Command ...";
+		//std::cout<< "Begin Parse Command ...";
 		switch(payload.command)
 		{
 			case Commands::init:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// std::string usr	 = payload.user;
@@ -42,7 +42,7 @@ void BlockChainManager::proccesBlockChain(){
 
 					// A partir del payload bookkeeper crea una transaccion
 					BlockChainManager::proccesStatus( bookkeeper.createOriginTransaction(payload) );
-
+					//bookkeeper.printUsers();
 					// Builder crea un bloque origen con los datos suministrados por bookkeeper
 					BlockChainManager::proccesStatus( builder.createOriginBlock( *(bookkeeper.getActualTransaction()) ) );
 					fileManager << FileTypes::userCommandResponseFiles << builder.getBlocklActual()->getBlockHash() << "\n";
@@ -50,11 +50,13 @@ void BlockChainManager::proccesBlockChain(){
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
 					BlockChainManager::proccesStatus( bookkeeper.saveOriginBlockInHistoryBook( builder.getBlocklActual() ) );
 
+					//bookkeeper.printUsers();
+
 				}
 				break;
 			case Commands::transfer:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// Queue<std:string> * ArgTransfer = payload.ArgTransfer
@@ -63,17 +65,20 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Bookkeeper intenta armar una Transaccion, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					BlockChainManager::proccesStatus( bookkeeper.createTransaction(payload));
-					fileManager << FileTypes::userCommandResponseFiles << bookkeeper.getTransactionHash()<<"\n";
+					BlockChainManager::state = bookkeeper.createTransaction(payload);
+					BlockChainManager::proccesStatus( BlockChainManager::state );
 
-					// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
-					BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
+					if(BlockChainManager::state != STATUS_USER_WITHOUT_BTC){
 
+						fileManager << FileTypes::userCommandResponseFiles << bookkeeper.getTransactionHash()<<"\n";
+						// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
+						BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
+					}
 				}
 			break;
 			case Commands::mine:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// unsigned int bits = payload.bits;
@@ -89,12 +94,14 @@ void BlockChainManager::proccesBlockChain(){
 					fileManager << FileTypes::userCommandResponseFiles << builder.getBlocklActual()->getBlockHash() << "\n";
 
 					// Bookkeeper guarda ese bloque en la historia y actualiza su lista de usuarios
-					BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlocklActual() ));
+					BlockChainManager::proccesStatus( bookkeeper.saveBlockInHistoryBook(builder.getBlocklActual(), false));
+					//bookkeeper.printUsers();
+
 				}
 				break;
 			case Commands::block:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// std::string id = payload.id;
@@ -109,25 +116,28 @@ void BlockChainManager::proccesBlockChain(){
 					// Imprime la transaccion en el archivo de respuesta
 					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::userCommandResponseFiles,bookkeeper.getBlockList()) );
 
-
 				}
 				break;
 			case Commands::balance:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
-					// std::string usr = payload.usr;
+					// std::string user = payload.user;
 					//--------------------------------------------------------------//
-					// BlockChainBookkeeper bookkeeper;
+					 BlockChainBookkeeper bookkeeper;
 
 					// Blockkeeper busca en su libro lista de usuarios al usr correspondiente
-					// BlockChainManager::proccesStatus( bookkeeper.searchInUserList( payload.usr );
+					 float balance;
+					 BlockChainManager::proccesStatus( bookkeeper.searchInUserList( payload.user,balance) );
+
+					 if(balance >= 0)
+						 fileManager << FileTypes::userCommandResponseFiles << std::to_string(balance)<<"\n";;
 				}
 				break;
 			case Commands::txn:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// std::string id = payload.id;
@@ -146,7 +156,7 @@ void BlockChainManager::proccesBlockChain(){
 				break;
 			case Commands::load:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// std::string filename = payload.filename;
@@ -162,12 +172,12 @@ void BlockChainManager::proccesBlockChain(){
 					newFile.isStandard = false;
 					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-
 					// Filemanager valida que la estructura de la blockchain este correctamente
 					BlockChainManager::proccesStatus( fileManager.validateBlockChain() );
 
 					// FileManager parsea los datos de la blockChain en la lista de bloques
 					BlockChainManager::proccesStatus( fileManager.loadBlockChain() );
+
 					// Bookkeeper guarda en la historia
 					BlockChainManager::proccesStatus( bookkeeper.saveUserBlockChainInHistoryBook( fileManager.getBlockChainPointer() ));
 
@@ -179,7 +189,7 @@ void BlockChainManager::proccesBlockChain(){
 				break;
 			case Commands::save:
 				{
-					std::cout<< "Done"<< std::endl;
+					//std::cout<< "Done"<< std::endl;
 					//--------------------------------------------------------------//
 					// Datos del payload que sirven en este caso.
 					// std::string filename = payload.filename;
@@ -195,7 +205,7 @@ void BlockChainManager::proccesBlockChain(){
 					// Filemanager abre el archivo pasado como argumento dentro del payload.
 					BlockChainManager::proccesStatus( fileManager.addFile(newFile) );
 
-					std::cout<< "Begin Converting Block to File ..." << std::endl;
+					//std::cout<< "Begin Converting Block to File ..." << std::endl;
 					BlockChainManager::proccesStatus( fileManager.convert(FileTypes::saveBlockChainFile,bookkeeper.getBlockChain()) );
 
 					// Filemanager cierra el archivo pasado como argumento dentro del payload.
@@ -206,7 +216,7 @@ void BlockChainManager::proccesBlockChain(){
 				break;
 			default:
 				BlockChainManager::command  = STATUS_NO_MORE_COMMANDS;
-				std::cout<< "Fail: Error Not Defined"<< std::endl;
+				//std::cout<< "Fail: Error Not Defined"<< std::endl;
 				break;
 		}
 	}
@@ -331,13 +341,23 @@ void BlockChainManager::proccesStatus(status_t status){
 	case STATUS_ERROR_LIST_OF_TRANSACT_NOT_SUPPORTED:
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
-		std::cerr << "Error: El sistema no soporta entradas con mas de una transaccion por bloque" << std::endl;
+		std::cerr << "Error: El sistema no soporta entradas con mas de una transaccion input por bloque" << std::endl;
 		std::abort();
 		break;
 		case STATUS_NO_BLOCKS_TO_CONVERT:
 		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
 		//std::cout << "Error de Conversion: No hay nada que convertir" << std::endl;
 		std::cerr << "Error de Conversion: No hay nada que convertir" << std::endl;
+		//std::abort();
+		break;
+		case  STATUS_NO_ORIGIN_BLOCK_MINED:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		std::cerr << "Error de blockchain: Se esta intentando agregar un bloque sin origen "<< std::endl;
+		//std::abort();
+		break;
+	case  STATUS_USER_WITHOUT_BTC:
+		fileManager << FileTypes::userCommandResponseFiles << "FAIL\n";
+		std::cerr << "Error de Transferencia: Usuario sin fondos "<< std::endl;
 		//std::abort();
 		break;
 	default:

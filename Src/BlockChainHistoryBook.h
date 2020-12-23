@@ -12,6 +12,7 @@
 #include "lista.h"
 #include "Block.h"
 #include "sha256.h"
+//#include "Cuentas.h"
 
 enum class HashIdType{
 	blockId,
@@ -22,6 +23,7 @@ class BlockChainHistoryBook {
 private:
 	friend class BlockChainBookkeeper;
 	static lista<Block*> AlgoChain;
+	//static Cuentas ListadoCuentas;
 	//---Getters---//
 	static const lista <Block *> & getListaBlocks(){return AlgoChain;};
 	// Para usar x línea de comandos block <id>
@@ -38,6 +40,12 @@ private:
 	static bool AddBlock( Block *& B );
 	static bool AddListaBlocks( lista <Block *> & lista );
 public:
-
+	//static lista <TransactionOutput *> obtenerOutputs( const std::string tx_id, const int idx );
+	//static bool updatedatosdatos();
+	
+	//static void imprimirdetalle( const std::string addr );
+	//static lista <movimientos_t *> obtenerdetalle( std::string addr );
 };
+
+
 #endif /* BLOCKCHAINHISTORYBOOK_H_ */

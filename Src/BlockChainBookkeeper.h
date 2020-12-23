@@ -14,7 +14,7 @@
 #include "Mempool.h"
 #include "Transaction.h"
 #include "Block.h"
-
+#include "BlockChainUser.h"
 #include "sha256.h"
 
 // #include "lista.h"
@@ -26,6 +26,12 @@ private:
 	Transaction * ActualTransaction;
 	lista<Block * > BlockList;
 	lista<Transaction *> TransactionList;
+	static lista<BlockChainUser *> ListOfUsers;
+
+	bool updateUserList(float value, bool isConfirmed,std::string hashUser, std::string username = "No name");
+	bool updateUserList(const lista<Transaction *> & ListaTran , bool isConfirmed,Queue<string> * userNameQueue = NULL); // Version Const
+	bool updateUserList(lista<Transaction *> & ListaTran , bool isConfirmed, Queue<string> * userNameQueue = NULL); // Version No Const
+	float searchBalanceFromHashUser(std::string hashUser);
 
 public:
 	BlockChainBookkeeper();
@@ -33,12 +39,13 @@ public:
 
 	status_t createTransaction(payload_t payload);
 	status_t createOriginTransaction(payload_t & payload);
-	status_t saveBlockInHistoryBook(Block * &block);
+	status_t saveBlockInHistoryBook(Block * &block, bool isOrigin);
 	status_t saveOriginBlockInHistoryBook(Block* &block);
 	status_t saveUserBlockChainInHistoryBook(lista<Block*> &listaBlock);
 	status_t saveInMempool(Transaction * trans);
 	status_t eraseAllBlockChainRegisters(void);
 	status_t searchInHistoryBook(HashIdType type, std::string hashId);
+	status_t searchInUserList(std::string hash,float &balance);
 
 	std::string getLastBlockHash(void);
 	std::string getTransactionHash(void);
@@ -49,6 +56,7 @@ public:
 	lista<Transaction *> & getTransactionList(void);
 	lista<Transaction *> &  getMempool(void );
 
+	void printUsers(void);
 
 };
 

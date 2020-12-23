@@ -8,6 +8,7 @@
 #include "BlockChainHistoryBook.h"
 
 lista<Block*> BlockChainHistoryBook::AlgoChain;
+//Cuentas BlockChainHistoryBook::ListadoCuentas;
 
 // Para usar x línea de comandos block <id>
  Block * BlockChainHistoryBook::searchBlock( const std::string HashBlock ) {
@@ -201,13 +202,17 @@ void BlockChainHistoryBook::BorrarHistoria(void){
 			delete it.dato();
 			AlgoChain.eliminar_nodo(it);
 		}
+		//BlockChainHistoryBook::ListadoCuentas.vaciarcuentas();
 	}
 }
 
+bool BlockChainHistoryBook::AddBlock( Block * & B ) {
+	Block * newBlock = new Block( *B );
+	AlgoChain.insertar( newBlock );
+	// Aca debo en Cuentas actualizar datos
+	//BlockChainHistoryBook::ListadoCuentas.updatedatos( B );
 
-bool BlockChainHistoryBook::AddBlock( Block *& B ){
-	Block * newBlock = new Block(*B);
-	AlgoChain.insertar(newBlock);
+
 	return true;
 }
 

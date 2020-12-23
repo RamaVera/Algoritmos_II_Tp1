@@ -1,0 +1,10 @@
+init lucas 1000 5
+transfer lucas lucio 10 fede 30
+mine 6
+transfer fede leandro 25
+transfer lucio leandro 5
+transfer lucas leandro 200
+mine 3
+transfer fede lucas 5
+mine 5
+save chain_output2.txt

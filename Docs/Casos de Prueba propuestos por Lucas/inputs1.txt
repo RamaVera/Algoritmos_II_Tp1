@@ -1,0 +1,4 @@
+init ornella 300 5
+transfer ornella lucas 100
+mine 4
+save chain_output1.txt

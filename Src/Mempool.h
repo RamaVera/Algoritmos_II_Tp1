@@ -14,6 +14,7 @@ using namespace std;
 #include "Transaction.h"
 #include "lista.h"
 #include "sha256.h"
+//#include "Cuentas.h"
 // static lista <Transaction *> Mempool::Mempool;
 
 
@@ -30,6 +31,7 @@ class Mempool{
 		static Transaction * searchOutputUser(std::string hashUser);
 		static Transaction * searchTransaction(const std::string txns_hash );
 		static size_t getMempoolLength();
+		//static bool getlistamovimientos( cuentas_t & c );
 		static void BorrarMempool(void);
 
 	public:
