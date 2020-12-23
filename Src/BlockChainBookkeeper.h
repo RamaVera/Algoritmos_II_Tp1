@@ -28,9 +28,13 @@ private:
 	lista<Transaction *> TransactionList;
 	static lista<BlockChainUser *> ListOfUsers;
 
-	bool updateUserList(float value, bool isConfirmed,std::string hashUser, std::string username = "No name");
-	bool updateUserList(const lista<Transaction *> & ListaTran , bool isConfirmed,Queue<string> * userNameQueue = NULL); // Version Const
-	bool updateUserList(lista<Transaction *> & ListaTran , bool isConfirmed, Queue<string> * userNameQueue = NULL); // Version No Const
+	bool updateUserList(float value, bool isConfirmed,const std::string &hashUser, std::string username = "No name");
+	bool updateUserList(const lista<Transaction *> & ListaTran , bool isConfirmed,Queue<string> & userNameQueue); // Version Const
+	bool updateUserList(const lista<Transaction *> & ListaTran , bool isConfirmed); // Version Const
+	bool updateUserList(lista<Transaction *> & ListaTran , bool isConfirmed, Queue<string> & userNameQueue); // Version No Const
+	bool updateUserList(lista<Transaction *> & ListaTran , bool isConfirmed);
+	bool updateUserList(bool isConfirmed);
+	bool eraseBalanceFromHashUser(string hashUser);
 	float searchBalanceFromHashUser(std::string hashUser);
 
 public:

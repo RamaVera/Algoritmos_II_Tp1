@@ -18,7 +18,9 @@ class Queue
     public:
 		Queue();
 		~Queue();
+		void copyQueue(Queue<T> &other);
 		bool isEmpty();
+		bool isEmpty()const;
 		void enqueue(T data);
 		T dequeue();
 };

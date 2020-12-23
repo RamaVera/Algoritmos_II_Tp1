@@ -19,9 +19,42 @@ Queue<T>::~Queue()
 }
 
 template<class T>
+void Queue<T>::copyQueue(Queue<T> &other){
+ if(other.isEmpty()){
+	 frontPtr = NULL;
+	 backPtr = NULL;
+	 count = 0;
+ }else{
+	Node * aux = other.frontPtr;
+	do{
+		Node *newOne = new Node;
+		newOne->data = aux->data;
+		newOne->next = NULL;
+		if(this->isEmpty()){
+			frontPtr = newOne;
+		}
+		else{
+			backPtr->next = newOne;
+		}
+		backPtr = newOne;
+		count++;
+		aux = aux->next;
+	}while(aux != NULL);
+ }
+}
+
+
+
+template<class T>
 bool Queue<T>::isEmpty(){
     return(count == 0);
 }
+
+template<class T>
+bool Queue<T>::isEmpty()const{
+    return(count == 0);
+}
+
 
 template<class T>
 void Queue<T>::enqueue(T data){

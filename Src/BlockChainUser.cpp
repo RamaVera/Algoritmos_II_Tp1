@@ -37,11 +37,11 @@ void BlockChainUser::setConfirmBalance(float confirmedBalance){
 }
 
 void BlockChainUser::setUnConfirmBalance(float unconfirmedBalance){
-	this->unconfirmedBalance = unconfirmedBalance;
+	this->unconfirmedBalance += unconfirmedBalance;
 }
 
 void BlockChainUser::transfer(float unconfirmedBalance){
-	this->unconfirmedBalance = unconfirmedBalance;
+	this->unconfirmedBalance -= unconfirmedBalance;
 }
 
 void BlockChainUser::confirmBalance(){

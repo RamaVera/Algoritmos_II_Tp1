@@ -45,7 +45,7 @@ static option_t options[] = {
 
 int main(int argc, char * const argv[]){
 
-	std::cout<<"AlgoChain v2.1.1 - Grupo 5 : Galvan - Vera - Dreszman"<<std::endl;
+	std::cout<<"AlgoChain v2.1.2 - Grupo 5 : Galvan - Vera - Dreszman"<<std::endl;
 
 	//------Valido Argumentos ------//
 	cmdline cmdl(options);

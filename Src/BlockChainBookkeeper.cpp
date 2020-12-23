@@ -36,45 +36,89 @@ BlockChainBookkeeper::~BlockChainBookkeeper() {
 			}
 	}
 }
-bool BlockChainBookkeeper::updateUserList(const lista<Transaction *> &listaTran, bool isConfirmed,Queue<string> * userNameQueue){
+bool BlockChainBookkeeper::updateUserList(const lista<Transaction *> &listaTran, bool isConfirmed,Queue<string> & userNameQueue){
 	lista<Transaction *>::iterador it(listaTran);
 	while (!it.extremo()){
 		int OutputCant = it.dato()->getNumTransactionOut();
 		for(int i = 1; i <= OutputCant; i++){
 			std::string hashUser = it.dato()->getTransactionOutput(i)->getAddr();
 			float 		value	 = it.dato()->getTransactionOutput(i)->getValue();
-			if (userNameQueue == NULL)
-			{
-				if (this->updateUserList(value, isConfirmed, hashUser) == false) return false;
-			}else{
-				if (this->updateUserList(value, isConfirmed, hashUser,userNameQueue->dequeue()) == false) return false;
-			}
+			if (this->updateUserList(value, isConfirmed, hashUser,userNameQueue.dequeue()) == false) return false;
 		}
 		it.avanzar();
 	}
 	return true;
 }
 
-bool BlockChainBookkeeper::updateUserList( lista<Transaction *> &listaTran, bool isConfirmed,Queue<string> * userNameQueue){
+bool BlockChainBookkeeper::updateUserList(const lista<Transaction *> &listaTran, bool isConfirmed){
+
+	lista<Transaction *>::iterador it(listaTran);
+	while (!it.extremo()){
+		int inputCant = it.dato()->getNumTransactionIn();
+		if( inputCant == 1){
+			// Borro la informacion que tenia si encuentra al usuario
+			// dado que al ser un bloque su otput esta en el vuelto
+			string senderHash = it.dato()->getTransactionInput(1)->getAddr();
+			this->eraseBalanceFromHashUser(senderHash);
+		}
+		int OutputCant = it.dato()->getNumTransactionOut();
+		for(int i = 1; i <= OutputCant; i++){
+			std::string hashUser = it.dato()->getTransactionOutput(i)->getAddr();
+			float 		value	 = it.dato()->getTransactionOutput(i)->getValue();
+			if (this->updateUserList(value, isConfirmed, hashUser) == false) return false;
+		}
+		it.avanzar();
+	}
+	return true;
+}
+
+bool BlockChainBookkeeper::updateUserList( bool isConfirmed){
+
+	lista<BlockChainUser *>::iterador it(ListOfUsers);
+	while (!it.extremo()){
+		if (isConfirmed)
+			// Si se pasa verdadero confirma todo
+			it.dato()->confirmBalance();
+		else
+			// Si se pasa falso borra todo
+			it.dato()->setConfirmBalance(0);
+		it.avanzar();
+	}
+	return true;
+}
+
+
+
+bool BlockChainBookkeeper::updateUserList( lista<Transaction *> &listaTran, bool isConfirmed,Queue<string> & userNameQueue){
 	lista<Transaction *>::iterador it(listaTran);
 	while (!it.extremo()){
 		int OutputCant = it.dato()->getNumTransactionOut();
 		for(int i = 1; i <= OutputCant; i++){
 			std::string hashUser = it.dato()->getTransactionOutput(i)->getAddr();
 			float 		value	 = it.dato()->getTransactionOutput(i)->getValue();
-			if (userNameQueue == NULL)
-			{
-				if (this->updateUserList(value, isConfirmed, hashUser) == false) return false;
-			}else{
-				if (this->updateUserList(value, isConfirmed, hashUser,userNameQueue->dequeue()) == false) return false;
-			}
+			if (this->updateUserList(value, isConfirmed, hashUser,userNameQueue.dequeue()) == false) return false;
+
 		}
 		it.avanzar();
 	}
 	return true;
 }
 
-bool BlockChainBookkeeper::updateUserList(float value, bool isConfirmed,std::string hashUser,std::string username){
+bool BlockChainBookkeeper::updateUserList( lista<Transaction *> &listaTran, bool isConfirmed){
+	lista<Transaction *>::iterador it(listaTran);
+	while (!it.extremo()){
+		int OutputCant = it.dato()->getNumTransactionOut();
+		for(int i = 1; i <= OutputCant; i++){
+			std::string hashUser = it.dato()->getTransactionOutput(i)->getAddr();
+			float 		value	 = it.dato()->getTransactionOutput(i)->getValue();
+			if (this->updateUserList(value, isConfirmed, hashUser) == false) return false;
+
+		}
+		it.avanzar();
+	}
+	return true;
+}
+bool BlockChainBookkeeper::updateUserList(float value, bool isConfirmed,const std::string&hashUser,std::string username){
 	bool userNotFound = true;
 	if (! ListOfUsers.vacia()){
 		lista<BlockChainUser *>::iterador it(ListOfUsers);
@@ -82,21 +126,24 @@ bool BlockChainBookkeeper::updateUserList(float value, bool isConfirmed,std::str
 			if(hashUser.compare(it.dato()->getHashUser()) == 0)
 			{
 				userNotFound = false;
-				if ( it.dato()->canTransfer(value) )
-				{
+				//if ( it.dato()->canTransfer(value) )
+				//{
 					 if(isConfirmed){
-						 if(value == it.dato()->getUnConfirmedBalance()){
+						// if(value == it.dato()->getUnConfirmedBalance()){
+						 	 //std::cout << "P1"<< std::endl;
 							 it.dato()->confirmBalance();
-						 }else{
-							 it.dato()->setConfirmBalance(value);
-						 }
+						 //}else{
+						//	 it.dato()->setConfirmBalance(value);
+						 //}
 					 }
-					 else
-						 it.dato()->transfer(value);
-				}else{
+					 else{
+						 //std::cout << "P2"<< std::endl;
+						 it.dato()->setUnConfirmBalance(value);
+					 }
+					//	 else{
 					// Si el usuario no puede transferir se avisa que no se puede
-					return false;
-				}
+					//return false;
+				//}
 			}
 			it.avanzar();
 		}
@@ -126,6 +173,21 @@ float BlockChainBookkeeper::searchBalanceFromHashUser(std::string hashUser){
 		}
 	}
 	return -1;
+}
+
+bool BlockChainBookkeeper::eraseBalanceFromHashUser(string hashUser){
+	if (! ListOfUsers.vacia()){
+			lista<BlockChainUser *>::iterador it(ListOfUsers);
+			while(!it.extremo()){
+				if(hashUser.compare(it.dato()->getHashUser()) == 0)
+				{
+					it.dato()->setConfirmBalance(0);
+					return true;
+				}
+				it.avanzar();
+			}
+		}
+		return false;
 }
 
 status_t BlockChainBookkeeper::createOriginTransaction(payload_t & payload){
@@ -161,7 +223,11 @@ status_t BlockChainBookkeeper::saveBlockInHistoryBook(Block* &block,bool isOrigi
 	}
 
 	if (BlockChainHistoryBook::AddBlock(block) ) {
-		this->updateUserList(block->getListaTran(), true);
+		//lista<Transaction *>::iterador iter(block->getListaTran());
+		//while(!iter.extremo()){
+			this->updateUserList(block->getListaTran(), true);
+		//	iter.avanzar();
+		//}
 		return STATUS_OK;
 	}
 
@@ -170,12 +236,16 @@ status_t BlockChainBookkeeper::saveBlockInHistoryBook(Block* &block,bool isOrigi
 
 status_t BlockChainBookkeeper::saveUserBlockChainInHistoryBook(lista<Block*> &listaBlock){
 	if (! BlockChainHistoryBook::AlgoChain.isEmpty() ) BlockChainHistoryBook::BorrarHistoria();
+	this->updateUserList(false);
+
+
 	lista<Block*>::iterador it(listaBlock);
 	it = listaBlock.ultimo();
 	while(!it.extremo()){
 		if (! BlockChainHistoryBook::AddBlock(it.dato() ) ) return STATUS_BAD_ALLOC;
-		this->updateUserList(it.dato()->getListaTran(), true);
-		//this->printUsers();
+		this->updateUserList(it.dato()->getListaTran(), false);
+		this->updateUserList(true);
+		this->printUsers();
 	it.retroceder();
 	}
 	return STATUS_OK;
@@ -183,15 +253,29 @@ status_t BlockChainBookkeeper::saveUserBlockChainInHistoryBook(lista<Block*> &li
 
 status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 	Queue<string> namesQueue;
+	Queue<string> auxQueue;
 	std::string _user_ = payload.ArgTranfer->dequeue();
+	auxQueue.copyQueue(*payload.ArgTranfer);
+	// Por diseno, el primer elemento de la cola sera el usuario que
+	// realiza la transferencia.
 	namesQueue.enqueue(_user_);
 	const string hashUser= sha256(sha256(_user_));
 
 	//Buscar en la lista de usuario a ver si tiene saldo
-	//Como la cantidad total a transferir se analiza mas adelante,
-	//Se vuelve a preguntar al final
+	float totalTransfer = 0;
 	float userBalance = BlockChainBookkeeper::searchBalanceFromHashUser(hashUser);
-	if( userBalance < 0 ) return STATUS_USER_WITHOUT_BTC;
+
+	// Verifico si la suma de las transferencias no es mayor que el saldo del
+	// Usuario
+	float auxUserBalance = userBalance;
+	while(!auxQueue.isEmpty()){
+		auxQueue.dequeue(); // desacolo el nombre
+		float value = std::stof(auxQueue.dequeue()); // me quedo con el valor
+		auxUserBalance -= value;
+		if( auxUserBalance < 0 ) return STATUS_USER_WITHOUT_BTC;
+	}
+	//Si pasa este while el usuario puede hacer dicha transferencia.
+
 
 	// Busco en la historia la transaccion asociado al usuario pasado por hash
 	Transaction * tr = BlockChainHistoryBook::getTransactionByTransactionOutputUser(hashUser);
@@ -233,25 +317,28 @@ status_t BlockChainBookkeeper::createTransaction(payload_t payload){
 		this->ActualTransaction->addTransactionOutput(); // El insertar interno me hace aumentar automaticamente
 		string addr = payload.ArgTranfer->dequeue();
 		namesQueue.enqueue(addr);
-		this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(sha256(sha256(addr)));
+		string hashAddr = sha256(sha256(addr));
+		this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(hashAddr);
 		float value = std::stof(payload.ArgTranfer->dequeue());
 		userBalance -= value;
+		totalTransfer +=value;
 		this->ActualTransaction->getTransactionOutput(OutputNumber)->setValue(value);
 		//OutputNumber++;
+		this->updateUserList(value,false,hashAddr,addr);
 	}
-	if (userBalance < 0)
-	{
-		//delete this->ActualTransaction;
-		return STATUS_USER_WITHOUT_BTC;
-	}
+
+	// Dado que le cargo los vueltos como transaccion antes de actualizar la lista de usuario
+	// pongo en cero el balance del que transfiere, de modo que al trasnferirle el vuelto
+	// su saldo queda correctamente definido.
 
 	this->ActualTransaction->addTransactionOutput();
 	this->ActualTransaction->getTransactionOutput(OutputNumber)->setAddr(hashUser);
 	this->ActualTransaction->getTransactionOutput(OutputNumber)->setValue(userBalance);
-
-	lista<Transaction * > listaTran;
-	listaTran.insertar(this->ActualTransaction);
-	this->updateUserList(listaTran, false,&namesQueue);
+	this->updateUserList(- totalTransfer,false,hashUser,_user_);
+	//this->printUsers();
+	//lista<Transaction * > listaTran;
+	//listaTran.insertar(this->ActualTransaction);
+	//this->updateUserList(listaTran, false,namesQueue);
 
 	return STATUS_OK;
 }
@@ -277,7 +364,6 @@ lista<Transaction *> & BlockChainBookkeeper::getMempool(){
 
 
 status_t BlockChainBookkeeper::saveInMempool(Transaction * trans){
-	//@TODO falta actualizar lista de usuarios
 	Mempool::addNewTransaction(trans);
 	return STATUS_OK;
 }
@@ -369,6 +455,7 @@ std::string BlockChainBookkeeper::getTransactionHash(){
 
 void BlockChainBookkeeper::printUsers(void){
 		lista<BlockChainUser *>::iterador it(ListOfUsers);
+		it = ListOfUsers.primero();
 		while(!it.extremo()){
 			std::cout << "-----------------------"			<< std::endl;
 			std::cout << it.dato()->getUsername() 			<< std::endl;

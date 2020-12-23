@@ -65,14 +65,17 @@ void BlockChainManager::proccesBlockChain(){
 
 					// Bookkeeper intenta armar una Transaccion, funciona como validacion puesto que
 					// si no lo logra completar, el usario no existe en la historia
-					BlockChainManager::state = bookkeeper.createTransaction(payload);
-					BlockChainManager::proccesStatus( BlockChainManager::state );
+					BlockChainManager::proccesStatus( bookkeeper.createTransaction(payload) );
+					//bookkeeper.printUsers();
 
+					// Si el usuario no tiene fondos, es una transaccion erronea, no deberia guardarse en la mempool
 					if(BlockChainManager::state != STATUS_USER_WITHOUT_BTC){
-
+						// Si tiene fondos se imprime el hash de dicha transaccion y se guarda en la mempool
 						fileManager << FileTypes::userCommandResponseFiles << bookkeeper.getTransactionHash()<<"\n";
 						// Bookkeeper guarda ese bloque en la mempool y actualiza su lista de usuarios
 						BlockChainManager::proccesStatus( bookkeeper.saveInMempool(bookkeeper.getActualTransaction()));
+
+						//bookkeeper.printUsers();
 					}
 				}
 			break;
@@ -185,6 +188,8 @@ void BlockChainManager::proccesBlockChain(){
 					BlockChainManager::proccesStatus( fileManager.removeFile( newFile.type) );
 					fileManager<<FileTypes::userCommandResponseFiles<< "OK \n";
 
+					bookkeeper.printUsers();
+
 				}
 				break;
 			case Commands::save:
@@ -236,7 +241,7 @@ void BlockChainManager::proccesBlockChain(){
 // Postcondicion:
 void BlockChainManager::proccesStatus(status_t status){
 	BlockChainFileManager fileManager;
-	state = status;
+	BlockChainManager::state = status;
 	switch(status){
 	// -------- Terminaciones Correctas-----//
 	case STATUS_OK:
